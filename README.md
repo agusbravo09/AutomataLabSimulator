@@ -1,73 +1,48 @@
-# React + TypeScript + Vite
+# 🤖 AutomataLab
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Laboratorio interactivo para el estudio y experimentación con Autómatas y Lenguajes Formales.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📌 Descripción
 
-## React Compiler
+**AutomataLab** es una aplicación diseñada para facilitar el aprendizaje práctico de conceptos fundamentales de la materia *Autómatas y Lenguajes Formales*.  
+El objetivo del proyecto es permitir modelar, analizar y simular distintos tipos de autómatas, brindando una herramienta didáctica tanto para estudiantes como para docentes.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🎯 Objetivos del proyecto
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Implementar estructuras formales como:
+  - Autómatas Finitos Deterministas (AFD)
+  - Autómatas Finitos No Deterministas (AFND)
+  - (A futuro) Expresiones Regulares y conversión entre modelos
+- Permitir la validación de cadenas
+- Simular el recorrido paso a paso de los estados
+- Aplicar buenas prácticas de diseño y arquitectura
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🚀 Estado del proyecto
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+🟡 En desarrollo.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Actualmente se encuentra en la fase de definición y desarrollo de funcionalidades básicas.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## ✍️ Autor
+
+**Agustín Bravo**  
+
+---
+
+## 🤝 Powered By
+
+Este proyecto es desarrollado con el apoyo de herramientas de Inteligencia Artificial para asistencia técnica, revisión de diseño y mejora estructural:
+
+- ChatGPT  
+- Gemini  
+- DeepSeek  
+
+Las decisiones de diseño, implementación y modelado formal son realizadas de manera consciente y crítica, utilizando estas herramientas como soporte y aceleradores de productividad.
