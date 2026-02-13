@@ -1,0 +1,21 @@
+/*RESET CSS*/
+:root {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Evita scrolls dobles */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block; /* Vite a veces pone flex aquí, lo quitamos */
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
