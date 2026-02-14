@@ -35,8 +35,6 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataTy
                         }}
                         title={item.label}
                     >
-                        {/* Carga del SVG externo. Si aún no tenés los archivos,
-                podés poner el alt temporario o emojis como teníamos antes */}
                         <img
                             src={item.iconSrc}
                             alt={item.label}
@@ -72,7 +70,7 @@ const toolbarContainerStyle: React.CSSProperties = {
     top: '20px',
     left: '20px',
     display: 'flex',
-    flexDirection: 'row', // Ahora es horizontal
+    flexDirection: 'row',
     alignItems: 'center',
     gap: '15px',
     backgroundColor: 'white',
