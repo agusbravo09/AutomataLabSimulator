@@ -23,11 +23,73 @@ El objetivo del proyecto es permitir modelar, analizar y simular distintos tipos
 
 ---
 
-## 🚀 Estado del proyecto
+## 🗺️ Roadmap 2026
 
-🟡 En desarrollo.
+El desarrollo del proyecto seguirá una evolución progresiva alineada con los principales bloques de la Teoría de Lenguajes Formales.
 
-Actualmente se encuentra en la fase de definición y desarrollo de funcionalidades básicas.
+### 📅 Febrero 2026 — Lenguajes Regulares (Fundamentos)
+
+Implementación de los modelos básicos:
+
+- Autómatas Finitos Deterministas (AFD)
+- Autómatas Finitos No Deterministas (AFND)
+- Gramáticas Regulares
+- Expresiones Regulares
+
+Objetivo: consolidar un núcleo funcional sólido para el modelado y simulación de lenguajes regulares.
+
+---
+
+### 📅 Marzo 2026 — Lenguajes Regulares (Transformaciones y Análisis)
+
+Conversión y análisis formal entre modelos:
+
+- AFND → AFD
+- AFD → AFD Mínimo
+- AFND ↔ Expresión Regular
+- AFND ↔ Gramática Regular
+- Experimentos con el Lema del Bombeo
+
+Objetivo: explorar equivalencias formales y propiedades estructurales de los lenguajes regulares.
+
+---
+
+### 📅 Abril 2026 — Lenguajes Independientes del Contexto
+
+Implementación de modelos más expresivos:
+
+- Autómatas a Pila (AP)
+- Gramáticas Libres de Contexto (GLC)
+- Conversión AP ↔ GLC
+- Experimentos con el Lema del Bombeo para lenguajes independientes del contexto
+
+Objetivo: ampliar el alcance del simulador hacia lenguajes no regulares.
+
+---
+
+### 📅 Resto de 2026 — Lenguajes Recursivamente Enumerables
+
+Exploración de los modelos más generales de computación:
+
+- Máquinas de Turing
+- Gramáticas Recursivamente Enumerables
+- Simulación de cómputos paso a paso
+- Análisis de decidibilidad y reconocibilidad
+
+Objetivo: extender el laboratorio hacia los fundamentos de la teoría de la computabilidad.
+
+---
+
+## 📚 Enciclopedia Dinámica (Feature Paralelo)
+
+Una vez consolidado el MVP con los modelos iniciales, se desarrollará una sección educativa integrada al proyecto que incluirá:
+
+- Explicaciones teóricas estructuradas
+- Ejemplos formales
+- Simulaciones interactivas utilizando el propio motor del sistema
+- Comparaciones entre modelos equivalentes
+
+El propósito es transformar AutomataLab en una herramienta tanto de simulación como de estudio conceptual.
 
 ---
 
