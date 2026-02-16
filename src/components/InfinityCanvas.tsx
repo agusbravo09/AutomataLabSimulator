@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import {type ElementType, useState} from 'react';
 import { Stage, Layer, Circle } from 'react-konva';
 import Toolbar, { type Tool, type AutomataType } from './Toolbar';
 import SidePanel from './SidePanel.tsx';
 import ZoomControl from './ZoomControl.tsx';
+import PropertiesPanel from './PropertiesPanel.tsx';
+import ConfirmationModal from "./ConfirmationModal.tsx";
 
 function InfinityCanvas() {
     // --- ESTADOS ---
@@ -13,6 +15,10 @@ function InfinityCanvas() {
     const [automataType, setAutomataType] = useState<AutomataType>('DFA');
     // Estado para saber si el panel esta abierto o cerrado
     const [isPanelOpen, setIsPanelOpen] = useState(false);
+    //Estados para testear
+    const [selectedElement, setSelectedElement] = useState<any>(null);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
 
     // --- LÓGICA DE LA GRILLA Y ESTILOS ---
     const GRID_GAP = 40;
@@ -94,7 +100,7 @@ function InfinityCanvas() {
                 pointerEvents: 'none', // Evita que bloquee los clics en el lienzo
                 userSelect: 'none' // Evita que se seleccione como texto por accidente
             }}>
-                AutomataLabSimulator v0.1 - Agustin Bravo
+                AutomataLabSimulator v1.0
             </div>
 
             {/* Selector de Zoom centrado */}
@@ -137,6 +143,32 @@ function InfinityCanvas() {
                 automataType={automataType} // <-- Pasa el tipo de automata de la lista.
             />
 
+            {/* Panel de propiedades */}
+            <PropertiesPanel
+                element={selectedElement}
+                onClose={() => setSelectedElement(null)}
+                onDelete={() => setIsConfirmOpen(true)}
+                onChange={(updated) => setSelectedElement(updated)}
+                onSave={() => {
+                    console.log("Cambios guardados para: ", selectedElement.name);
+                    //Aca es donde se actualizaran los datos de los nodos mas adelante.
+                    setSelectedElement(null);
+                }}
+            />
+
+            {/* Modal de confirmacion */}
+            <ConfirmationModal
+                isOpen={isConfirmOpen}
+                title="¿Eliminar elemento?"
+                message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones."
+                onCancel={() => setIsConfirmOpen(false)}
+                onConfirm={() => {
+                    console.log("Elemento eliminado");
+                    setIsConfirmOpen(false);
+                    setSelectedElement(null);
+                }}
+            />
+
             {/* El Stage es el lienzo visible */}
             <Stage
                 width={window.innerWidth}
@@ -163,7 +195,13 @@ function InfinityCanvas() {
                         fill="#6366f1"
                         // Solo dejamos mover el círculo de prueba si tenés el cursor seleccionado
                         draggable={activeTool === 'CURSOR'}
-                    />
+                        onClick={() => setSelectedElement({
+                            type: 'STATE',
+                            id: 'q0_test',
+                            name: 'q0',
+                            isInitial: true,
+                            isFinal: false
+                        })}                    />
                 </Layer>
             </Stage>
         </div>
