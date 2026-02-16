@@ -1,10 +1,11 @@
-import {type ElementType, useState} from 'react';
-import { Stage, Layer, Circle } from 'react-konva';
+import {useState} from 'react';
+import { Stage, Layer, Circle, Group, Text, Arrow } from 'react-konva';
 import Toolbar, { type Tool, type AutomataType } from './Toolbar';
 import SidePanel from './SidePanel.tsx';
 import ZoomControl from './ZoomControl.tsx';
 import PropertiesPanel from './PropertiesPanel.tsx';
-import ConfirmationModal from "./ConfirmationModal.tsx";
+import ConfirmationModal from './ConfirmationModal.tsx';
+import type { StateNode } from '../types/types.ts';
 
 function InfinityCanvas() {
     // --- ESTADOS ---
@@ -18,6 +19,8 @@ function InfinityCanvas() {
     //Estados para testear
     const [selectedElement, setSelectedElement] = useState<any>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    //Memoria de los estados
+    const [nodes, setNodes] = useState<StateNode[]>([]);
 
 
     // --- LÓGICA DE LA GRILLA Y ESTILOS ---
@@ -83,6 +86,84 @@ function InfinityCanvas() {
         });
     };
 
+    // Función para manejar clics en el lienzo
+    const handleStageClick = (e: any) => {
+        // Evitamos crear un nodo si el usuario hizo clic sobre un nodo existente
+        if (e.target !== e.target.getStage()) return;
+
+        if (activeTool !== 'STATE') {
+            // Si hace clic en el fondo con otra herramienta, deseleccionamos el elemento actual
+            setSelectedElement(null);
+            return;
+        }
+
+        const stage = e.target.getStage();
+        const pointer = stage.getPointerPosition();
+        if (!pointer) return;
+
+        //Transformación matemática: de la pantalla al mundo infinito
+        const worldX = (pointer.x - camera.x) / camera.scale;
+        const worldY = (pointer.y - camera.y) / camera.scale;
+
+        //Creamos el objeto del nuevo estado
+        const newNode: StateNode = {
+            id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(), // ID único
+            name: `q${nodes.length}`, // Autonombrado: q0, q1, q2...
+            x: worldX,
+            y: worldY,
+            isInitial: nodes.length === 0, // El primero que se crea es inicial por defecto
+            isFinal: false
+        };
+
+        //Lo guardamos en el estado de React
+        setNodes([...nodes, newNode]);
+    };
+
+    //Funcion para guardar cambios
+    const handleSaveElement = () => {
+        if (!selectedElement) return;
+
+        if (selectedElement.type === 'STATE') {
+            setNodes(prevNodes => prevNodes.map(node => {
+                // Si es el nodo que estoy editando, lo actualizo con los nuevos datos
+                if (node.id === selectedElement.id){
+                    return {
+                        ...node,
+                        name: selectedElement.name,
+                        isInitial: selectedElement.isInitial,
+                        isFinal: selectedElement.isFinal
+                    };
+                }
+
+                //Si el nodo que guarde se marca como inicial,
+                //debo quitarle el estado inicial a todos los demas (solo puede haber uno)
+                if (selectedElement.isInitial) {
+                    return { ...node, isInitial: false};
+                }
+
+                return node;
+            }));
+        }
+
+        //Limpiar seleccion para que el panel se cierre.
+        setSelectedElement(null);
+    };
+
+    //Funcion para Eliminar
+    const handleDeleteElement = () => {
+        if (!selectedElement) return;
+
+        if (selectedElement.type === 'STATE') {
+            //FILTRAR EL ARRAY: me quedo con todos los nodos menos el que quiero borrar
+            setNodes(prevNodes => prevNodes.filter(n => n.id !== selectedElement.id));
+
+            //aca tambien deberia borrar las transiciones mas adelante.
+        }
+
+        setIsConfirmOpen(false); //cerrar modal de confirmacion
+        setSelectedElement(null); //cerrar el panel lateral
+    }
+
     return (
         <div style={backgroundStyle}>
             {/* Renderizamos la barra de herramientas y le pasamos su estado */}
@@ -100,7 +181,7 @@ function InfinityCanvas() {
                 pointerEvents: 'none', // Evita que bloquee los clics en el lienzo
                 userSelect: 'none' // Evita que se seleccione como texto por accidente
             }}>
-                AutomataLabSimulator v1.0
+                AutomataLabSimulator v1.0 - 
             </div>
 
             {/* Selector de Zoom centrado */}
@@ -149,11 +230,7 @@ function InfinityCanvas() {
                 onClose={() => setSelectedElement(null)}
                 onDelete={() => setIsConfirmOpen(true)}
                 onChange={(updated) => setSelectedElement(updated)}
-                onSave={() => {
-                    console.log("Cambios guardados para: ", selectedElement.name);
-                    //Aca es donde se actualizaran los datos de los nodos mas adelante.
-                    setSelectedElement(null);
-                }}
+                onSave={handleSaveElement}
             />
 
             {/* Modal de confirmacion */}
@@ -162,11 +239,7 @@ function InfinityCanvas() {
                 title="¿Eliminar elemento?"
                 message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones."
                 onCancel={() => setIsConfirmOpen(false)}
-                onConfirm={() => {
-                    console.log("Elemento eliminado");
-                    setIsConfirmOpen(false);
-                    setSelectedElement(null);
-                }}
+                onConfirm={handleDeleteElement}
             />
 
             {/* El Stage es el lienzo visible */}
@@ -185,23 +258,74 @@ function InfinityCanvas() {
                         setCamera((prev) => ({ ...prev, x: e.target.x(), y: e.target.y() }));
                     }
                 }}
+                onClick={handleStageClick}
             >
                 <Layer>
-                    {/* Un círculo de prueba */}
-                    <Circle
-                        x={window.innerWidth / 2}
-                        y={window.innerHeight / 2}
-                        radius={30}
-                        fill="#6366f1"
-                        // Solo dejamos mover el círculo de prueba si tenés el cursor seleccionado
-                        draggable={activeTool === 'CURSOR'}
-                        onClick={() => setSelectedElement({
-                            type: 'STATE',
-                            id: 'q0_test',
-                            name: 'q0',
-                            isInitial: true,
-                            isFinal: false
-                        })}                    />
+                    {/* Recorremos el arreglo de nodos y dibujamos un Grupo por cada uno */}
+                    {nodes.map((node) => (
+                        <Group
+                            key={node.id}
+                            x={node.x}
+                            y={node.y}
+                            draggable={activeTool === 'CURSOR'}
+
+                            // Cuando el usuario termina de arrastrar, guardamos su nueva posición
+                            onDragEnd={(e) => {
+                                const updatedNodes = nodes.map(n =>
+                                    n.id === node.id
+                                        ? { ...n, x: e.target.x(), y: e.target.y() }
+                                        : n
+                                );
+                                setNodes(updatedNodes);
+                            }}
+
+                            // Cuando hacemos clic en un nodo, abrimos el panel de propiedades
+                            onClick={(e) => {
+                                e.cancelBubble = true; // Evita que el clic pase al Stage (y cree otro nodo)
+                                if (activeTool === 'CURSOR') {
+                                    setSelectedElement({ type: 'STATE', ...node });
+                                }
+                            }}
+                        >
+
+                            {/* Indicador de Estado Inicial */}
+                            {node.isInitial && (
+                                <Arrow
+                                    points={[-70, 0, -35, 0]}
+                                    pointerLength={10}
+                                    pointerWidth={10}
+                                    fill="#495057"
+                                    stroke="#495057"
+                                    strokeWidth={2}
+                                />
+                            )}
+
+                            {/* Círculo Principal */}
+                            <Circle
+                                radius={30}
+                                fill={selectedElement?.id === node.id ? "#edf2ff" : "#ffffff"} // Feedback visual si está seleccionado
+                                stroke="#4c6ef5"
+                                strokeWidth={2}
+                            />
+
+                            {/*Si es final, dibujamos un círculo interno más chico */}
+                            {node.isFinal && (
+                                <Circle radius={24} stroke="#4c6ef5" strokeWidth={2} />
+                            )}
+
+                            {/* Texto (Nombre del estado) */}
+                            <Text
+                                text={node.name}
+                                fontSize={16}
+                                fontFamily="monospace"
+                                fill="#495057"
+                                x={-30}
+                                y={-8}
+                                width={60}
+                                align="center"
+                            />
+                        </Group>
+                    ))}
                 </Layer>
             </Stage>
         </div>

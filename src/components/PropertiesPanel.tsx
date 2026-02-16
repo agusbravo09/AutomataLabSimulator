@@ -1,9 +1,10 @@
 import React from 'react';
+import type { StateNode, Transition } from '../types';
 
 //Definir que tipo de objeto se esta editando
 type SelectedElement =
-    | { type: 'STATE'; id: string; name: string; isInitial: boolean; isFinal: boolean }
-    | { type: 'TRANSITION'; id: string; from: string; to: string; symbols: string; hasLambda: boolean }
+    | ({ type: 'STATE' } & StateNode)
+    | ({ type: 'TRANSITION' } & Transition)
     | null;
 
 interface PropertiesPanelProps {
