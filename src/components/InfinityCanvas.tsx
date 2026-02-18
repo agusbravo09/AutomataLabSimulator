@@ -5,7 +5,8 @@ import SidePanel from './SidePanel.tsx';
 import ZoomControl from './ZoomControl.tsx';
 import PropertiesPanel from './PropertiesPanel.tsx';
 import ConfirmationModal from './ConfirmationModal.tsx';
-import type { StateNode } from '../types/types.ts';
+import type { StateNode, Transition } from '../types/types.ts';
+import { getEdgePoints, getCurvedEdgePoints, getDynamicSelfLoopPoints } from '../utils/EdgePoints.tsx';
 
 function InfinityCanvas() {
     // --- ESTADOS ---
@@ -21,10 +22,20 @@ function InfinityCanvas() {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     //Memoria de los estados
     const [nodes, setNodes] = useState<StateNode[]>([]);
+    //Memoria de las transiciones
+    const [transitions, setTransitions] = useState<Transition[]>([]);
 
 
     // --- LÓGICA DE LA GRILLA Y ESTILOS ---
     const GRID_GAP = 40;
+
+    // Estado para la UX de crear transiciones
+    // Guardamos el ID del nodo origen y hacia dónde apunta el mouse actualmente
+    const [drawingTransition, setDrawingTransition] = useState<{
+        fromNodeId: string;
+        toX: number;
+        toY: number;
+    } | null>(null);
 
     // Función para que el cursor del mouse cambie según qué herramienta elegiste
     const getCursorStyle = () => {
@@ -164,6 +175,73 @@ function InfinityCanvas() {
         setSelectedElement(null); //cerrar el panel lateral
     }
 
+    //Funcion para flechas de transicion
+    //1. presionar el mouse sobre el nodo de origen.
+    const handleMouseDownNode = (id: string) => {
+        if (activeTool !== 'TRANSITION') return;
+
+        const node = nodes.find(n => n.id === id);
+        if (node) {
+            setDrawingTransition({
+                fromNodeId: id,
+                toX: node.x,
+                toY: node.y
+            });
+        }
+    };
+
+    //2. Mover el mouse por el lienzo (flecha fantasma)
+    const handleMouseMoveStage = (e: any) => {
+        if (!drawingTransition || activeTool !== 'TRANSITION') return;
+
+        const stage = e.target.getStage();
+        const pointer = stage.getPointerPosition();
+
+        //traducir la pos del mouse al mundo infinito (misma forma que con los nodos)
+        const worldX = (pointer.x - camera.x) / camera.scale;
+        const worldY = (pointer.y - camera.y) / camera.scale;
+
+        setDrawingTransition({
+            ...drawingTransition,
+            toX: worldX,
+            toY: worldY
+        });
+    };
+
+    //3. Cuando el mouse llega a destino
+    const handleMouseUpNode = (toNodeId: string) => {
+        if (!drawingTransition || activeTool !== 'TRANSITION') return;
+
+        // Evitar duplicados
+        // Chequeamos si ya existe una transición con el mismo origen y destino
+        const transitionExists = transitions.some(
+            t => t.from === drawingTransition.fromNodeId && t.to === toNodeId
+        );
+
+        if (transitionExists) {
+            // Si ya existe, simplemente cancelamos la flecha "fantasma" y salimos
+            setDrawingTransition(null);
+            return;
+        }
+
+        // Si pasa las validaciones, se crea la transicion
+        const newTransition: Transition = {
+            id: crypto.randomUUID(),
+            from: drawingTransition.fromNodeId,
+            to: toNodeId,
+            symbols: [], // empieza vacio y se edita despues
+            hasLambda: false
+        };
+
+        setTransitions([...transitions, newTransition]);
+        setDrawingTransition(null) // borra la flecha fantasma
+    };
+
+    //4. si se suelta el mouse fuera del circulo se cancela la creacion.
+    const handleMouseUpStage = () => {
+        if(drawingTransition) setDrawingTransition(null);
+    };
+
     return (
         <div style={backgroundStyle}>
             {/* Renderizamos la barra de herramientas y le pasamos su estado */}
@@ -259,8 +337,84 @@ function InfinityCanvas() {
                     }
                 }}
                 onClick={handleStageClick}
+                onMouseMove={handleMouseMoveStage}
+                onMouseUp={handleMouseUpStage}
             >
                 <Layer>
+                    {/* Transiciones permanentes */}
+                    {transitions.map((t) => {
+                        // Buscamos los objetos de los nodos origen y destino en el arreglo de memoria
+                        const fromNode = nodes.find(n => n.id === t.from);
+                        const toNode = nodes.find(n => n.id === t.to);
+
+                        // Si por alguna razón no los encuentro, no dibujo nada
+                        if (!fromNode || !toNode) return null;
+
+                        const RADIUS = 30;
+
+                        // Caso 1: Self-loop (Transición al mismo estado)
+                        if (t.from === t.to) {
+                            return (
+                                <Arrow
+                                    key={t.id}
+                                    // Creamos un lazo arriba del nodo usando 4 puntos
+                                    points={getDynamicSelfLoopPoints(fromNode, nodes, transitions, RADIUS)}
+                                    stroke="#495057"
+                                    strokeWidth={2}
+                                    fill="#495057"
+                                    tension={0.8} // Esta propiedad hace que la línea sea curva y no angular
+                                    pointerLength={10}
+                                    pointerWidth={10}
+                                    onClick={() => setSelectedElement({ type: 'TRANSITION', ...t })}
+                                />
+                            );
+                        }
+
+                        // Caso 2: Transición entre estados distintos
+                        // Detectamos si existe una transición en sentido contrario
+                        const isMutual = transitions.some(tr => tr.from === t.to && tr.to === t.from);
+
+                        // 2. Elegimos qué matemática usar
+                        const points = isMutual
+                            ? getCurvedEdgePoints(fromNode, toNode, RADIUS)
+                            : getEdgePoints(fromNode, toNode, RADIUS);
+
+                        return (
+                            <Arrow
+                                key={t.id}
+                                points={points}
+                                stroke="#495057"
+                                strokeWidth={2}
+                                pointerLength={10}
+                                pointerWidth={10}
+                                fill="#495057"
+                                // Si es mutual, le damos 'tension' para que los 3 puntos se unan con una curva suave.
+                                // Si es 0, es una línea recta.
+                                tension={isMutual ? 0.5 : 0}
+                                onClick={() => setSelectedElement({ type: 'TRANSITION', ...t })}
+                            />
+                        );
+                    })}
+
+
+                    {/*  Flecha fantasma */}
+                    {drawingTransition && (
+                        <Arrow
+                            points={[
+                                nodes.find(n => n.id === drawingTransition.fromNodeId)?.x || 0,
+                                nodes.find(n => n.id === drawingTransition.fromNodeId)?.y || 0,
+                                drawingTransition.toX,
+                                drawingTransition.toY
+                            ]}
+                            stroke="#adb5bd"
+                            strokeWidth={2}
+                            dash={[10, 5]} // Línea punteada para indicar que es temporal
+                            pointerLength={10}
+                            pointerWidth={10}
+                            fill="#adb5bd"
+                        />
+                    )}
+
                     {/* Recorremos el arreglo de nodos y dibujamos un Grupo por cada uno */}
                     {nodes.map((node) => (
                         <Group
@@ -268,11 +422,14 @@ function InfinityCanvas() {
                             x={node.x}
                             y={node.y}
                             draggable={activeTool === 'CURSOR'}
+                            onMouseDown={() => handleMouseDownNode(node.id)}
+                            onMouseUp={() => handleMouseUpNode(node.id)}
 
-                            // Cuando el usuario termina de arrastrar, guardamos su nueva posición
-                            onDragEnd={(e) => {
+                            // Cuando el usuario arrastra, actualiza la nueva posición
+                            onDragMove={(e) => {
                                 const updatedNodes = nodes.map(n =>
                                     n.id === node.id
+                                        // Guardamos la posición instantánea mientras el mouse se mueve
                                         ? { ...n, x: e.target.x(), y: e.target.y() }
                                         : n
                                 );
