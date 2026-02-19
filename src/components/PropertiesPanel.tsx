@@ -9,13 +9,14 @@ type SelectedElement =
 
 interface PropertiesPanelProps {
     element: SelectedElement;
+    nodes: StateNode[];
     onClose: () => void;
     onDelete: () => void;
     onSave: () => void;
     onChange: (updatedElement: any) => void;
 }
 
-const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, onClose, onDelete, onChange, onSave }) => {
+const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClose, onDelete, onChange, onSave }) => {
     if (!element) return null;
 
     const handleUpdate = (field: string, value: any) => {
@@ -64,16 +65,44 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, onClose, onD
                         </div>
                     </>
                 ) : (
-                    /* ... Lógica para Transición ... */
-                    <div style={fieldStyle}>
-                        <label style={labelStyle}>Símbolos:</label>
-                        <input
-                            type="text"
-                            value={element.symbols}
-                            onChange={(e) => handleUpdate('symbols', e.target.value)}
-                            style={inputStyle}
-                        />
-                    </div>
+                    <>
+                        {/* Lógica para Transición */}
+                        <div style={{
+                            padding: '10px',
+                            backgroundColor: '#f8f9fa',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '8px',
+                            marginBottom: '5px',
+                            textAlign: 'center',
+                            fontSize: '15px',
+                            fontWeight: 600,
+                            color: '#4c6ef5' // Azulito para que resalte
+                        }}>
+                            Transición: {nodes.find(n => n.id === element.from)?.name} ➔ {nodes.find(n => n.id === element.to)?.name}
+                        </div>
+
+                        <div style={fieldStyle}>
+                            <label style={labelStyle}>Símbolos (separados por coma):</label>
+                            <input
+                                type="text"
+                                // Convierte el array ['a', 'b'] en un string "a, b" para poder editarlo
+                                value={Array.isArray(element.symbols) ? element.symbols.join(', ') : element.symbols}
+                                onChange={(e) => handleUpdate('symbols', e.target.value)}
+                                style={inputStyle}
+                                placeholder="ej: 0, 1, a"
+                            />
+                        </div>
+
+                        <div style={fieldStyle}>
+                            <label style={labelStyle}>
+                                <input
+                                    type="checkbox"
+                                    checked={element.hasLambda || false}
+                                    onChange={(e) => handleUpdate('hasLambda', e.target.checked)}
+                                /> Incluir λ (Lambda)
+                            </label>
+                        </div>
+                    </>
                 )}
             </div>
 

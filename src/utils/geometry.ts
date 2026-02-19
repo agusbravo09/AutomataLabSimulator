@@ -104,3 +104,27 @@ export const getDynamicSelfLoopPoints = (node: {id: string, x: number, y: number
 
     return [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY];
 };
+
+export const getTextPosition = (points: number[], type: 'straight' | 'curved' | 'self-loop') => {
+    if (type === 'straight') {
+        // En una línea recta, el texto va en el punto medio exacto
+        return {
+            x: (points[0] + points[2]) / 2,
+            y: (points[1] + points[3]) / 2 - 15 // Lo subimos 15px para que no pise la línea
+        };
+    } else if (type === 'curved') {
+        // points: [startX, startY, controlX, controlY, endX, endY]
+        // En una curva, el punto de control es el "pico" de la panza
+        return {
+            x: points[2],
+            y: points[3] - 10
+        };
+    } else {
+        // self-loop points: [startX, startY, c1X, c1Y, c2X, c2Y, endX, endY]
+        // El texto va en el punto medio entre los dos puntos de control en el aire
+        return {
+            x: (points[2] + points[4]) / 2,
+            y: (points[3] + points[5]) / 2 - 15
+        };
+    }
+};

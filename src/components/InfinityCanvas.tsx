@@ -102,13 +102,45 @@ function InfinityCanvas() {
                 return node;
             }));
         }
+        // GUARDAR TRANSICIÓN
+        else if (selectedElement.type === 'TRANSITION') {
+            setTransitions(prevTransitions => prevTransitions.map(t => {
+                if (t.id === selectedElement.id) {
+                    // El input de PropertiesPanel devuelve un string (ej: "a, b, 0").
+                    // Lo convertimos al array de strings que pide el modelo.
+                    let parsedSymbols = selectedElement.symbols;
+                    if (typeof parsedSymbols === 'string') {
+                        parsedSymbols = parsedSymbols.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '');
+                    }
+
+                    return {
+                        ...t,
+                        symbols: parsedSymbols,
+                        hasLambda: selectedElement.hasLambda
+                    };
+                }
+                return t;
+            }));
+        }
         setSelectedElement(null);
     };
 
     const handleDeleteElement = () => {
         if (!selectedElement) return;
         if (selectedElement.type === 'STATE') {
+            // 1. Borramos el estado
             setNodes(prevNodes => prevNodes.filter(n => n.id !== selectedElement.id));
+
+            // 2. BORRADO EN CASCADA: Borramos todas las transiciones que salían o entraban a este estado
+            setTransitions(prevTransitions => prevTransitions.filter(
+                t => t.from !== selectedElement.id && t.to !== selectedElement.id
+            ));
+        }
+        else if (selectedElement.type === 'TRANSITION') {
+            // 3. Borramos una transición individual si el usuario la seleccionó
+            setTransitions(prevTransitions => prevTransitions.filter(
+                t => t.id !== selectedElement.id
+            ));
         }
         setIsConfirmOpen(false);
         setSelectedElement(null);
@@ -173,7 +205,7 @@ function InfinityCanvas() {
 
             <SidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} automataType={automataType} />
 
-            <PropertiesPanel element={selectedElement} onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)} onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement} />
+            <PropertiesPanel element={selectedElement} nodes={nodes} onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)} onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement} />
 
             <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
 
@@ -189,6 +221,7 @@ function InfinityCanvas() {
                     {transitions.map((t) => {
                         const fromNode = nodes.find(n => n.id === t.from);
                         const toNode = nodes.find(n => n.id === t.to);
+                        let type: 'straight' | 'curved' | 'self-loop' = 'straight';
                         if (!fromNode || !toNode) return null;
 
                         const RADIUS = 30;
@@ -198,15 +231,17 @@ function InfinityCanvas() {
                         if (t.from === t.to) {
                             points = getDynamicSelfLoopPoints(fromNode, nodes, transitions, RADIUS);
                             tension = 0.8;
+                            type = 'self-loop';
                         } else {
                             const isMutual = transitions.some(tr => tr.from === t.to && tr.to === t.from);
                             points = isMutual ? getCurvedEdgePoints(fromNode, toNode, RADIUS) : getEdgePoints(fromNode, toNode, RADIUS);
                             tension = isMutual ? 0.5 : 0;
+                            type = isMutual ? 'curved' : 'straight';
                         }
 
                         return (
                             <TransitionArrowView
-                                key={t.id} transition={t} points={points} tension={tension}
+                                key={t.id} transition={t} points={points} tension={tension} type={type}
                                 onClick={() => setSelectedElement({ type: 'TRANSITION', ...t })}
                             />
                         );
