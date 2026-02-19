@@ -1,5 +1,5 @@
 import React from 'react';
-import type { StateNode, Transition } from '../types';
+import type { StateNode, Transition } from '../types/types.ts';
 
 //Definir que tipo de objeto se esta editando
 type SelectedElement =
