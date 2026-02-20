@@ -9,10 +9,11 @@ interface Props {
     onClick: (e: any) => void;
     onMouseDown: () => void;
     onMouseUp: () => void;
+    isHighlighted: boolean;
 }
 
 export const StateNodeView = ({
-                                  node, isSelected, isDraggable, onDragMove, onClick, onMouseDown, onMouseUp
+                                  node, isSelected, isDraggable, onDragMove, onClick, onMouseDown, onMouseUp, isHighlighted
                               }: Props) => {
     return (
         <Group
@@ -30,7 +31,10 @@ export const StateNodeView = ({
             )}
 
             {/* Círculo Principal */}
-            <Circle radius={30} fill={isSelected ? "#edf2ff" : "#ffffff"} stroke="#4c6ef5" strokeWidth={2} />
+            <Circle radius={30}
+                    fill={isHighlighted ? "#ffec99" : (isSelected ? "#edf2ff" : "#ffffff")}
+                    stroke={isHighlighted ? "#f59f00" : "#4c6ef5"}
+                    strokeWidth={2} />
 
             {/* Si es final, dibujamos un círculo interno más chico */}
             {node.isFinal && <Circle radius={24} stroke="#4c6ef5" strokeWidth={2} />}

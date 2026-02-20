@@ -8,9 +8,10 @@ interface Props {
     tension: number;
     type: 'straight' | 'curved' | 'self-loop'; // Recibimos el tipo para saber dónde poner el texto
     onClick: () => void;
+    isHighlighted?: boolean;
 }
 
-export const TransitionArrowView = ({ transition, points, tension, type, onClick }: Props) => {
+export const TransitionArrowView = ({ transition, points, tension, type, onClick, isHighlighted }: Props) => {
     //calculamos la posicion del texto
     const textPos = getTextPosition(points, type);
 
@@ -23,16 +24,22 @@ export const TransitionArrowView = ({ transition, points, tension, type, onClick
     //Si no hay simbolos ni lambda, mostrar un cuadrado sutil para indicar que esta vacio
     if (label.length === 0) label = '☐';
 
+
+    // --- COLORES DINÁMICOS ---
+    const arrowColor = isHighlighted ? "#f59f00" : "#495057"; // Naranja brillante vs Gris oscuro
+    const textColor = isHighlighted ? "#d9480f" : "#4c6ef5";   // Naranja oscuro para el texto
+    const strokeWidth = isHighlighted ? 3 : 2;                 // La hacemos un poquito más gruesa al brillar
+
     return (
         <Group onClick={onClick}>
             {/* La flecha de transicion */}
             <Arrow
                 points={points}
-                stroke="#495057"
-                strokeWidth={2}
+                stroke={arrowColor}
+                strokeWidth={strokeWidth}
                 pointerLength={10}
                 pointerWidth={10}
-                fill="#495057"
+                fill={arrowColor}
                 tension={tension}
             />
 
@@ -43,7 +50,7 @@ export const TransitionArrowView = ({ transition, points, tension, type, onClick
                 text={label}
                 fontSize={16}
                 fontStyle="bold"
-                fill="#4c6ef5"
+                fill={textColor}
                 width={100}
                 align="center"
             />

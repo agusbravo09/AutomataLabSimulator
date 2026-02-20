@@ -8,6 +8,7 @@ import PropertiesPanel from './PropertiesPanel.tsx';
 import ConfirmationModal from './ConfirmationModal.tsx';
 import type { StateNode, Transition } from '../types/types.ts';
 import { getEdgePoints, getCurvedEdgePoints, getDynamicSelfLoopPoints } from '../utils/geometry.ts';
+import { simulateDFA } from "../utils/engine.ts";
 
 // Nuevos imports modularizados
 import { useAutomata } from '../hooks/useAutomata.ts';
@@ -17,6 +18,15 @@ import { TransitionArrowView } from './canvas/TransitionArrowView.tsx';
 function InfinityCanvas() {
     // --- ESTADOS GLOBALES MODULARIZADOS ---
     const { nodes, setNodes, transitions, setTransitions, updateNodePosition } = useAutomata();
+    // --- ESTADOS PARA EL RESULTADO DE LA SIMULACION
+    const [simulationResult, setSimulationResult] = useState<any>(null);
+    // --- ESTADOS PARA EL MODO PASO A PASO
+    const [simMode, setSimMode] = useState<{
+        active: boolean;
+        path: any[];
+        currentIndex: number;
+        stringToEvaluate: string;
+    }>({active: false, path: [], currentIndex: 0, stringToEvaluate: '' });
 
     // --- ESTADOS DE UI ---
     const [camera, setCamera] = useState({ x: 0, y: 0, scale: 1 });
@@ -47,7 +57,28 @@ function InfinityCanvas() {
         position: 'relative', overflow: 'hidden', cursor: getCursorStyle()
     };
 
-    // --- FUNCIONES DE LÓGICA (Se mantienen igual, ahora usan el estado del hook) ---
+    // --- FUNCION PARA MANEJAR LA SIMULACION ---
+    const handleRunSimulation = (inputString: string) => {
+        const result = simulateDFA(nodes, transitions, inputString);
+        setSimulationResult(result);
+        console.log("Rastro:", result.path); // Para que chusmees en la consola
+    };
+
+    // --- FUNCION PARA MANEJAR LA SIMULACION PASO A PASO ---
+    const handleStartStepByStep = (inputString: string) => {
+        const result = simulateDFA(nodes, transitions, inputString);
+        setSimMode({
+            active: true,
+            path: result.path,
+            currentIndex: 0,
+            stringToEvaluate: inputString
+        });
+        setSimulationResult(result);
+        setIsPanelOpen(false);
+        setSelectedElement(null);
+    }
+
+    // --- FUNCIONES DE LÓGICA ---
     const handleWheel = (e: any) => {
         e.evt.preventDefault();
         const scaleBy = 1.030;
@@ -203,11 +234,57 @@ function InfinityCanvas() {
                 Panel de Control
             </button>
 
-            <SidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} automataType={automataType} />
+            <SidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} automataType={automataType} onSimulate={handleRunSimulation} simulationResult={simulationResult} onClearResult={() => setSimulationResult(null)} onStepByStep={handleStartStepByStep} />
 
             <PropertiesPanel element={selectedElement} nodes={nodes} onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)} onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement} />
 
             <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
+
+            {/* --- REPRODUCTOR PASO A PASO --- */}
+            {simMode.active && (
+                <div style={{
+                    position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
+                    backgroundColor: '#343a40', color: 'white', padding: '15px 25px', borderRadius: '12px',
+                    zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                }}>
+                    <div style={{ fontSize: '18px', fontFamily: 'monospace', letterSpacing: '2px' }}>
+                        {/* Dibujamos la palabra y resaltamos la letra actual */}
+                        {simMode.stringToEvaluate.split('').map((char, index) => (
+                            <span key={index} style={{
+                                color: index === simMode.currentIndex ? '#ffd43b' : (index < simMode.currentIndex ? '#adb5bd' : 'white'),
+                                fontWeight: index === simMode.currentIndex ? 'bold' : 'normal',
+                                borderBottom: index === simMode.currentIndex ? '2px solid #ffd43b' : 'none'
+                            }}>
+                                {char}
+                            </span>
+                        ))}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                            disabled={simMode.currentIndex === 0}
+                            onClick={() => setSimMode(prev => ({...prev, currentIndex: prev.currentIndex - 1}))}
+                            style={{ padding: '8px 15px', cursor: 'pointer', borderRadius: '6px', border: 'none' }}
+                        >
+                            Anterior
+                        </button>
+                        <button
+                            disabled={simMode.currentIndex >= simMode.path.length}
+                            onClick={() => setSimMode(prev => ({...prev, currentIndex: prev.currentIndex + 1}))}
+                            style={{ padding: '8px 15px', cursor: 'pointer', borderRadius: '6px', border: 'none', backgroundColor: '#ffd43b', color: 'black', fontWeight: 'bold' }}
+                        >
+                            Siguiente
+                        </button>
+                        <button
+                            onClick={() => setSimMode({ active: false, path: [], currentIndex: 0, stringToEvaluate: '' })}
+                            style={{ padding: '8px 15px', cursor: 'pointer', borderRadius: '6px', border: 'none', backgroundColor: '#fa5252', color: 'white' }}
+                        >
+                            Salir
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <Stage
                 width={window.innerWidth} height={window.innerHeight} draggable={activeTool === 'CURSOR'}
@@ -239,9 +316,17 @@ function InfinityCanvas() {
                             type = isMutual ? 'curved' : 'straight';
                         }
 
+                        //logica de iluminacion
+                        let isHighlighted = false;
+                        if (simMode.active && simMode.currentIndex > 0 && simMode.currentIndex <= simMode.path.length) {
+                            const currentStep = simMode.path[simMode.currentIndex - 1];
+                            isHighlighted = t.id === currentStep.transitionId;
+                        }
+
                         return (
                             <TransitionArrowView
                                 key={t.id} transition={t} points={points} tension={tension} type={type}
+                                isHighlighted={isHighlighted}
                                 onClick={() => setSelectedElement({ type: 'TRANSITION', ...t })}
                             />
                         );
@@ -260,21 +345,42 @@ function InfinityCanvas() {
                     )}
 
                     {/* NODOS MODULARIZADOS */}
-                    {nodes.map((node) => (
-                        <StateNodeView
-                            key={node.id}
-                            node={node}
-                            isSelected={selectedElement?.id === node.id}
-                            isDraggable={activeTool === 'CURSOR'}
-                            onDragMove={(e) => updateNodePosition(node.id, e.target.x(), e.target.y())}
-                            onMouseDown={() => handleMouseDownNode(node.id)}
-                            onMouseUp={() => handleMouseUpNode(node.id)}
-                            onClick={(e) => {
-                                e.cancelBubble = true;
-                                if (activeTool === 'CURSOR') setSelectedElement({ type: 'STATE', ...node });
-                            }}
-                        />
-                    ))}
+                    {nodes.map((node) => {
+                        // --- LÓGICA DE ILUMINACIÓN PARA LA SIMULACIÓN ---
+                        let isHighlighted = false;
+                        if (simMode.active) {
+                            if (simMode.currentIndex === 0) {
+                                // En el paso 0, brilla el estado inicial
+                                isHighlighted = node.isInitial;
+                            } else if (simMode.currentIndex <= simMode.path.length) {
+                                // En los siguientes pasos, brilla el estado al que saltamos
+                                const currentStep = simMode.path[simMode.currentIndex - 1];
+                                // Si nextStateId es null (se trabó), mantenemos iluminado el actual
+                                isHighlighted = node.id === (currentStep.nextStateId || currentStep.currentStateId);
+                            }
+                        }
+
+                        if (simMode.active) {
+                            console.log(`Paso: ${simMode.currentIndex} | Nodo: ${node.name} | ¿Brilla?: ${isHighlighted}`);
+                        }
+
+                        return (
+                            <StateNodeView
+                                key={node.id}
+                                node={node}
+                                isSelected={selectedElement?.id === node.id}
+                                isHighlighted={isHighlighted}
+                                isDraggable={activeTool === 'CURSOR'}
+                                onDragMove={(e) => updateNodePosition(node.id, e.target.x(), e.target.y())}
+                                onMouseDown={() => handleMouseDownNode(node.id)}
+                                onMouseUp={() => handleMouseUpNode(node.id)}
+                                onClick={(e) => {
+                                    e.cancelBubble = true;
+                                    if (activeTool === 'CURSOR') setSelectedElement({ type: 'STATE', ...node });
+                                }}
+                            />
+                        );
+                    })}
                 </Layer>
             </Stage>
         </div>

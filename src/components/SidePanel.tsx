@@ -1,13 +1,34 @@
-import React from 'react';
+import React, {useState} from 'react';
 import type { AutomataType } from './Toolbar';
 
 interface SidePanelProps {
     isOpen: boolean;
     onClose: () => void;
     automataType: AutomataType;
+    onSimulate?: (input: string) => void;
+    simulationResult?: { accepted: boolean; error?: string } | null;
+    onClearResult?: () => void;
+    onStepByStep?: (input: string) => void;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType }) => {
+const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, onSimulate, simulationResult, onClearResult, onStepByStep }) => {
+    //estado local para lo que el usuario escribe en el input
+    const [inputValue, setInputValue] = useState('');
+
+    const handleComprobar = () => {
+        if (inputValue.trim() !== '' && onSimulate) {
+            onSimulate(inputValue);
+        }
+    };
+
+    const handlePasoAPaso = () => {
+        if (inputValue.trim() !== '' && onStepByStep) {
+            onStepByStep(inputValue);
+        }
+    };
+
+    if (!isOpen) return null;
+
     return (
         <div style={{
             position: 'absolute',
@@ -59,50 +80,56 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType }) 
             </div>
 
             {/* Zona de Simulación y Pruebas */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h3 style={{ margin: 0, fontSize: '14px', color: '#495057' }}>Simulación</h3>
+            <div>
+                <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>Simulación</h3>
 
                 <input
                     type="text"
                     placeholder="Ingresar cadena (ej: 10110)..."
-                    style={{
-                        padding: '10px 12px',
-                        borderRadius: '6px',
-                        border: '1px solid #ced4da',
-                        outline: 'none',
-                        fontSize: '14px'
+                    value={inputValue}
+                    onChange={(e) => {
+                        setInputValue(e.target.value);
+                        if (onClearResult) onClearResult();
                     }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleComprobar()}
+                    style={{ width: '100%', padding: '8px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
 
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button style={{
-                        flex: 1,
-                        padding: '10px',
-                        backgroundColor: '#e9ecef',
-                        color: '#495057',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                        transition: 'background 0.2s'
-                    }}>
+                    <button
+                        style={{ flex: 1, padding: '8px', backgroundColor: '#e9ecef', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', color: '#495057' }}
+                        onClick={handlePasoAPaso}
+                    >
                         Paso a Paso
                     </button>
-
-                    <button style={{
-                        flex: 1,
-                        padding: '10px',
-                        backgroundColor: '#4c6ef5',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                        transition: 'background 0.2s'
-                    }}>
+                    <button
+                        onClick={handleComprobar}
+                        style={{ flex: 1, padding: '8px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
                         Comprobar
                     </button>
                 </div>
+
+                {/* CARTEL DE RESULTADO */}
+                {simulationResult && (
+                    <div style={{
+                        marginTop: '15px',
+                        padding: '10px',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                        backgroundColor: simulationResult.accepted ? '#d3f9d8' : '#ffe3e3',
+                        color: simulationResult.accepted ? '#2b8a3e' : '#e03131',
+                        border: `1px solid ${simulationResult.accepted ? '#b2f2bb' : '#ffc9c9'}`
+                    }}>
+                        {simulationResult.accepted ? 'Cadena Aceptada' : 'Cadena Rechazada'}
+                        {simulationResult.error && (
+                            <div style={{ fontSize: '12px', marginTop: '5px', fontWeight: 'normal' }}>
+                                {simulationResult.error}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
