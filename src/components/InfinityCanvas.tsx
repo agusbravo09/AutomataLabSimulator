@@ -41,7 +41,7 @@ function InfinityCanvas() {
 
     const getCursorStyle = () => {
         switch (activeTool) {
-            case 'CURSOR': return 'grab';
+            case 'CURSOR': return 'default';
             case 'STATE': return 'crosshair';
             case 'TRANSITION': return 'alias';
             case 'DELETE': return 'not-allowed';
@@ -215,10 +215,35 @@ function InfinityCanvas() {
             <Toolbar activeTool={activeTool} setActiveTool={setActiveTool} automataType={automataType} setAutomataType={setAutomataType} />
 
             <div style={{
-                position: 'absolute', bottom: '20px', left: '20px', color: '#adb5bd',
-                fontSize: '13px', fontFamily: 'monospace', zIndex: 100, pointerEvents: 'none', userSelect: 'none'
+                position: 'absolute', bottom: '20px', left: '20px', zIndex: 100,
+                display: 'flex', alignItems: 'center', gap: '15px'
             }}>
-                AutomataLabSimulator v1.0 -
+                <span style={{ color: '#adb5bd', fontSize: '13px', fontFamily: 'monospace', userSelect: 'none', pointerEvents: 'none' }}>
+                    AutomataLabSimulator v1.0
+                </span>
+
+                <button
+                    onClick={() => console.log("Abrir modal de feedback")}
+                    style={{
+                        padding: '6px 12px',
+                        backgroundColor: 'white',
+                        color: '#495057',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '20px', // Forma de píldora
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                >
+                    💡 Feedback
+                </button>
             </div>
 
             <ZoomControl scale={camera.scale} onZoomIn={() => handleManualZoom(0.2)} onZoomOut={() => handleManualZoom(-0.2)} onReset={() => setCamera(prev => ({ ...prev, scale: 1 }))} />
@@ -236,7 +261,7 @@ function InfinityCanvas() {
 
             <SidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} automataType={automataType} onSimulate={handleRunSimulation} simulationResult={simulationResult} onClearResult={() => setSimulationResult(null)} onStepByStep={handleStartStepByStep} />
 
-            <PropertiesPanel element={selectedElement} nodes={nodes} onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)} onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement} />
+            <PropertiesPanel element={selectedElement} nodes={nodes} isSidePanelOpen={isPanelOpen} onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)} onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement} />
 
             <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
 

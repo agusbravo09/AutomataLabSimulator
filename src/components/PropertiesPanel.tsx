@@ -14,17 +14,25 @@ interface PropertiesPanelProps {
     onDelete: () => void;
     onSave: () => void;
     onChange: (updatedElement: any) => void;
+    isSidePanelOpen?: boolean;
 }
 
-const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClose, onDelete, onChange, onSave }) => {
+const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClose, onDelete, onChange, onSave, isSidePanelOpen }) => {
     if (!element) return null;
 
     const handleUpdate = (field: string, value: any) => {
         onChange({ ...element, [field]: value });
     };
 
+    const dynamicPanelStyle: React.CSSProperties = {
+        ...panelStyle,
+        // Si el panel lateral está abierto (asumiendo que mide ~320px), corremos este a 340px. Si no, a 20px.
+        right: isSidePanelOpen ? '380px' : '20px',
+        transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)' // Animación súper suave
+    };
+
     return (
-        <div style={panelStyle}>
+        <div style={dynamicPanelStyle}>
             <div style={headerStyle}>
                 <h2 style={{ fontSize: '16px', margin: 0 }}>Editor de Propiedades</h2>
                 <button onClick={onClose} style={closeButtonStyle}>✕</button>

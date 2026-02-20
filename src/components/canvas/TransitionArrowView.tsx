@@ -50,6 +50,7 @@ export const TransitionArrowView = ({ transition, points, tension, type, onClick
                 text={label}
                 fontSize={16}
                 fontStyle="bold"
+                fontFamily="'Fira Code', monospace"
                 fill={textColor}
                 width={100}
                 align="center"

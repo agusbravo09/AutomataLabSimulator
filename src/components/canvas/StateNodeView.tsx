@@ -40,7 +40,7 @@ export const StateNodeView = ({
             {node.isFinal && <Circle radius={24} stroke="#4c6ef5" strokeWidth={2} />}
 
             {/* Texto (Nombre del estado) */}
-            <Text text={node.name} fontSize={16} fontFamily="monospace" fill="#495057" x={-30} y={-8} width={60} align="center" />
+            <Text text={node.name} fontSize={16} fontFamily="'Fira Code', monospace" fill="#495057" x={-30} y={-8} width={60} align="center" />
         </Group>
     );
 };

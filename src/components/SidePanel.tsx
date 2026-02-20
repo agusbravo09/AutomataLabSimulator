@@ -27,24 +27,24 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, on
         }
     };
 
-    if (!isOpen) return null;
-
     return (
         <div style={{
             position: 'absolute',
             top: 0,
             //si está abierto, right es 0. Si no, se esconde fuera de la pantalla.
             right: isOpen ? 0 : '-400px',
-            width: '350px',
+            width: '360px',
             height: '100vh',
             backgroundColor: '#ffffff',
-            boxShadow: '-5px 0 25px rgba(0,0,0,0.1)',
-            transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Animación suave
-            zIndex: 200, // Por encima de todo
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            transition: 'right 0.4s cubic-bezier(0.4, 0, 0.2, 1)', // Animación suave
+            zIndex: 140,
             display: 'flex',
             flexDirection: 'column',
             padding: '20px',
             boxSizing: 'border-box',
+            visibility: isOpen ? 'visible' : 'hidden',
         }}>
             {/* Cabecera del Panel */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
