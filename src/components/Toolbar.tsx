@@ -16,7 +16,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataTy
     const [hoveredTool, setHoveredTool] = useState<Tool | null>(null);
 
     const menuItems: { id: Tool; label: string; iconSrc: string }[] = [
-        { id: 'CURSOR', label: 'Desplazar (Mano)', iconSrc: '/Toolbar/cursor.svg' },
+        { id: 'CURSOR', label: 'Selección', iconSrc: '/Toolbar/cursor.svg' },
         { id: 'STATE', label: 'Crear Estado', iconSrc: '/Toolbar/add-state.svg' },
         { id: 'TRANSITION', label: 'Crear Transición', iconSrc: '/Toolbar/add-transition.svg' },
         { id: 'DELETE', label: 'Eliminar', iconSrc: '/Toolbar/' },

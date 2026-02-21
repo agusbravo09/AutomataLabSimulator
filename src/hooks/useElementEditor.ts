@@ -1,0 +1,70 @@
+import type { StateNode, Transition } from '../types/types';
+
+interface UseElementEditorProps {
+    selectedElement: any;
+    setSelectedElement: React.Dispatch<React.SetStateAction<any>>;
+    setNodes: React.Dispatch<React.SetStateAction<StateNode[]>>;
+    setTransitions: React.Dispatch<React.SetStateAction<Transition[]>>;
+    setIsConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const useElementEditor = ({
+                                     selectedElement,
+                                     setSelectedElement,
+                                     setNodes,
+                                     setTransitions,
+                                     setIsConfirmOpen
+                                 }: UseElementEditorProps) => {
+
+    const handleSaveElement = () => {
+        if (!selectedElement) return;
+
+        if (selectedElement.type === 'STATE') {
+            setNodes(prevNodes => prevNodes.map(node => {
+                if (node.id === selectedElement.id){
+                    return { ...node, name: selectedElement.name, isInitial: selectedElement.isInitial, isFinal: selectedElement.isFinal };
+                }
+                // Si el editado es inicial, le sacamos la corona al resto
+                if (selectedElement.isInitial) return { ...node, isInitial: false};
+                return node;
+            }));
+        }
+        else if (selectedElement.type === 'TRANSITION') {
+            setTransitions(prevTransitions => prevTransitions.map(t => {
+                if (t.id === selectedElement.id) {
+                    let parsedSymbols = selectedElement.symbols;
+                    if (typeof parsedSymbols === 'string') {
+                        parsedSymbols = parsedSymbols.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '');
+                    }
+                    return { ...t, symbols: parsedSymbols, hasLambda: selectedElement.hasLambda };
+                }
+                return t;
+            }));
+        }
+        setSelectedElement(null);
+    };
+
+    const handleDeleteElement = () => {
+        if (!selectedElement) return;
+
+        if (selectedElement.type === 'STATE') {
+            // 1. Borramos el estado
+            setNodes(prevNodes => prevNodes.filter(n => n.id !== selectedElement.id));
+            // 2. Borrado en cascada: limpiamos transiciones huérfanas
+            setTransitions(prevTransitions => prevTransitions.filter(
+                t => t.from !== selectedElement.id && t.to !== selectedElement.id
+            ));
+        }
+        else if (selectedElement.type === 'TRANSITION') {
+            // 3. Borramos transición individual
+            setTransitions(prevTransitions => prevTransitions.filter(
+                t => t.id !== selectedElement.id
+            ));
+        }
+
+        setIsConfirmOpen(false);
+        setSelectedElement(null);
+    };
+
+    return { handleSaveElement, handleDeleteElement };
+};
