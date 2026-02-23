@@ -6,6 +6,7 @@ interface UseElementEditorProps {
     setNodes: React.Dispatch<React.SetStateAction<StateNode[]>>;
     setTransitions: React.Dispatch<React.SetStateAction<Transition[]>>;
     setIsConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    clearWorkspace: () => void;
 }
 
 export const useElementEditor = ({
@@ -13,7 +14,8 @@ export const useElementEditor = ({
                                      setSelectedElement,
                                      setNodes,
                                      setTransitions,
-                                     setIsConfirmOpen
+                                     setIsConfirmOpen,
+                                     clearWorkspace
                                  }: UseElementEditorProps) => {
 
     const handleSaveElement = () => {
@@ -66,5 +68,12 @@ export const useElementEditor = ({
         setSelectedElement(null);
     };
 
-    return { handleSaveElement, handleDeleteElement };
+    const handleClearWorkspace = () => {
+        if (window.confirm('¿Estás seguro de que querés borrar todo el autómata? Esta acción no se puede deshacer.')) {
+            clearWorkspace();
+            setSelectedElement(null);
+        }
+    };
+
+    return { handleSaveElement, handleDeleteElement, handleClearWorkspace };
 };

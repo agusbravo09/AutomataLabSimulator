@@ -10,9 +10,10 @@ interface ToolbarProps {
     setActiveTool: (tool: Tool) => void;
     automataType: AutomataType;
     setAutomataType: (type: AutomataType) => void;
+    onClear: () => void;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataType, setAutomataType }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataType, setAutomataType, onClear }) => {
     const [hoveredTool, setHoveredTool] = useState<Tool | null>(null);
 
     const menuItems: { id: Tool; label: string; iconSrc: string }[] = [
@@ -94,6 +95,21 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataTy
                 <option value="PDA">Autómata de Pila (AP)</option>
                 <option value="TM">Máquina de Turing (MT)</option>
             </select>
+
+            {/* BOTÓN DE LIMPIAR */}
+            <div style={separatorStyle}></div>
+            <button
+                onClick={onClear}
+                style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '10px 15px', borderRadius: '8px',
+                    border: '1px solid #ffc9c9', backgroundColor: '#fff5f5',
+                    color: '#e03131', fontSize: '14px', fontWeight: 600,
+                    cursor: 'pointer', outline: 'none', transition: 'all 0.2s'
+                }}
+            >
+                Limpiar Todo
+            </button>
         </div>
     );
 };

@@ -33,7 +33,7 @@ function InfinityCanvas() {
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
     // 2. Cerebros (Custom Hooks)
-    const { nodes, setNodes, transitions, setTransitions, updateNodePosition } = useAutomata();
+    const { nodes, setNodes, transitions, setTransitions, updateNodePosition, clearWorkspace } = useAutomata();
     const { camera, setCamera, handleWheel, handleManualZoom } = useCamera();
 
     const {
@@ -43,8 +43,8 @@ function InfinityCanvas() {
         nodes, setNodes, transitions, setTransitions, camera, activeTool, setSelectedElement
     });
 
-    const { handleSaveElement, handleDeleteElement } = useElementEditor({
-        selectedElement, setSelectedElement, setNodes, setTransitions, setIsConfirmOpen
+    const { handleSaveElement, handleDeleteElement, handleClearWorkspace } = useElementEditor({
+        selectedElement, setSelectedElement, setNodes, setTransitions, setIsConfirmOpen, clearWorkspace
     });
 
     const {
@@ -79,6 +79,7 @@ function InfinityCanvas() {
             <Toolbar
                 activeTool={activeTool} setActiveTool={setActiveTool}
                 automataType={automataType} setAutomataType={setAutomataType}
+                onClear={handleClearWorkspace}
             />
 
             <VersionOverlay onOpenFeedback={() => setIsFeedbackOpen(true)} />
@@ -106,6 +107,8 @@ function InfinityCanvas() {
                 onClose={() => setIsPanelOpen(false)}
                 automataType={automataType}
                 onSimulate={handleRunSimulation}
+                nodes={nodes}
+                transitions={transitions}
                 simulationResult={simulationResult}
                 onClearResult={() => setSimulationResult(null)}
                 onStepByStep={(input) => handleStartStepByStep(input, () => setIsPanelOpen(false), () => setSelectedElement(null))}
