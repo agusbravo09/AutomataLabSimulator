@@ -21,13 +21,8 @@ export const NodesRenderer: React.FC<Props> = ({
         <>
             {nodes.map((node) => {
                 let isHighlighted = false;
-                if (simMode.active) {
-                    if (simMode.currentIndex === 0) {
-                        isHighlighted = node.isInitial;
-                    } else if (simMode.currentIndex <= simMode.path.length) {
-                        const currentStep = simMode.path[simMode.currentIndex - 1];
-                        isHighlighted = node.id === (currentStep.nextStateId || currentStep.currentStateId);
-                    }
+                if (simMode.active && simMode.path[simMode.currentIndex]) {
+                    isHighlighted = simMode.path[simMode.currentIndex].activeStates.includes(node.id);
                 }
 
                 return (

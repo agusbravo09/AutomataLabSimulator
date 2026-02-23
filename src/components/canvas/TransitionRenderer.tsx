@@ -35,9 +35,8 @@ export const TransitionsRenderer: React.FC<Props> = ({ transitions, nodes, simMo
                 }
 
                 let isHighlighted = false;
-                if (simMode.active && simMode.currentIndex > 0 && simMode.currentIndex <= simMode.path.length) {
-                    const currentStep = simMode.path[simMode.currentIndex - 1];
-                    isHighlighted = t.id === currentStep.transitionId;
+                if (simMode.active && simMode.path[simMode.currentIndex]) {
+                    isHighlighted = simMode.path[simMode.currentIndex].activeTransitions.includes(t.id);
                 }
 
                 return (

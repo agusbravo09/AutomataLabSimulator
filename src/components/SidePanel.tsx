@@ -19,14 +19,14 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
     const [inputValue, setInputValue] = useState('');
 
     const handleComprobar = () => {
-        if (inputValue.trim() !== '' && onSimulate) {
-            onSimulate(inputValue);
+        if (onSimulate) {
+            onSimulate(inputValue.trim()); // Permite string vacío ""
         }
     };
 
     const handlePasoAPaso = () => {
-        if (inputValue.trim() !== '' && onStepByStep) {
-            onStepByStep(inputValue);
+        if (onStepByStep) {
+            onStepByStep(inputValue.trim()); // Permite string vacío ""
         }
     };
 

@@ -1,10 +1,13 @@
 import type { StateNode, Transition } from '../types/types';
+import type { AutomataType } from '../components/Toolbar';
 
+
+//Interfaces Unificadas
+//Todos los simuladores devuelven este mismo formato para que la UI no se rompa.
 export interface Step {
-    currentStateId: string;
     charRead: string;
-    nextStateId: string | null;
-    transitionId: string | null;
+    activeStates: string[];
+    activeTransitions: string[];
 }
 
 export interface SimulationResult {
@@ -16,51 +19,126 @@ export interface SimulationResult {
 
 //Automata Finito Determinista
 export const simulateDFA = (nodes: StateNode[], transitions: Transition[], inputString: string): SimulationResult => {
-    // 1. Buscar el estado inicial
-    const initialState = nodes.find(n => n.isInitial);
+    // 1. Validar que exista un único estado inicial
+    const initialNodes = nodes.filter(n => n.isInitial);
+    if (initialNodes.length === 0) return { accepted: false, path: [], error: "No hay estado inicial." };
+    if (initialNodes.length > 1) return { accepted: false, path: [], error: "Error: Un AFD no puede tener múltiples estados iniciales." };
 
-    if (!initialState) {
-        return { accepted: false, path: [], error: "El autómata no tiene un estado inicial." };
-    }
+    // 2. VALIDACIÓN ESTRUCTURAL ESTRICTA
+    for (const node of nodes) {
+        const outgoingTransitions = transitions.filter(t => t.from === node.id);
+        const seenSymbols = new Set<string>();
 
-    let currentStateId = initialState.id;
-    const path: Step[] = [];
+        for (const t of outgoingTransitions) {
+            // Regla A: Prohibido usar transiciones Lambda
+            if (t.hasLambda) {
+                return { accepted: false, path: [], error: `Error estructural: El estado '${node.name}' tiene una transición Lambda (λ). Cambiá a modo AFND.` };
+            }
 
-    // 2. Iteramos sobre cada carácter de la cadena de entrada
-    for (const char of inputString) {
-        // Buscamos si hay una flecha que salga del estado actual y acepte este carácter
-        const validTransition = transitions.find(t =>
-            t.from === currentStateId &&
-            t.symbols.includes(char) // symbols es un array. Ej: ['0', '1']
-        );
-
-        if (validTransition) {
-            // Si la encontramos, guardamos el paso y "saltamos" al siguiente estado
-            path.push({
-                currentStateId: currentStateId,
-                charRead: char,
-                nextStateId: validTransition.to,
-                transitionId: validTransition.id
-            });
-            currentStateId = validTransition.to;
-        } else {
-            // Si no hay transición para esta letra, el automata se "traba" y rechaza automáticamente la cadena
-            path.push({
-                currentStateId: currentStateId,
-                charRead: char,
-                nextStateId: null,
-                transitionId: null
-            });
-            return { accepted: false, path, error: `Transición no definida para el símbolo '${char}' en el estado actual.` };
+            // Regla B: Prohibido el no determinismo (múltiples flechas con el mismo símbolo)
+            for (const sym of t.symbols) {
+                if (seenSymbols.has(sym)) {
+                    return { accepted: false, path: [], error: `Error estructural (No Determinismo): El estado '${node.name}' tiene múltiples caminos para el símbolo '${sym}'. Cambiá a modo AFND.` };
+                }
+                seenSymbols.add(sym);
+            }
         }
     }
 
-    // 3. Si termina de leer toda la palabra, verificamos si el estado donde quedamos es Final
+    // 3. Simulación lineal
+    let currentStateId = initialNodes[0].id;
+    const path: Step[] = [{ charRead: '', activeStates: [currentStateId], activeTransitions: [] }];
+
+    for (const char of inputString) {
+        const validTransition = transitions.find(t => t.from === currentStateId && t.symbols.includes(char));
+
+        if (validTransition) {
+            path.push({
+                charRead: char,
+                activeStates: [validTransition.to],
+                activeTransitions: [validTransition.id]
+            });
+            currentStateId = validTransition.to;
+        } else {
+            path.push({ charRead: char, activeStates: [], activeTransitions: [] });
+            return { accepted: false, path, error: `Se trabó en el estado '${nodes.find(n => n.id === currentStateId)?.name}': no hay transición para el símbolo '${char}'.` };
+        }
+    }
     const finalState = nodes.find(n => n.id === currentStateId);
     const isAccepted = finalState ? finalState.isFinal : false;
 
     return {
         accepted: isAccepted,
-        path: path
+        path,
+        error: !isAccepted ? `La cadena se consumió totalmente pero el estado '${finalState?.name || '?'}' no es de aceptación.` : undefined
     };
+};
+
+// Automata Finito No Determinista
+const getLambdaClosure = (stateIds: Set<string>, transitions: Transition[]): Set<string> => {
+    const closure = new Set(stateIds);
+    const stack = Array.from(stateIds);
+    while (stack.length > 0) {
+        const current = stack.pop()!;
+        transitions.filter(t => t.from === current && t.hasLambda).forEach(t => {
+            if (!closure.has(t.to)) { closure.add(t.to); stack.push(t.to); }
+        });
+    }
+    return closure;
+};
+
+const simulateNFA = (nodes: StateNode[], transitions: Transition[], inputString: string): SimulationResult => {
+    const initialNodes = nodes.filter(n => n.isInitial).map(n => n.id);
+    if (initialNodes.length === 0) return { accepted: false, path: [], error: "No hay estado inicial." };
+
+    let currentStates = getLambdaClosure(new Set(initialNodes), transitions);
+    const path: Step[] = [{ charRead: '', activeStates: Array.from(currentStates), activeTransitions: [] }];
+    let died = false;
+
+    for (const char of inputString) {
+        const nextStates = new Set<string>();
+        const usedTransitions = new Set<string>();
+
+        for (const state of currentStates) {
+            const validTrans = transitions.filter(t => t.from === state && t.symbols.includes(char));
+            validTrans.forEach(t => { nextStates.add(t.to); usedTransitions.add(t.id); });
+        }
+
+        if (nextStates.size === 0) {
+            died = true;
+            path.push({ charRead: char, activeStates: [], activeTransitions: [] });
+            break;
+        }
+
+        currentStates = getLambdaClosure(nextStates, transitions);
+        path.push({ charRead: char, activeStates: Array.from(currentStates), activeTransitions: Array.from(usedTransitions) });
+    }
+
+    const isAccepted = !died && Array.from(currentStates).some(id => nodes.find(n => n.id === id)?.isFinal);
+    return { accepted: isAccepted, path, error: died ? `Murió en el símbolo '${path[path.length-1].charRead}'.` : undefined };
+};
+
+// MOTORES FUTUROS
+const simulatePDA = (): SimulationResult => {
+    return { accepted: false, path: [], error: "Simulación de Autómata a Pila (PDA) en desarrollo..." };
+};
+
+const simulateTM = (): SimulationResult => {
+    return { accepted: false, path: [], error: "Simulación de Máquina de Turing en desarrollo..." };
+};
+
+// Enrutador
+export const runSimulation = (
+    type: AutomataType,
+    nodes: StateNode[],
+    transitions: Transition[],
+    inputString: string
+): SimulationResult => {
+    switch (type) {
+        case 'DFA': return simulateDFA(nodes, transitions, inputString);
+        case 'NFA': return simulateNFA(nodes, transitions, inputString);
+        case 'PDA': return simulatePDA();
+        case 'TM':  return simulateTM();
+        default:    return { accepted: false, path: [], error: "Tipo de autómata desconocido." };
+    }
 };

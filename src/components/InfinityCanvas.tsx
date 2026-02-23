@@ -106,12 +106,12 @@ function InfinityCanvas() {
                 isOpen={isPanelOpen}
                 onClose={() => setIsPanelOpen(false)}
                 automataType={automataType}
-                onSimulate={handleRunSimulation}
+                onSimulate={(input) => handleRunSimulation(input, automataType)}
                 nodes={nodes}
                 transitions={transitions}
                 simulationResult={simulationResult}
                 onClearResult={() => setSimulationResult(null)}
-                onStepByStep={(input) => handleStartStepByStep(input, () => setIsPanelOpen(false), () => setSelectedElement(null))}
+                onStepByStep={(input) => handleStartStepByStep(input, automataType, () => setIsPanelOpen(false), () => setSelectedElement(null))}
             />
 
             <PropertiesPanel

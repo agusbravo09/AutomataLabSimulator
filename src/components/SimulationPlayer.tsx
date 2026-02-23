@@ -45,7 +45,7 @@ export const SimulationPlayer: React.FC<Props> = ({ simMode, setSimMode }) => {
                     Anterior
                 </button>
                 <button
-                    disabled={simMode.currentIndex >= simMode.path.length}
+                    disabled={simMode.currentIndex >= simMode.path.length - 1}
                     onClick={() => setSimMode(prev => ({...prev, currentIndex: prev.currentIndex + 1}))}
                     style={{ padding: '8px 15px', cursor: 'pointer', borderRadius: '6px', border: 'none', backgroundColor: '#ffd43b', color: 'black', fontWeight: 'bold' }}
                 >
