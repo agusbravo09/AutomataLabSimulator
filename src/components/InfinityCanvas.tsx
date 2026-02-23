@@ -16,6 +16,7 @@ import PropertiesPanel from './PropertiesPanel';
 import ConfirmationModal from './ConfirmationModal';
 import { SimulationPlayer } from "./SimulationPlayer";
 import { VersionOverlay } from './VersionOverlay';
+import { FeedbackModal } from "./FeedbackModal";
 
 // --- COMPONENTES CANVAS ---
 import { GhostArrow } from './canvas/GhostArrow';
@@ -29,6 +30,7 @@ function InfinityCanvas() {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const [selectedElement, setSelectedElement] = useState<any>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
     // 2. Cerebros (Custom Hooks)
     const { nodes, setNodes, transitions, setTransitions, updateNodePosition } = useAutomata();
@@ -79,7 +81,7 @@ function InfinityCanvas() {
                 automataType={automataType} setAutomataType={setAutomataType}
             />
 
-            <VersionOverlay />
+            <VersionOverlay onOpenFeedback={() => setIsFeedbackOpen(true)} />
 
             <ZoomControl
                 scale={camera.scale}
@@ -119,6 +121,16 @@ function InfinityCanvas() {
                 isOpen={isConfirmOpen} title="¿Eliminar elemento?"
                 message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones."
                 onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement}
+            />
+
+            <FeedbackModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
+                onSubmit={(type, msg) => {
+                    console.log(`[Feedback Enviado] Tipo: ${type} | Mensaje: ${msg}`);
+                    // Acá a futuro podés meter un fetch a tu backend, a Discord o un servicio como Formspree
+                    alert('¡Gracias por tu feedback! Lo anotamos para la próxima versión.');
+                }}
             />
 
             <SimulationPlayer simMode={simMode} setSimMode={setSimMode} />

@@ -1,6 +1,10 @@
 import React from 'react';
 
-export const VersionOverlay: React.FC = () => {
+interface Props {
+    onOpenFeedback: () => void;
+}
+
+export const VersionOverlay: React.FC<Props> = ({ onOpenFeedback }) => {
     return (
         <div style={{
             position: 'absolute', bottom: '20px', left: '20px', zIndex: 100,
@@ -14,7 +18,7 @@ export const VersionOverlay: React.FC = () => {
             </span>
 
             <button
-                onClick={() => console.log("Abrir modal de feedback")}
+                onClick={ onOpenFeedback }
                 style={{
                     padding: '6px 12px',
                     backgroundColor: 'white',
