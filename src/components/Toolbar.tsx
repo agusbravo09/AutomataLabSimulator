@@ -38,7 +38,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataTy
 
     return (
         <div style={{
-            position: 'absolute', top: '20px', left: '20px', display: 'flex', flexDirection: 'row',
+            position: 'absolute', top: '20px', left: '50%', transform: 'translate(-50%)', display: 'flex', flexDirection: 'row',
             alignItems: 'center', gap: '15px', backgroundColor: 'white', padding: '10px 15px',
             borderRadius: '12px', boxShadow: '0 8px 30px rgba(0,0,0,0.12)', zIndex: 100,
         }}>
