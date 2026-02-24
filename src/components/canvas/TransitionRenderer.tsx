@@ -54,23 +54,68 @@ export const TransitionsRenderer: React.FC<Props> = ({ transitions, nodes, simMo
                 const offsetValue = getTransitionOffset(t, transitions);
 
                 if (t.from === t.to) {
-                    // --- CASO 1: Bucle (Self-loop) ---
+                    // --- CASO 1: Bucle (Self-loop) Dinámico y en Capas ---
                     type = 'self-loop';
                     tension = 0.8;
 
                     const loopIndex = offsetValue as number;
-                    // Cada bucle extra es 35px más alto y 15px más ancho
-                    const loopHeight = 60 + (loopIndex * 35);
-                    const loopWidth = 35 + (loopIndex * 15);
-                    // Separamos un poquito el punto donde las flechas tocan al estado
-                    const baseSpread = 15 + (loopIndex * 4);
+                    const loopDistance = 60 + (loopIndex * 35); // Qué tan lejos sale el bucle
+                    const loopSpread = 35 + (loopIndex * 15);   // Qué tan ancha es la panza
+                    const angleSpread = 0.5 + (loopIndex * 0.1); // Separación de las flechas al tocar el nodo (Radianes)
 
-                    points = [
-                        fromNode.x - baseSpread, fromNode.y - RADIUS + 5, // Inicio
-                        fromNode.x - loopWidth, fromNode.y - loopHeight - RADIUS, // Control 1 (izquierda)
-                        fromNode.x + loopWidth, fromNode.y - loopHeight - RADIUS, // Control 2 (derecha)
-                        fromNode.x + baseSpread, fromNode.y - RADIUS + 5 // Fin
-                    ];
+                    // 1. Buscamos todas las flechas (que no sean bucles) conectadas a este estado
+                    const connectedNodes = transitions
+                        .filter(tr => tr.from !== tr.to && (tr.from === t.from || tr.to === t.from))
+                        .map(tr => {
+                            const otherId = tr.from === t.from ? tr.to : tr.from;
+                            return nodes.find(n => n.id === otherId);
+                        }).filter(Boolean);
+
+                    // 2. Por defecto sale hacia arriba (-90 grados)
+                    let bestAngle = -Math.PI / 2;
+
+                    // 3. Si hay otras flechas, buscamos el "hueco" más grande entre ellas
+                    if (connectedNodes.length > 0) {
+                        const angles = connectedNodes.map(n => Math.atan2(n!.y - fromNode.y, n!.x - fromNode.x));
+                        angles.sort((a, b) => a - b); // Ordenamos los ángulos
+
+                        let maxGap = 0;
+                        for (let i = 0; i < angles.length; i++) {
+                            const a1 = angles[i];
+                            const a2 = angles[(i + 1) % angles.length];
+                            let gap = a2 - a1;
+                            if (gap <= 0) gap += 2 * Math.PI; // Ajuste si da la vuelta al círculo
+
+                            if (gap > maxGap) {
+                                maxGap = gap;
+                                // El mejor ángulo es justo en el medio del hueco
+                                bestAngle = a1 + gap / 2;
+                            }
+                        }
+                    }
+
+                    // 4. Calculamos los vectores dirección
+                    const uX = Math.cos(bestAngle); // Vector unitario X
+                    const uY = Math.sin(bestAngle); // Vector unitario Y
+                    const nX = -uY; // Vector normal perpendicular X
+                    const nY = uX;  // Vector normal perpendicular Y
+
+                    // 5. Calculamos los puntos en el borde del nodo
+                    const startX = fromNode.x + RADIUS * Math.cos(bestAngle - angleSpread);
+                    const startY = fromNode.y + RADIUS * Math.sin(bestAngle - angleSpread);
+                    const endX = fromNode.x + RADIUS * Math.cos(bestAngle + angleSpread);
+                    const endY = fromNode.y + RADIUS * Math.sin(bestAngle + angleSpread);
+
+                    // 6. Calculamos los puntos de control de la panza usando la dirección y el ancho
+                    const outwardX = fromNode.x + uX * (RADIUS + loopDistance);
+                    const outwardY = fromNode.y + uY * (RADIUS + loopDistance);
+
+                    const c1X = outwardX - nX * loopSpread;
+                    const c1Y = outwardY - nY * loopSpread;
+                    const c2X = outwardX + nX * loopSpread;
+                    const c2Y = outwardY + nY * loopSpread;
+
+                    points = [startX, startY, c1X, c1Y, c2X, c2Y, endX, endY];
 
                 } else if (offsetValue !== 0) {
                     // --- CASO 2: Curva (Multi-flecha o Ida y Vuelta) ---

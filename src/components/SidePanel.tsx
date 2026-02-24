@@ -14,9 +14,12 @@ interface SidePanelProps {
     onStepByStep?: (input: string) => void;
 }
 
+type TabType = 'matrix' | 'definition' | 'simulate';
+
 const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, nodes, transitions, onSimulate, simulationResult, onClearResult, onStepByStep }) => {
     //estado local para lo que el usuario escribe en el input
     const [inputValue, setInputValue] = useState('');
+    const [activeTab, setActiveTab] = useState<TabType>('matrix');
 
     const handleComprobar = () => {
         if (onSimulate) {
@@ -50,223 +53,240 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
 
     return (
         <div style={{
-            position: 'absolute',
-            top: 0,
-            //si está abierto, right es 0. Si no, se esconde fuera de la pantalla.
-            right: isOpen ? 0 : '-400px',
-            width: '360px',
-            height: '100vh',
-            backgroundColor: '#ffffff',
-            borderRadius: '12px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-            transition: 'right 0.4s cubic-bezier(0.4, 0, 0.2, 1)', // Animación suave
-            zIndex: 140,
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '20px',
-            boxSizing: 'border-box',
-            visibility: isOpen ? 'visible' : 'hidden',
+            position: 'absolute', top: 0, right: isOpen ? 0 : '-400px',
+            width: '380px', height: '100vh', backgroundColor: '#ffffff',
+            boxShadow: '-5px 0 25px rgba(0,0,0,0.05)',
+            transition: 'right 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            zIndex: 140, display: 'flex', flexDirection: 'column',
+            boxSizing: 'border-box', visibility: isOpen ? 'visible' : 'hidden',
         }}>
-            {/* Cabecera del Panel */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ margin: 0, fontSize: '18px', color: '#212529' }}>Panel de Control</h2>
-                <button
-                    onClick={onClose}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#868e96' }}
-                >
-                    ✖
-                </button>
+            {/* CABECERA DEL PANEL (Fija) */}
+            <div style={{ padding: '20px 20px 0 20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <div>
+                        <h2 style={{ margin: 0, fontSize: '18px', color: '#212529' }}>Panel de Control</h2>
+                        <span style={{ fontSize: '12px', color: '#868e96', fontWeight: 600 }}>MODO: <span style={{color: '#4c6ef5'}}>{automataType}</span></span>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        style={{ background: '#f8f9fa', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontSize: '14px', color: '#495057', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
+                    >
+                        ✖
+                    </button>
+                </div>
+
+                {/* BOTONERA DE PESTAÑAS */}
+                <div style={{ display: 'flex', borderBottom: '1px solid #dee2e6', marginBottom: '20px' }}>
+                    {(['matrix', 'definition', 'simulate'] as TabType[]).map((tab) => {
+                        const labels = { matrix: 'Matriz', definition: 'Definición', simulate: 'Simular' };
+                        const isActive = activeTab === tab;
+                        return (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                style={{
+                                    flex: 1, padding: '10px 5px', background: 'none', border: 'none',
+                                    borderBottom: isActive ? '2px solid #4c6ef5' : '2px solid transparent',
+                                    color: isActive ? '#4c6ef5' : '#868e96',
+                                    fontWeight: isActive ? 600 : 500, fontSize: '13px',
+                                    cursor: 'pointer', transition: 'all 0.2s ease', outline: 'none'
+                                }}
+                            >
+                                {labels[tab]}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
-            {/* Titulo y tipo de automata */}
-            <h3 style={{ fontSize: '14px', color: '#495057', marginBottom: '8px' }}>
-                Tabla de transiciones: <span style={{ color: '#4c6ef5' }}>{automataType}</span>
-            </h3>
+            {/* CONTENEDOR DESLIZABLE (El contenido cambia según la pestaña) */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px 20px' }}>
 
-            {/* Zona de Tabla de Transiciones */}
-            <div style={{
-                flex: 1,
-                minHeight: '200px',
-                overflow: 'auto',
-                marginBottom: '15px'
-                // Chau backgroundColor, borderRadius, padding y border del contenedor
-            }}>
-                {nodes.length === 0 ? (
-                    <p style={{ fontSize: '13px', color: '#868e96', textAlign: 'center', marginTop: '20px' }}>
-                        Agregá estados al lienzo para ver la tabla.
-                    </p>
-                ) : alphabet.length === 0 && !hasLambda ? (
-                    <p style={{ fontSize: '13px', color: '#868e96', textAlign: 'center', marginTop: '20px' }}>
-                        Creá transiciones con símbolos para poblar la tabla.
-                    </p>
-                ) : (
-                    <table style={{
-                        width: '100%', borderCollapse: 'separate', borderSpacing: 0,
-                        fontSize: '13px', fontFamily: "'Fira Code', monospace", textAlign: 'center',
-                        borderLeft: '1px solid #dee2e6', borderTop: '1px solid #dee2e6' // <--- Le agregamos los bordes superior e izquierdo a la tabla
-                    }}>
-                        <thead>
-                        <tr>
-                            {/* CELDA ESQUINA SUPERIOR IZQUIERDA (Doble Sticky) */}
-                            <th style={{
-                                padding: '8px', borderRight: '1px solid #dee2e6', borderBottom: '2px solid #dee2e6', color: '#495057',
-                                position: 'sticky', top: 0, left: 0, zIndex: 3, backgroundColor: '#e9ecef'
-                            }}>
-                                Q \ Σ
-                            </th>
-
-                            {/* CABECERA DE SÍMBOLOS (Sticky Arriba) */}
-                            {alphabet.map(sym => (
-                                <th key={sym} style={{
-                                    padding: '8px', borderRight: '1px solid #dee2e6', borderBottom: '2px solid #dee2e6', color: '#495057',
-                                    position: 'sticky', top: 0, zIndex: 2, backgroundColor: '#e9ecef'
+                {/* ---------------- PESTAÑA 1: MATRIZ ---------------- */}
+                {activeTab === 'matrix' && (
+                    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        {nodes.length === 0 ? (
+                            <div style={{ textAlign: 'center', marginTop: '40px', color: '#adb5bd' }}>
+                                <div style={{ fontSize: '32px', marginBottom: '10px' }}>Lienzo Vacío</div>
+                                <p style={{ fontSize: '13px', margin: 0 }}>Agregá estados al lienzo para ver la tabla.</p>
+                            </div>
+                        ) : alphabet.length === 0 && !hasLambda ? (
+                            <div style={{ textAlign: 'center', marginTop: '40px', color: '#adb5bd' }}>
+                                <div style={{ fontSize: '32px', marginBottom: '10px' }}>Sin Transiciones</div>
+                                <p style={{ fontSize: '13px', margin: 0 }}>Creá transiciones con símbolos para poblar la tabla.</p>
+                            </div>
+                        ) : (
+                            <div style={{borderRadius: '8px',  overflow: 'auto', border: '1px solid #dee2e6', maxHeight: '350px'}}>
+                                <table style={{
+                                    width: '100%', borderCollapse: 'collapse',
+                                    fontSize: '13px', fontFamily: "'Fira Code', monospace", textAlign: 'center', whiteSpace: 'nowrap'
                                 }}>
-                                    {sym}
-                                </th>
-                            ))}
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {nodes.map(node => {
-                            let prefix = '';
-                            if (node.isInitial) prefix += '→ ';
-                            if (node.isFinal) prefix += '* ';
-
-                            return (
-                                <tr key={node.id}>
-                                    {/* COLUMNA DE ESTADOS (Sticky Izquierda) */}
-                                    <td style={{
-                                        padding: '8px', borderRight: '1px solid #dee2e6', borderBottom: '1px solid #dee2e6',
-                                        fontWeight: 'bold', backgroundColor: '#e9ecef', whiteSpace: 'nowrap',
-                                        position: 'sticky', left: 0, zIndex: 1
-                                    }}>
-                                        {prefix}{node.name}
-                                    </td>
-
-                                    {/* CELDAS DE DESTINOS (Normales) */}
-                                    {alphabet.map(sym => {
-                                        const dests = transitions
-                                            .filter(t => t.from === node.id && (sym === 'λ' ? t.hasLambda : t.symbols.includes(sym)))
-                                            .map(t => {
-                                                const targetNode = nodes.find(n => n.id === t.to);
-                                                return targetNode ? targetNode.name : '';
-                                            })
-                                            .filter(Boolean);
-
-                                        let cellContent: React.ReactNode = '-';
-
-                                        if (dests.length === 1) {
-                                            cellContent = dests[0];
-                                        } else if (dests.length > 1) {
-                                            const chunks = [];
-                                            for (let i = 0; i < dests.length; i += 3) {
-                                                chunks.push(dests.slice(i, i + 3).join(', '));
-                                            }
-
-                                            cellContent = (
-                                                <span style={{ display: 'inline-block' }}>
-                                                        {'{'}
-                                                    {chunks.map((chunk, idx) => (
-                                                        <React.Fragment key={idx}>
-                                                            <span style={{ whiteSpace: 'nowrap' }}>{chunk}</span>
-                                                            {idx < chunks.length - 1 && <span>,<br/> </span>}
-                                                        </React.Fragment>
-                                                    ))}
-                                                    {'}'}
-                                                    </span>
-                                            );
-                                        }
+                                    <thead>
+                                    <tr>
+                                        <th style={{ padding: '10px', borderRight: '1px solid #dee2e6', borderBottom: '2px solid #dee2e6', color: '#495057', backgroundColor: '#f8f9fa', position: 'sticky', top: 0, left: 0, zIndex: 3 }}>
+                                            Q \ Σ
+                                        </th>
+                                        {alphabet.map(sym => (
+                                            <th key={sym} style={{ padding: '10px', borderRight: '1px solid #dee2e6', borderBottom: '2px solid #dee2e6', color: '#495057', backgroundColor: '#f8f9fa', position: 'sticky', top: 0, zIndex: 2 }}>
+                                                {sym}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {nodes.map(node => {
+                                        let prefix = '';
+                                        if (node.isInitial) prefix += '→ ';
+                                        if (node.isFinal) prefix += '* ';
 
                                         return (
-                                            <td key={sym} style={{
-                                                padding: '8px', borderRight: '1px solid #dee2e6', borderBottom: '1px solid #dee2e6',
-                                                color: dests.length === 0 ? '#adb5bd' : '#212529',
-                                                backgroundColor: '#ffffff' // Fondo blanco para tapar al hacer scroll
-                                            }}>
-                                                {cellContent}
-                                            </td>
+                                            <tr key={node.id}>
+                                                <td style={{ padding: '10px', borderRight: '1px solid #dee2e6', borderBottom: '1px solid #dee2e6', fontWeight: 'bold', backgroundColor: '#f8f9fa', whiteSpace: 'nowrap', position: 'sticky', left: 0, zIndex: 1 }}>
+                                                    {prefix}{node.name}
+                                                </td>
+                                                {alphabet.map(sym => {
+                                                    const dests = transitions
+                                                        .filter(t => t.from === node.id && (sym === 'λ' ? t.hasLambda : t.symbols.includes(sym)))
+                                                        .map(t => {
+                                                            const targetNode = nodes.find(n => n.id === t.to);
+                                                            return targetNode ? targetNode.name : '';
+                                                        }).filter(Boolean);
+
+                                                    let cellContent: React.ReactNode = '-';
+
+                                                    if (dests.length === 1) {
+                                                        cellContent = dests[0];
+                                                    } else if (dests.length > 1) {
+                                                        const chunks = [];
+                                                        for (let i = 0; i < dests.length; i += 3) {
+                                                            chunks.push(dests.slice(i, i + 3).join(', '));
+                                                        }
+                                                        cellContent = (
+                                                            <span style={{ display: 'inline-block' }}>
+                                                                    {'{'}{chunks.map((chunk, idx) => (
+                                                                <React.Fragment key={idx}>
+                                                                    <span style={{ whiteSpace: 'nowrap' }}>{chunk}</span>
+                                                                    {idx < chunks.length - 1 && <span>,<br/> </span>}
+                                                                </React.Fragment>
+                                                            ))}{'}'}
+                                                                </span>
+                                                        );
+                                                    }
+
+                                                    return (
+                                                        <td key={sym} style={{ padding: '10px', borderRight: '1px solid #dee2e6', borderBottom: '1px solid #dee2e6', color: dests.length === 0 ? '#adb5bd' : '#212529', backgroundColor: '#ffffff' }}>
+                                                            {cellContent}
+                                                        </td>
+                                                    );
+                                                })}
+                                            </tr>
                                         );
                                     })}
-                                </tr>
-                            );
-                        })}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-
-            {/* DEFINICIÓN FORMAL */}
-            {nodes.length > 0 && (
-                <div style={{
-                    backgroundColor: '#e9ecef', border: '1px solid #dee2e6', borderRadius: '8px',
-                    padding: '12px', marginBottom: '20px', fontSize: '13px',
-                    fontFamily: "'Fira Code', monospace", color: '#495057'
-                }}>
-                    <div style={{ fontWeight: 600, marginBottom: '6px', color: '#212529', fontFamily: "'Inter', sans-serif", fontSize: '14px' }}>
-                        Definición Formal
-                    </div>
-                    <div>M = (Q, Σ, δ, q0, F)</div>
-                    <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div>Q = {`{${qSet}}`}</div>
-                        <div>Σ = {`{${sigmaSet}}`}</div>
-                        <div>Estado Inicial = {initialStates.includes(',') ? `{${initialStates}}` : (initialStates || '-')}</div>
-                        <div>F = {`{${finalStates}}`}</div>
-                    </div>
-                </div>
-            )}
-
-            {/* Zona de Simulación y Pruebas */}
-            <div>
-                <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>Simulación</h3>
-
-                <input
-                    type="text"
-                    placeholder="Ingresar cadena (ej: 10110)..."
-                    value={inputValue}
-                    onChange={(e) => {
-                        setInputValue(e.target.value);
-                        if (onClearResult) onClearResult();
-                    }}
-                    onKeyDown={(e) => e.key === 'Enter' && handleComprobar()}
-                    style={{ width: '100%', padding: '8px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                        style={{ flex: 1, padding: '8px', backgroundColor: '#e9ecef', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', color: '#495057' }}
-                        onClick={handlePasoAPaso}
-                    >
-                        Paso a Paso
-                    </button>
-                    <button
-                        onClick={handleComprobar}
-                        style={{ flex: 1, padding: '8px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                    >
-                        Comprobar
-                    </button>
-                </div>
-
-                {/* CARTEL DE RESULTADO */}
-                {simulationResult && (
-                    <div style={{
-                        marginTop: '15px',
-                        padding: '10px',
-                        borderRadius: '6px',
-                        textAlign: 'center',
-                        fontWeight: 'bold',
-                        backgroundColor: simulationResult.accepted ? '#d3f9d8' : '#ffe3e3',
-                        color: simulationResult.accepted ? '#2b8a3e' : '#e03131',
-                        border: `1px solid ${simulationResult.accepted ? '#b2f2bb' : '#ffc9c9'}`
-                    }}>
-                        {simulationResult.accepted ? 'Cadena Aceptada' : 'Cadena Rechazada'}
-                        {simulationResult.error && (
-                            <div style={{ fontSize: '12px', marginTop: '5px', fontWeight: 'normal' }}>
-                                {simulationResult.error}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
                     </div>
                 )}
+
+                {/* ---------------- PESTAÑA 2: DEFINICIÓN FORMAL ---------------- */}
+                {activeTab === 'definition' && (
+                    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        {nodes.length === 0 ? (
+                            <div style={{ textAlign: 'center', marginTop: '40px', color: '#adb5bd' }}>
+                                <div style={{ fontSize: '32px', marginBottom: '10px' }}>Sin Datos</div>
+                                <p style={{ fontSize: '13px', margin: 0 }}>El autómata está vacío.</p>
+                            </div>
+                        ) : (
+                            <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px', fontSize: '14px', fontFamily: "'Fira Code', monospace", color: '#495057', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                                <div style={{ fontWeight: 600, marginBottom: '12px', color: '#212529', fontFamily: "'Inter', sans-serif", borderBottom: '1px solid #dee2e6', paddingBottom: '8px' }}>
+                                    Quíntupla Matemática
+                                </div>
+                                <div style={{ fontSize: '16px', color: '#4c6ef5', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>
+                                    M = (Q, Σ, δ, q0, F)
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <div><strong style={{color: '#212529'}}>Q</strong> = {`{ ${qSet || '∅'} }`}</div>
+                                    <div><strong style={{color: '#212529'}}>Σ</strong> = {`{ ${sigmaSet || '∅'} }`}</div>
+                                    <div><strong style={{color: '#212529'}}>q0</strong> = {initialStates.includes(',') ? `{${initialStates}}` : (initialStates || '∅')}</div>
+                                    <div><strong style={{color: '#212529'}}>F</strong> = {`{ ${finalStates || '∅'} }`}</div>
+                                    <div style={{ marginTop: '5px', fontSize: '12px', color: '#868e96' }}>
+                                        * La función de transición (δ) se detalla en la pestaña Matriz.
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ---------------- PESTAÑA 3: SIMULACIÓN ---------------- */}
+                {activeTab === 'simulate' && (
+                    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #dee2e6' }}>
+                            <h3 style={{ fontSize: '14px', margin: '0 0 12px 0', color: '#212529' }}>Evaluar Cadena</h3>
+
+                            <input
+                                type="text"
+                                placeholder="Ej: 10110 (o dejar vacío para λ)"
+                                value={inputValue}
+                                onChange={(e) => {
+                                    setInputValue(e.target.value);
+                                    if (onClearResult) onClearResult();
+                                }}
+                                onKeyDown={(e) => e.key === 'Enter' && handleComprobar()}
+                                style={{ width: '100%', padding: '10px', marginBottom: '15px', borderRadius: '6px', border: '1px solid #ced4da', boxSizing: 'border-box', fontFamily: "'Fira Code', monospace", fontSize: '14px', outline: 'none' }}
+                            />
+
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button
+                                    onClick={handlePasoAPaso}
+                                    style={{ flex: 1, padding: '10px', backgroundColor: 'white', border: '1px solid #ced4da', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, color: '#495057', transition: 'all 0.2s' }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >
+                                    Paso a Paso
+                                </button>
+                                <button
+                                    onClick={handleComprobar}
+                                    style={{ flex: 1, padding: '10px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s', boxShadow: '0 4px 10px rgba(76, 110, 245, 0.3)' }}
+                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                >
+                                    Comprobar
+                                </button>
+                            </div>
+
+                            {/* CARTEL DE RESULTADO */}
+                            {simulationResult && (
+                                <div style={{
+                                    marginTop: '20px', padding: '12px', borderRadius: '8px', textAlign: 'center',
+                                    backgroundColor: simulationResult.accepted ? '#ebfbee' : '#fff5f5',
+                                    color: simulationResult.accepted ? '#2b8a3e' : '#e03131',
+                                    border: `1px solid ${simulationResult.accepted ? '#b2f2bb' : '#ffc9c9'}`,
+                                    animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                                }}>
+                                    <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: simulationResult.error ? '6px' : '0' }}>
+                                        {simulationResult.accepted ? 'Cadena Aceptada' : 'Cadena Rechazada'}
+                                    </div>
+                                    {simulationResult.error && (
+                                        <div style={{ fontSize: '12px', fontWeight: 'normal', lineHeight: '1.4' }}>
+                                            {simulationResult.error}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* Keyframes embebidos para las animaciones CSS */}
+            <style>
+                {`
+                    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+                    @keyframes popIn { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+                `}
+            </style>
         </div>
     );
 };
