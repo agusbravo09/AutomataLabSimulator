@@ -8,6 +8,10 @@ import { useCanvasInteractions } from '../hooks/useCanvasInteractions';
 import { useElementEditor } from '../hooks/useElementEditor';
 import { useSimulation } from '../hooks/useSimulation';
 
+import { toPostfix } from '../utils/converters/regexParser';
+import { regexToAutomata } from '../utils/converters/glushkov.ts';
+import { evaluateRegex } from '../utils/converters/regexEvaluator';
+
 // --- COMPONENTES UI ---
 import Toolbar, { type Tool, type AutomataType } from './Toolbar';
 import SidePanel from './SidePanel';
@@ -52,6 +56,33 @@ function InfinityCanvas() {
         handleRunSimulation, handleStartStepByStep
     } = useSimulation(nodes, transitions);
 
+    
+
+    //REFACTORIZAR
+    const handleGenerateRegex = (regexStr: string) => {
+        try {
+            // Generamos el autómata visual para el lienzo (lo que ya tenías)
+            const postfix = toPostfix(regexStr);
+            const { nodes: generatedNodes, transitions: generatedTransitions } = regexToAutomata(postfix);
+            setNodes(generatedNodes);
+            setTransitions(generatedTransitions);
+            setAutomataType('NFA');
+
+            // --- PRUEBA DEL EVALUADOR ---
+            console.log("Probando cadena 'ab' en la regex:", regexStr);
+            const test1 = evaluateRegex(regexStr, "ab");
+            console.log("Resultado 'ab':", test1.accepted ? "✅ Aceptada" : "❌ Rechazada");
+
+            console.log("Probando cadena 'b' en la regex:", regexStr);
+            const test2 = evaluateRegex(regexStr, "b");
+            console.log("Resultado 'b':", test2.accepted ? "✅ Aceptada" : "❌ Rechazada");
+            // ---------------------------
+
+        } catch (error: any) {
+            alert("Error al generar: " + error.message);
+        }
+    };
+
     // 3. Estilos Base
     const GRID_GAP = 40;
 
@@ -80,6 +111,7 @@ function InfinityCanvas() {
                 activeTool={activeTool} setActiveTool={setActiveTool}
                 automataType={automataType} setAutomataType={setAutomataType}
                 onClear={handleClearWorkspace}
+                onGenerateRegex={handleGenerateRegex}
             />
 
             <VersionOverlay onOpenFeedback={() => setIsFeedbackOpen(true)} />

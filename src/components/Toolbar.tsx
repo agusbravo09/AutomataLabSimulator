@@ -11,10 +11,12 @@ interface ToolbarProps {
     automataType: AutomataType;
     setAutomataType: (type: AutomataType) => void;
     onClear: () => void;
+    onGenerateRegex?: (regex: string) => void;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataType, setAutomataType, onClear }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataType, setAutomataType, onClear, onGenerateRegex }) => {
     const [hoveredTool, setHoveredTool] = useState<Tool | null>(null);
+    const [regexInput, setRegexInput] = useState<string>('');
 
     const menuItems: { id: Tool; label: string; iconSrc: string }[] = [
         { id: 'CURSOR', label: 'Selección', iconSrc: '/Toolbar/cursor.svg' },
@@ -96,6 +98,25 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataTy
                 <option value="TM">Máquina de Turing (MT)</option>
             </select>
 
+            {/* SECCIÓN DE REGEX */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                    type="text"
+                    placeholder="Regex: (a+b)*abb"
+                    value={regexInput}
+                    onChange={(e) => setRegexInput(e.target.value)}
+                    style={regexInputStyle}
+                />
+                <button
+                    onClick={() => { if (onGenerateRegex && regexInput.trim() !== '') onGenerateRegex(regexInput); }}
+                    style={regexButtonStyle}
+                >
+                    Generar
+                </button>
+            </div>
+
+            <div style={separatorStyle}></div>
+
             {/* BOTÓN DE LIMPIAR */}
             <div style={separatorStyle}></div>
             <button
@@ -165,6 +186,15 @@ const selectStyle: React.CSSProperties = {
     cursor: 'pointer',
     outline: 'none',
     minWidth: '250px',
+};
+
+const regexInputStyle: React.CSSProperties = {
+    padding: '10px', borderRadius: '8px', border: '1px solid #dee2e6', backgroundColor: '#f8f9fa',
+    fontSize: '14px', fontFamily: "'Fira Code', monospace", outline: 'none', width: '180px'
+};
+const regexButtonStyle: React.CSSProperties = {
+    padding: '10px 15px', borderRadius: '8px', border: 'none', backgroundColor: '#4c6ef5',
+    color: 'white', fontSize: '14px', fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.2s'
 };
 
 export default Toolbar;
