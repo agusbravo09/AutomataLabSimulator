@@ -113,7 +113,7 @@ function InfinityCanvas() {
                 </div>
             )}
 
-            <StepPlayerOverlay buildMode={buildMode} setBuildMode={setBuildMode} setNodes={setNodes} setTransitions={setTransitions} />
+            <StepPlayerOverlay buildMode={buildMode} setBuildMode={setBuildMode} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType} />
 
             <VersionOverlay onOpenFeedback={() => setIsFeedbackOpen(true)} />
 

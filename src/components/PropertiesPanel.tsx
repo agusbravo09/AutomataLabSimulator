@@ -26,7 +26,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClo
 
     const dynamicPanelStyle: React.CSSProperties = {
         ...panelStyle,
-        // Si el panel lateral está abierto (asumiendo que mide ~320px), corremos este a 340px. Si no, a 20px.
         right: isSidePanelOpen ? '400px' : '20px',
         transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)' // Animación súper suave
     };

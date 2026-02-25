@@ -1,21 +1,29 @@
 import type { StateNode, Transition } from '../../types/types';
 
+export interface DfaTableRow {
+    name: string;        // Ej: "A"
+    elements: string;    // Ej: "{q0, q1}"
+    isInitial: boolean;
+    isFinal: boolean;
+    moves: Record<string, string>; // Ej: { 'a': 'B', 'b': '∅' }
+}
+
 export interface DfaStep {
     description: string;
-    nodes: StateNode[];
-    transitions: Transition[];
-    tableRow?: {
-        dfaState: string;
-        nfaSet: string;
-        moves: { symbol: string; targetSet: string; targetDfa: string }[];
-    };
+    alphabet: string[];
+    table: DfaTableRow[];
+    nodes: StateNode[];        // Autómata que se muestra (AFND original durante el proceso, AFD al final)
+    transitions: Transition[]; // Transiciones que se muestran
+    highlightedNodes?: string[]; // Nodos del AFND que estamos analizando en este paso
 }
 
 export const convertNfaToDfa = (originalNodes: StateNode[], originalTransitions: Transition[]): { nodes: StateNode[], transitions: Transition[], steps: DfaStep[] } => {
+    // Obtener el alfabeto (sin λ)
     const alphabetSet = new Set<string>();
-    originalTransitions.forEach(t => t.symbols.forEach(s => alphabetSet.add(s)));
-    const alphabet = Array.from(alphabetSet).sort().filter(s => s !== 'λ');
+    originalTransitions.forEach(t => t.symbols.forEach(s => { if (s !== 'λ') alphabetSet.add(s); }));
+    const alphabet = Array.from(alphabetSet).sort();
 
+    // Helpers matemáticos
     const lambdaClosure = (stateIds: string[]): string[] => {
         const closure = new Set<string>(stateIds);
         const stack = [...stateIds];
@@ -37,88 +45,120 @@ export const convertNfaToDfa = (originalNodes: StateNode[], originalTransitions:
         return Array.from(result).sort();
     };
 
-    const dfaNodes: StateNode[] = [];
-    const dfaTransitions: Transition[] = [];
+    const getNodeNames = (ids: string[]) => ids.map(id => originalNodes.find(n => n.id === id)?.name || id).join(', ');
+    const isFinalSet = (ids: string[]) => ids.some(id => originalNodes.find(n => n.id === id)?.isFinal);
+
     const steps: DfaStep[] = [];
-    let transCounter = 0;
+    const table: DfaTableRow[] = [];
+    const discoveredSets = new Map<string, string>(); // 'q0,q1' -> 'A'
 
-    const takeSnapshot = (desc: string, tableRow?: DfaStep['tableRow']) => {
-        steps.push({
-            description: desc,
-            nodes: JSON.parse(JSON.stringify(dfaNodes)),
-            transitions: JSON.parse(JSON.stringify(dfaTransitions)),
-            tableRow
-        });
-    };
+    let stateNameCounter = 0;
+    const getNextName = () => String.fromCharCode(65 + stateNameCounter++); // Genera A, B, C...
 
+    // Paso Inicial: Clausura Lambda de los estados iniciales
     const initials = originalNodes.filter(n => n.isInitial).map(n => n.id);
     if (initials.length === 0) throw new Error("El autómata no tiene estado inicial.");
 
-    const initialClosure = lambdaClosure(initials);
-    const stateMap = new Map<string, string>();
-    let dfaStateCounter = 0;
+    const startClosure = lambdaClosure(initials);
+    const startKey = startClosure.join(',');
+    const startName = getNextName();
+    discoveredSets.set(startKey, startName);
 
-    const getStateKey = (ids: string[]) => ids.length > 0 ? `{${ids.map(id => originalNodes.find(n => n.id === id)?.name || id).join(',')}}` : '∅';
-    const isFinal = (ids: string[]) => ids.some(id => originalNodes.find(n => n.id === id)?.isFinal);
+    steps.push({
+        description: `Paso 1: Se calcula la Clausura λ de los estados iniciales. Obtenemos el nuevo estado inicial ${startName} = {${getNodeNames(startClosure)}}`,
+        alphabet, table: [], nodes: originalNodes, transitions: originalTransitions, highlightedNodes: startClosure
+    });
 
-    const initialKey = getStateKey(initialClosure);
-    const initialDfaId = `q${dfaStateCounter++}`;
-    stateMap.set(initialKey, initialDfaId);
+    const queue: { key: string, ids: string[], name: string, isInitial: boolean }[] = [
+        { key: startKey, ids: startClosure, name: startName, isInitial: true }
+    ];
+    const processedKeys = new Set<string>();
 
-    dfaNodes.push({ id: initialDfaId, name: initialDfaId, isInitial: true, isFinal: isFinal(initialClosure), x: 100, y: 300 });
-
-    takeSnapshot(`Paso 1: Se calcula la Clausura λ del estado inicial del AFND. Nuevo estado inicial: ${initialDfaId} = ${initialKey}`);
-
-    const queue: { key: string, ids: string[], dfaId: string }[] = [{ key: initialKey, ids: initialClosure, dfaId: initialDfaId }];
-
+    // Llenado de la Tabla
     while (queue.length > 0) {
-        const curr = queue.shift()!;
-        const movesForRow: { symbol: string; targetSet: string; targetDfa: string }[] = [];
+        const current = queue.shift()!;
+        if (processedKeys.has(current.key)) continue;
+        processedKeys.add(current.key);
 
+        const row: DfaTableRow = {
+            name: current.name,
+            elements: `{${getNodeNames(current.ids)}}`,
+            isInitial: current.isInitial,
+            isFinal: isFinalSet(current.ids),
+            moves: {}
+        };
+
+        const newlyDiscovered: string[] = [];
+
+        // Evaluamos cada letra del alfabeto
         for (const sym of alphabet) {
-            const reached = move(curr.ids, sym);
-            if (reached.length === 0) continue;
-
-            const closureReached = lambdaClosure(reached);
-            const reachedKey = getStateKey(closureReached);
-
-            let targetDfaId = stateMap.get(reachedKey);
-            let isNew = false;
-
-            if (!targetDfaId) {
-                targetDfaId = `q${dfaStateCounter++}`;
-                stateMap.set(reachedKey, targetDfaId);
-                dfaNodes.push({
-                    id: targetDfaId, name: targetDfaId, isInitial: false, isFinal: isFinal(closureReached),
-                    x: 100 + (Math.floor(dfaStateCounter / 2) * 150),
-                    y: 300 + ((dfaStateCounter % 2 === 0 ? 1 : -1) * 80)
-                });
-                queue.push({ key: reachedKey, ids: closureReached, dfaId: targetDfaId });
-                isNew = true;
+            const reached = move(current.ids, sym);
+            if (reached.length === 0) {
+                row.moves[sym] = '∅';
+                continue;
             }
 
-            movesForRow.push({ symbol: sym, targetSet: reachedKey, targetDfa: targetDfaId });
+            const closure = lambdaClosure(reached);
+            const key = closure.join(',');
 
-            const existingT = dfaTransitions.find(t => t.from === curr.dfaId && t.to === targetDfaId);
-            if (existingT) {
-                if (!existingT.symbols.includes(sym)) existingT.symbols.push(sym);
-            } else {
-                dfaTransitions.push({ id: `dt${transCounter++}`, from: curr.dfaId, to: targetDfaId!, symbols: [sym], hasLambda: false });
+            let targetName = discoveredSets.get(key);
+            if (!targetName) {
+                targetName = getNextName();
+                discoveredSets.set(key, targetName);
+                queue.push({ key, ids: closure, name: targetName, isInitial: false });
+                newlyDiscovered.push(`${targetName} = {${getNodeNames(closure)}}`);
             }
-
-            if (isNew) {
-                takeSnapshot(`Evaluando transiciones de ${curr.dfaId} con '${sym}'. Se descubre un nuevo subconjunto: ${reachedKey} -> ${targetDfaId}`);
-            }
+            row.moves[sym] = targetName;
         }
 
-        if (movesForRow.length > 0) {
-            takeSnapshot(`Se completaron las transiciones para el estado ${curr.dfaId}.`, {
-                dfaState: curr.dfaId, nfaSet: curr.key, moves: movesForRow
-            });
-        }
+        table.push({ ...row }); // Guardamos la fila en la tabla general
+
+        let desc = `Evaluando estado ${current.name} = ${row.elements}.`;
+        if (newlyDiscovered.length > 0) desc += ` Se descubren nuevos estados: ${newlyDiscovered.join('; ')}`;
+        else desc += ` No se encontraron conjuntos nuevos.`;
+
+        // Foto del paso con la tabla actualizada
+        steps.push({
+            description: desc, alphabet,
+            table: JSON.parse(JSON.stringify(table)), // Copia profunda de la tabla hasta este punto
+            nodes: originalNodes, transitions: originalTransitions, highlightedNodes: current.ids
+        });
     }
 
-    takeSnapshot("¡Determinización completada! El AFD resultante no contiene transiciones λ ni ambigüedades.");
+    // 4. Generación final del AFD (Traducir la tabla a nodos y transiciones gráficas)
+    const dfaNodes: StateNode[] = [];
+    const dfaTransitions: Transition[] = [];
+    let tId = 0;
+
+    table.forEach((row, index) => {
+        dfaNodes.push({
+            id: row.name, name: row.name,
+            isInitial: row.isInitial, isFinal: row.isFinal,
+            x: 150 + (index % 3) * 200, // Layout básico en grilla
+            y: 300 + Math.floor(index / 3) * 150
+        });
+
+        // Agrupamos transiciones que van al mismo destino
+        const targets = new Map<string, string[]>(); // targetName -> symbols[]
+        Object.entries(row.moves).forEach(([sym, target]) => {
+            if (target !== '∅') {
+                if (!targets.has(target)) targets.set(target, []);
+                targets.get(target)!.push(sym);
+            }
+        });
+
+        targets.forEach((symbols, target) => {
+            dfaTransitions.push({
+                id: `dt_${tId++}`, from: row.name, to: target,
+                symbols: symbols, hasLambda: false
+            });
+        });
+    });
+
+    steps.push({
+        description: `¡Tabla completa! Todos los estados han sido evaluados. Generando el Autómata Finito Determinista equivalente...`,
+        alphabet, table, nodes: dfaNodes, transitions: dfaTransitions
+    });
 
     return { nodes: dfaNodes, transitions: dfaTransitions, steps };
 };
