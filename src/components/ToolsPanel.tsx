@@ -17,9 +17,10 @@ interface ToolsPanelProps {
     setTransitions: (transitions: Transition[]) => void;
     setAutomataType: (type: AutomataType) => void;
     onPlaySubset: (steps: any[]) => void;
+    onPlayMinimization: () => void;
 }
 
-const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset }) => {
+const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization }) => {
     const [regexInput, setRegexInput] = useState('');
     const [generatedRegexResult, setGeneratedRegexResult] = useState<string | null>(null);
 
@@ -149,15 +150,21 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, 
                             </div>
                         </div>
 
-                        {/* MINIMIZACIÓN (PRÓXIMAMENTE) */}
-                        <div style={{ backgroundColor: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '15px', opacity: 0.7 }}>
+                        {/* SECCIÓN 4: MINIMIZACIÓN */}
+                        <div style={{ backgroundColor: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '15px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
                                 <h3 style={{ margin: 0, fontSize: '14px', color: '#495057', fontWeight: 600 }}>Minimización</h3>
                             </div>
-                            <p style={{ fontSize: '12px', color: '#868e96', margin: '0 0 10px 0' }}>Reduce el AFD a su mínima cantidad de estados.</p>
-                            <button disabled style={{ width: '100%', padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: '#e9ecef', color: '#adb5bd', fontSize: '13px', fontWeight: 600, cursor: 'not-allowed' }}>
-                                Minimizar AFD
+                            <p style={{ fontSize: '12px', color: '#868e96', margin: '0 0 10px 0' }}>Reduce el AFD eliminando estados inalcanzables y fusionando equivalentes.</p>
+
+                            <button
+                                onClick={onPlayMinimization}
+                                disabled={automataType !== 'DFA'}
+                                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: automataType === 'DFA' ? '1px solid #4c6ef5' : '1px solid #ced4da', backgroundColor: automataType === 'DFA' ? 'white' : '#e9ecef', color: automataType === 'DFA' ? '#4c6ef5' : '#adb5bd', fontSize: '13px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
+                            >
+                                Minimizar AFD al instante
                             </button>
+                            {automataType !== 'DFA' && <span style={{ fontSize: '10px', color: '#e03131', marginTop: '4px', display: 'block' }}>* Requiere que el tipo sea AFD.</span>}
                         </div>
                     </>
                 ) : (

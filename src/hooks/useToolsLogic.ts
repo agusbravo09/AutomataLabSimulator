@@ -1,6 +1,7 @@
 import { toPostfix } from '../utils/converters/regexParser';
 import { regexToAutomata } from '../utils/converters/glushkov';
 import type { StateNode, Transition } from '../types/types';
+import { minimizeDfaInstant } from '../utils/converters/dfaMinimization';
 
 export const useToolsLogic = (
     nodes: StateNode[],
@@ -41,7 +42,6 @@ export const useToolsLogic = (
             alert("Error al generar: " + error.message);
         }
     };
-
     const handlePlayElimination = (steps: any[]) => {
         if (!steps || steps.length === 0) return;
         setBuildMode({
@@ -62,5 +62,21 @@ export const useToolsLogic = (
         setTransitions(steps[0].transitions);
     };
 
-    return { handleGenerateRegex, handlePlayElimination, handlePlaySubset };
+
+    const handlePlayMinimization = () => {
+        try {
+            const result = minimizeDfaInstant(nodes, transitions);
+            if (window.confirm(`Autómata minimizado calculado.\nPasamos de ${nodes.length} a ${result.nodes.length} estados.\n\n¿Querés aplicarlo en el lienzo?`)) {
+                setNodes(result.nodes);
+                setTransitions(result.transitions);
+                // Reseteamos el modo de construcción por las dudas
+                setBuildMode({ active: false, steps: [], currentIndex: 0 });
+            }
+        } catch (err: any) {
+            alert("Error al minimizar: " + err.message);
+        }
+    };
+
+
+return { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization };
 };
