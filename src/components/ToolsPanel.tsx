@@ -18,9 +18,12 @@ interface ToolsPanelProps {
     setAutomataType: (type: AutomataType) => void;
     onPlaySubset: (steps: any[]) => void;
     onPlayMinimization: () => void;
+    onInstantMinimization: () => void;
+    onInstantClasses: () => void;
+    onPlayClasses: () => void;
 }
 
-const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization }) => {
+const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses }) => {
     const [regexInput, setRegexInput] = useState('');
     const [generatedRegexResult, setGeneratedRegexResult] = useState<string | null>(null);
 
@@ -151,21 +154,31 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, 
                         </div>
 
                         {/* SECCIÓN 4: MINIMIZACIÓN */}
-                        <div style={{ backgroundColor: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '15px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-                                <h3 style={{ margin: 0, fontSize: '14px', color: '#495057', fontWeight: 600 }}>Minimización</h3>
-                            </div>
-                            <p style={{ fontSize: '12px', color: '#868e96', margin: '0 0 10px 0' }}>Reduce el AFD eliminando estados inalcanzables y fusionando equivalentes.</p>
+                            <div style={{ backgroundColor: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '15px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                    <h3 style={{ margin: 0, fontSize: '14px', color: '#495057', fontWeight: 600 }}>Minimización</h3>
+                                </div>
 
-                            <button
-                                onClick={onPlayMinimization}
-                                disabled={automataType !== 'DFA'}
-                                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: automataType === 'DFA' ? '1px solid #4c6ef5' : '1px solid #ced4da', backgroundColor: automataType === 'DFA' ? 'white' : '#e9ecef', color: automataType === 'DFA' ? '#4c6ef5' : '#adb5bd', fontSize: '13px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
-                            >
-                                Minimizar AFD al instante
-                            </button>
-                            {automataType !== 'DFA' && <span style={{ fontSize: '10px', color: '#e03131', marginTop: '4px', display: 'block' }}>* Requiere que el tipo sea AFD.</span>}
-                        </div>
+                                {/* Método Escalerita */}
+                                <div style={{ marginBottom: '15px' }}>
+                                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#868e96', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tabla de Estados Distinguibles</span>
+                                    <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
+                                        <button onClick={onInstantMinimization} disabled={automataType !== 'DFA'} style={{ flex: 1, padding: '6px', borderRadius: '4px', border: automataType === 'DFA' ? '1px solid #4c6ef5' : '1px solid #ced4da', backgroundColor: automataType === 'DFA' ? '#4c6ef5' : '#e9ecef', color: automataType === 'DFA' ? 'white' : '#adb5bd', fontSize: '11px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed' }}>Instantáneo</button>
+                                        <button onClick={onPlayMinimization} disabled={automataType !== 'DFA'} style={{ flex: 1, padding: '6px', borderRadius: '4px', border: automataType === 'DFA' ? '1px solid #4c6ef5' : '1px solid #ced4da', backgroundColor: 'white', color: automataType === 'DFA' ? '#4c6ef5' : '#adb5bd', fontSize: '11px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed' }}>Paso a Paso</button>
+                                    </div>
+                                </div>
+
+                                {/* Método Clases (Moore) */}
+                                <div>
+                                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#868e96', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Conjuntos de Estados</span>
+                                    <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
+                                        <button onClick={onInstantClasses} disabled={automataType !== 'DFA'} style={{ flex: 1, padding: '6px', borderRadius: '4px', border: automataType === 'DFA' ? '1px solid #20c997' : '1px solid #ced4da', backgroundColor: automataType === 'DFA' ? '#20c997' : '#e9ecef', color: automataType === 'DFA' ? 'white' : '#adb5bd', fontSize: '11px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed' }}>Instantáneo</button>
+                                        <button onClick={onPlayClasses} disabled={automataType !== 'DFA'} style={{ flex: 1, padding: '6px', borderRadius: '4px', border: automataType === 'DFA' ? '1px solid #20c997' : '1px solid #ced4da', backgroundColor: 'white', color: automataType === 'DFA' ? '#20c997' : '#adb5bd', fontSize: '11px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed' }}>Paso a Paso</button>
+                                    </div>
+                                </div>
+
+                                {automataType !== 'DFA' && <span style={{ fontSize: '10px', color: '#e03131', marginTop: '8px', display: 'block' }}>* Requiere que el tipo sea AFD.</span>}
+                            </div>
                     </>
                 ) : (
                     <div style={{ textAlign: 'center', color: '#adb5bd', marginTop: '20px' }}>

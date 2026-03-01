@@ -60,7 +60,7 @@ function InfinityCanvas() {
         handleRunSimulation, handleStartStepByStep
     } = useSimulation(nodes, transitions);
 
-    const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization } = useToolsLogic(
+    const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses } = useToolsLogic(
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode
     );
 
@@ -103,7 +103,8 @@ function InfinityCanvas() {
                 automataType={automataType} nodes={nodes} transitions={transitions}
                 onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination}
                 onPlaySubset={handlePlaySubset} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType}
-                onPlayMinimization={handlePlayMinimization}
+                onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization}
+                onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses}
             />
 
             {/* ESTADO VACÍO */}
