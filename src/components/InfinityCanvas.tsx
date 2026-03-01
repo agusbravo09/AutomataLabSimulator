@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState} from 'react';
 import { Stage, Layer } from 'react-konva';
 import type { StateNode, Transition } from '../types/types';
-import { checkEquivalenceMooreStepByStep } from '../utils/converters/mooreEquivalence';
+
 
 // --- HOOKS CUSTOM ---
 import { useAutomata } from '../hooks/useAutomata';
@@ -10,6 +10,9 @@ import { useCanvasInteractions } from '../hooks/useCanvasInteractions';
 import { useElementEditor } from '../hooks/useElementEditor';
 import { useSimulation } from '../hooks/useSimulation';
 import { useToolsLogic } from '../hooks/useToolsLogic';
+import { useFileManager } from '../hooks/useFileManager';
+import { useMooreLogic } from '../hooks/useMooreLogic';
+import { useHistory } from '../hooks/useHistory';
 
 // --- COMPONENTES UI ---
 import Toolbar, { type Tool, type AutomataType } from './Toolbar';
@@ -45,70 +48,31 @@ function InfinityCanvas() {
     // 2. Cerebros (Custom Hooks)
     const { nodes, setNodes, transitions, setTransitions, updateNodePosition, clearWorkspace } = useAutomata();
     const { camera, setCamera, handleWheel, handleManualZoom } = useCamera();
-
+    const { takeSnapshot } = useHistory(nodes, setNodes, transitions, setTransitions);
     const {
         drawingTransition, handleStageClick, handleMouseDownNode,
         handleMouseMoveStage, handleMouseUpNode, handleMouseUpStage
     } = useCanvasInteractions({
-        nodes, setNodes, transitions, setTransitions, camera, activeTool, setSelectedElement
+        nodes, setNodes, transitions, setTransitions, camera, activeTool, setSelectedElement, takeSnapshot
     });
-
-    // Nuevo estado para guardar el Autómata A en memoria (Teorema de Moore)
-    const [savedAutomatonA, setSavedAutomatonA] = useState<{ nodes: StateNode[], transitions: Transition[] } | null>(null);
 
     const { handleSaveElement, handleDeleteElement, handleClearWorkspace } = useElementEditor({
-        selectedElement, setSelectedElement, setNodes, setTransitions, setIsConfirmOpen, clearWorkspace
+        selectedElement, setSelectedElement, setNodes, setTransitions, setIsConfirmOpen, clearWorkspace, takeSnapshot
     });
 
-    const {
-        simMode, setSimMode, simulationResult, setSimulationResult,
-        handleRunSimulation, handleStartStepByStep
-    } = useSimulation(nodes, transitions);
+    const { simMode, setSimMode, simulationResult, setSimulationResult, handleRunSimulation, handleStartStepByStep } = useSimulation(nodes, transitions);
 
     const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses } = useToolsLogic(
-        nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode
+        nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera
     );
 
-    // --- LÓGICA DE UI PARA TEOREMA DE MOORE ---
-    const handleSaveAutomatonA = () => {
-        if (nodes.length === 0) {
-            alert("El lienzo está vacío. Dibujá el Autómata A primero.");
-            return;
-        }
-        setSavedAutomatonA({ nodes: [...nodes], transitions: [...transitions] });
-        if (window.confirm("¡Autómata A guardado en memoria!\n\n¿Querés limpiar el lienzo ahora para empezar a dibujar el Autómata B?")) {
-            setNodes([]);
-            setTransitions([]);
-        }
-    };
+    const { handleExportAutomaton, handleImportAutomaton } = useFileManager(
+        nodes, transitions, automataType, setNodes, setTransitions, setAutomataType, takeSnapshot
+    );
 
-    const handleClearAutomatonA = () => {
-        setSavedAutomatonA(null);
-    };
-
-    const handleCompareMoore = (isInstant: boolean) => {
-        if (!savedAutomatonA) return;
-        if (nodes.length === 0) {
-            alert("El lienzo está vacío. Dibujá el Autómata B."); return;
-        }
-
-        try {
-            const { isEquivalent, steps } = checkEquivalenceMooreStepByStep(
-                savedAutomatonA.nodes, savedAutomatonA.transitions, nodes, transitions
-            );
-
-            if (isInstant) {
-                alert(isEquivalent ? "✅ ¡LOS AUTÓMATAS SON EQUIVALENTES!" : "❌ ¡LOS AUTÓMATAS SON INCOMPATIBLES!");
-            } else {
-                setBuildMode({
-                    active: true, steps, currentIndex: 0,
-                    backupNodes: [...nodes], backupTransitions: [...transitions]
-                });
-            }
-        } catch (err: any) {
-            alert("Error: " + err.message);
-        }
-    };
+    const { savedAutomatonA, handleSaveAutomatonA, handleClearAutomatonA, handleCompareMoore } = useMooreLogic(
+        nodes, transitions, setNodes, setTransitions, setBuildMode
+    );
 
     // 3. Estilos Base
     const GRID_GAP = 40;
@@ -144,6 +108,14 @@ function InfinityCanvas() {
                 onClear={handleClearWorkspace} onToggleTools={() => setIsToolsPanelOpen(!isToolsPanelOpen)}
             />
 
+            {/* botones importar-exportar (ESTO MAS ADELANTE VUELA XD)*/}
+            <button onClick={handleExportAutomaton} style={{ padding: '8px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #dee2e6' }}>Exportar</button>
+
+            <label style={{ padding: '8px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #dee2e6', backgroundColor: '#f8f9fa' }}>
+                Importar
+                <input type="file" accept=".al,.json" style={{ display: 'none' }} onChange={handleImportAutomaton} />
+            </label>
+
             <ToolsPanel
                 isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)}
                 automataType={automataType} nodes={nodes} transitions={transitions}
@@ -151,7 +123,6 @@ function InfinityCanvas() {
                 onPlaySubset={handlePlaySubset} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType}
                 onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization}
                 onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses}
-                /* NUEVAS PROPS PARA MOORE */
                 savedAutomatonA={savedAutomatonA}
                 onSaveAutomatonA={handleSaveAutomatonA}
                 onClearAutomatonA={handleClearAutomatonA}
@@ -214,7 +185,7 @@ function InfinityCanvas() {
                 <Layer>
                     <TransitionsRenderer transitions={transitions} nodes={nodes} simMode={simMode} setSelectedElement={setSelectedElement} />
                     <GhostArrow drawingTransition={drawingTransition} nodes={nodes} />
-                    <NodesRenderer nodes={nodes} simMode={simMode} selectedElement={selectedElement} activeTool={activeTool} updateNodePosition={updateNodePosition} handleMouseDownNode={handleMouseDownNode} handleMouseUpNode={handleMouseUpNode} setSelectedElement={setSelectedElement} />
+                    <NodesRenderer nodes={nodes} simMode={simMode} selectedElement={selectedElement} activeTool={activeTool} updateNodePosition={updateNodePosition} handleMouseDownNode={handleMouseDownNode} handleMouseUpNode={handleMouseUpNode} setSelectedElement={setSelectedElement}/>
                 </Layer>
             </Stage>
         </div>

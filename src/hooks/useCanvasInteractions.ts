@@ -10,15 +10,17 @@ interface UseCanvasInteractionsProps {
     camera: { x: number; y: number; scale: number };
     activeTool: Tool;
     setSelectedElement: React.Dispatch<React.SetStateAction<any>>;
+    takeSnapshot: () => void;
 }
 
 export const useCanvasInteractions = ({
-                                          nodes, setNodes, transitions, setTransitions, camera, activeTool, setSelectedElement
+                                          nodes, setNodes, transitions, setTransitions, camera, activeTool, setSelectedElement, takeSnapshot
                                       }: UseCanvasInteractionsProps) => {
 
     const [drawingTransition, setDrawingTransition] = useState<{fromNodeId: string; toX: number; toY: number;} | null>(null);
 
     const handleStageClick = (e: any) => {
+
         if (e.target !== e.target.getStage()) return;
         if (activeTool !== 'STATE') {
             setSelectedElement(null);
@@ -37,6 +39,7 @@ export const useCanvasInteractions = ({
             x: worldX, y: worldY,
             isInitial: nodes.length === 0, isFinal: false
         };
+        takeSnapshot();
         setNodes([...nodes, newNode]);
     };
 
@@ -66,6 +69,7 @@ export const useCanvasInteractions = ({
             id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
             from: drawingTransition.fromNodeId, to: toNodeId, symbols: [], hasLambda: false
         };
+        takeSnapshot();
         setTransitions([...transitions, newTransition]);
         setDrawingTransition(null);
     };

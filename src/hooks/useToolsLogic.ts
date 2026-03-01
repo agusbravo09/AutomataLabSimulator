@@ -2,6 +2,7 @@ import { toPostfix } from '../utils/converters/regexParser';
 import { regexToAutomata } from '../utils/converters/glushkov';
 import type { StateNode, Transition } from '../types/types';
 import { minimizeDfaStepByStep, minimizeDfaClassesStepByStep } from '../utils/converters/dfaMinimization';
+import { centerAutomatonInCamera } from '../utils/centerAutomaton';
 
 export const useToolsLogic = (
     nodes: StateNode[],
@@ -9,7 +10,8 @@ export const useToolsLogic = (
     setNodes: (nodes: StateNode[]) => void,
     setTransitions: (transitions: Transition[]) => void,
     setAutomataType: (type: any) => void,
-    setBuildMode: (mode: any) => void
+    setBuildMode: (mode: any) => void,
+    camera: { x: number, y: number, scale: number }
 ) => {
 
     const handleGenerateRegex = (regexStr: string, isStepByStep: boolean) => {
@@ -21,20 +23,22 @@ export const useToolsLogic = (
             const postfix = toPostfix(regexStr);
             const result = regexToAutomata(postfix);
 
+            const { centeredNodes, centeredSteps } = centerAutomatonInCamera(result.nodes, result.buildSteps || [], camera);
+
             if (!result.buildSteps || result.buildSteps.length === 0) {
-                setNodes(result.nodes);
+                setNodes(centeredNodes);
                 setTransitions(result.transitions);
                 setAutomataType('NFA');
                 return;
             }
 
             if (isStepByStep) {
-                setBuildMode({ active: true, steps: result.buildSteps, currentIndex: 0 });
-                setNodes(result.buildSteps[0].nodes);
-                setTransitions(result.buildSteps[0].transitions);
+                setBuildMode({ active: true, steps: centeredSteps, currentIndex: 0 });
+                setNodes(centeredSteps[0].nodes);
+                setTransitions(centeredSteps[0].transitions);
             } else {
                 setBuildMode({ active: false, steps: [], currentIndex: 0 });
-                setNodes(result.nodes);
+                setNodes(centeredNodes);
                 setTransitions(result.transitions);
             }
             setAutomataType('NFA');
@@ -42,6 +46,7 @@ export const useToolsLogic = (
             alert("Error al generar: " + error.message);
         }
     };
+
     const handlePlayElimination = (steps: any[]) => {
         if (!steps || steps.length === 0) return;
         setBuildMode({
@@ -54,20 +59,26 @@ export const useToolsLogic = (
 
     const handlePlaySubset = (steps: any[]) => {
         if (!steps || steps.length === 0) return;
+
+        const finalNodes = steps[steps.length - 1].nodes;
+        const { centeredSteps } = centerAutomatonInCamera(finalNodes, steps, camera);
+
         setBuildMode({
-            active: true, steps, currentIndex: 0,
+            active: true, steps: centeredSteps, currentIndex: 0,
             backupNodes: [...nodes], backupTransitions: [...transitions]
         });
-        setNodes(steps[0].nodes);
-        setTransitions(steps[0].transitions);
+        setNodes(centeredSteps[0].nodes);
+        setTransitions(centeredSteps[0].transitions);
     };
 
     const handleInstantMinimization = () => {
         try {
-            // Usamos la misma función, pero ignoramos los 'steps' y nos quedamos con el resultado final
             const result = minimizeDfaStepByStep(nodes, transitions);
-            if (window.confirm(`Autómata minimizado calculado.\nPasamos de ${nodes.length} a ${result.nodes.length} estados.\n\n¿Querés aplicarlo en el lienzo?`)) {
-                setNodes(result.nodes);
+
+            const { centeredNodes } = centerAutomatonInCamera(result.nodes, [], camera);
+
+            if (window.confirm(`Autómata minimizado calculado.\nPasamos de ${nodes.length} a ${centeredNodes.length} estados.\n\n¿Querés aplicarlo en el lienzo?`)) {
+                setNodes(centeredNodes);
                 setTransitions(result.transitions);
                 setBuildMode({ active: false, steps: [], currentIndex: 0 });
             }
@@ -78,13 +89,16 @@ export const useToolsLogic = (
 
     const handlePlayMinimization = () => {
         try {
-            const { steps } = minimizeDfaStepByStep(nodes, transitions);
+            const result = minimizeDfaStepByStep(nodes, transitions);
+
+            const { centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
+
             setBuildMode({
-                active: true, steps, currentIndex: 0,
+                active: true, steps: centeredSteps, currentIndex: 0,
                 backupNodes: [...nodes], backupTransitions: [...transitions]
             });
-            setNodes(steps[0].nodes);
-            setTransitions(steps[0].transitions);
+            setNodes(centeredSteps[0].nodes);
+            setTransitions(centeredSteps[0].transitions);
         } catch (err: any) {
             alert("Error al minimizar: " + err.message);
         }
@@ -93,8 +107,11 @@ export const useToolsLogic = (
     const handleInstantClasses = () => {
         try {
             const result = minimizeDfaClassesStepByStep(nodes, transitions);
-            if (window.confirm(`Autómata minimizado (Método Clases).\nPasamos de ${nodes.length} a ${result.nodes.length} estados.\n\n¿Querés aplicarlo en el lienzo?`)) {
-                setNodes(result.nodes);
+
+            const { centeredNodes } = centerAutomatonInCamera(result.nodes, [], camera);
+
+            if (window.confirm(`Autómata minimizado (Método Clases).\nPasamos de ${nodes.length} a ${centeredNodes.length} estados.\n\n¿Querés aplicarlo en el lienzo?`)) {
+                setNodes(centeredNodes);
                 setTransitions(result.transitions);
                 setBuildMode({ active: false, steps: [], currentIndex: 0 });
             }
@@ -105,18 +122,20 @@ export const useToolsLogic = (
 
     const handlePlayClasses = () => {
         try {
-            const { steps } = minimizeDfaClassesStepByStep(nodes, transitions);
+            const result = minimizeDfaClassesStepByStep(nodes, transitions);
+
+            const { centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
+
             setBuildMode({
-                active: true, steps, currentIndex: 0,
+                active: true, steps: centeredSteps, currentIndex: 0,
                 backupNodes: [...nodes], backupTransitions: [...transitions]
             });
-            setNodes(steps[0].nodes);
-            setTransitions(steps[0].transitions);
+            setNodes(centeredSteps[0].nodes);
+            setTransitions(centeredSteps[0].transitions);
         } catch (err: any) {
             alert("Error al minimizar: " + err.message);
         }
     };
 
-
-return { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handleInstantClasses, handlePlayClasses };
+    return { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handleInstantClasses, handlePlayClasses };
 };

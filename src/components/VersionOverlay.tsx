@@ -14,7 +14,7 @@ export const VersionOverlay: React.FC<Props> = ({ onOpenFeedback }) => {
                 color: '#adb5bd', fontSize: '13px', fontFamily: 'monospace',
                 userSelect: 'none', pointerEvents: 'none'
             }}>
-                AutomataLab v1.0
+                AutomataLab Simulator
             </span>
 
             <button
