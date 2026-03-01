@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import type { AutomataType } from './Toolbar';
 import type { StateNode, Transition } from '../types/types';
+import { generateRightLinearProductions } from "../utils/converters/grammarGenerator";
+import { decomposePumping } from '../utils/converters/pumpingLemma';
 
 interface SidePanelProps {
     isOpen: boolean;
@@ -14,23 +16,46 @@ interface SidePanelProps {
     onStepByStep?: (input: string) => void;
 }
 
-type TabType = 'matrix' | 'definition' | 'simulate';
+// AGREGAMOS 'pumping' A LOS TIPOS DE PESTAÑA
+type TabType = 'matrix' | 'definition' | 'simulate' | 'pumping';
 
 const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, nodes, transitions, onSimulate, simulationResult, onClearResult, onStepByStep }) => {
-    //estado local para lo que el usuario escribe en el input
+
     const [inputValue, setInputValue] = useState('');
     const [activeTab, setActiveTab] = useState<TabType>('matrix');
 
+    // ESTADOS PARA EL LEMA DEL BOMBEO
+    const [pumpInput, setPumpInput] = useState('');
+    const [pumpData, setPumpData] = useState<{x: string, y: string, z: string, p: number} | null>(null);
+    const [pumpError, setPumpError] = useState('');
+    const [pumpI, setPumpI] = useState(2);
+
     const handleComprobar = () => {
-        if (onSimulate) {
-            onSimulate(inputValue.trim()); // Permite string vacío ""
-        }
+        if (onSimulate) onSimulate(inputValue.trim());
     };
 
     const handlePasoAPaso = () => {
-        if (onStepByStep) {
-            onStepByStep(inputValue.trim()); // Permite string vacío ""
+        if (onStepByStep) onStepByStep(inputValue.trim());
+    };
+
+    const handleDecompose = () => {
+        try {
+            setPumpError('');
+            const data = decomposePumping(nodes, transitions, pumpInput.trim());
+            setPumpData(data);
+            setPumpI(2); // Por defecto bombeamos con i=2
+        } catch(e: any) {
+            setPumpError(e.message);
+            setPumpData(null);
         }
+    };
+
+    const handleTestPumpedString = () => {
+        if (!pumpData || !onSimulate) return;
+        const pumpedString = pumpData.x + pumpData.y.repeat(pumpI) + pumpData.z;
+        setActiveTab('simulate');
+        setInputValue(pumpedString);
+        onSimulate(pumpedString);
     };
 
     // Calculo dinamico del alfabeto
@@ -47,9 +72,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
 
     //Calculo definicion formal
     const qSet = nodes.map(n => n.name).join(', ');
-    const sigmaSet = alphabet.filter(s => s !== 'λ').join(', '); // Lambda no va en el alfabeto base
+    const sigmaSet = alphabet.filter(s => s !== 'λ').join(', ');
     const initialStates = nodes.filter(n => n.isInitial).map(n => n.name).join(', ');
     const finalStates = nodes.filter(n => n.isFinal).map(n => n.name).join(', ');
+    const productionsText = generateRightLinearProductions(nodes, transitions);
 
     return (
         <div style={{
@@ -60,7 +86,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
             zIndex: 140, display: 'flex', flexDirection: 'column',
             boxSizing: 'border-box', visibility: isOpen ? 'visible' : 'hidden',
         }}>
-            {/* CABECERA DEL PANEL (Fija) */}
+            {/* CABECERA DEL PANEL */}
             <div style={{ padding: '20px 20px 0 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                     <div>
@@ -75,20 +101,20 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                     </button>
                 </div>
 
-                {/* BOTONERA DE PESTAÑAS */}
+                {/* BOTONERA DE 4 PESTAÑAS */}
                 <div style={{ display: 'flex', borderBottom: '1px solid #dee2e6', marginBottom: '20px' }}>
-                    {(['matrix', 'definition', 'simulate'] as TabType[]).map((tab) => {
-                        const labels = { matrix: 'Matriz', definition: 'Definición', simulate: 'Simular' };
+                    {(['matrix', 'definition', 'simulate', 'pumping'] as TabType[]).map((tab) => {
+                        const labels = { matrix: 'Matriz', definition: 'Definición', simulate: 'Simular', pumping: 'Bombeo' };
                         const isActive = activeTab === tab;
                         return (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 style={{
-                                    flex: 1, padding: '10px 5px', background: 'none', border: 'none',
+                                    flex: 1, padding: '10px 2px', background: 'none', border: 'none',
                                     borderBottom: isActive ? '2px solid #4c6ef5' : '2px solid transparent',
                                     color: isActive ? '#4c6ef5' : '#868e96',
-                                    fontWeight: isActive ? 600 : 500, fontSize: '13px',
+                                    fontWeight: isActive ? 600 : 500, fontSize: '12px',
                                     cursor: 'pointer', transition: 'all 0.2s ease', outline: 'none'
                                 }}
                             >
@@ -99,7 +125,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                 </div>
             </div>
 
-            {/* CONTENEDOR DESLIZABLE (El contenido cambia según la pestaña) */}
+            {/* CONTENEDOR DESLIZABLE */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px 20px' }}>
 
                 {/* ---------------- PESTAÑA 1: MATRIZ ---------------- */}
@@ -198,20 +224,40 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                                 <p style={{ fontSize: '13px', margin: 0 }}>El autómata está vacío.</p>
                             </div>
                         ) : (
-                            <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px', fontSize: '14px', fontFamily: "'Fira Code', monospace", color: '#495057', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
-                                <div style={{ fontWeight: 600, marginBottom: '12px', color: '#212529', fontFamily: "'Inter', sans-serif", borderBottom: '1px solid #dee2e6', paddingBottom: '8px' }}>
-                                    Quíntupla Matemática
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px', fontSize: '14px', fontFamily: "'Fira Code', monospace", color: '#495057', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                                    <div style={{ fontWeight: 600, marginBottom: '12px', color: '#212529', fontFamily: "'Inter', sans-serif", borderBottom: '1px solid #dee2e6', paddingBottom: '8px' }}>
+                                        Quíntupla Matemática
+                                    </div>
+                                    <div style={{ fontSize: '16px', color: '#4c6ef5', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>
+                                        M = (Q, Σ, δ, q0, F)
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <div><strong style={{color: '#212529'}}>Q</strong> = {`{ ${qSet || '∅'} }`}</div>
+                                        <div><strong style={{color: '#212529'}}>Σ</strong> = {`{ ${sigmaSet || '∅'} }`}</div>
+                                        <div><strong style={{color: '#212529'}}>q0</strong> = {initialStates.includes(',') ? `{${initialStates}}` : (initialStates || '∅')}</div>
+                                        <div><strong style={{color: '#212529'}}>F</strong> = {`{ ${finalStates || '∅'} }`}</div>
+                                        <div style={{ marginTop: '5px', fontSize: '12px', color: '#868e96' }}>
+                                            * La función de transición (δ) se detalla en la pestaña Matriz.
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style={{ fontSize: '16px', color: '#4c6ef5', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>
-                                    M = (Q, Σ, δ, q0, F)
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    <div><strong style={{color: '#212529'}}>Q</strong> = {`{ ${qSet || '∅'} }`}</div>
-                                    <div><strong style={{color: '#212529'}}>Σ</strong> = {`{ ${sigmaSet || '∅'} }`}</div>
-                                    <div><strong style={{color: '#212529'}}>q0</strong> = {initialStates.includes(',') ? `{${initialStates}}` : (initialStates || '∅')}</div>
-                                    <div><strong style={{color: '#212529'}}>F</strong> = {`{ ${finalStates || '∅'} }`}</div>
-                                    <div style={{ marginTop: '5px', fontSize: '12px', color: '#868e96' }}>
-                                        * La función de transición (δ) se detalla en la pestaña Matriz.
+
+                                <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                                    <div style={{ fontWeight: 600, marginBottom: '12px', color: '#212529', fontFamily: "'Inter', sans-serif", borderBottom: '1px solid #dee2e6', paddingBottom: '8px' }}>
+                                        Cuádrupla de la Gramática
+                                    </div>
+                                    <div style={{ fontSize: '16px', color: '#4c6ef5', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>
+                                        G = (V, Σ, P, S)
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <div><strong style={{color: '#212529'}}>V (No Terminales)</strong> = {`{ ${qSet || '∅'} }`}</div>
+                                        <div><strong style={{color: '#212529'}}>Σ (Terminales)</strong> = {`{ ${sigmaSet || '∅'} }`}</div>
+                                        <div><strong style={{color: '#212529'}}>S (Axioma)</strong> = {initialStates.includes(',') ? `{${initialStates}}` : (initialStates || '∅')}</div>
+                                        <div><strong style={{color: '#212529'}}>P (Producciones)</strong>:</div>
+                                        <pre style={{ margin: '0 0 0 10px', padding: '10px', backgroundColor: '#ffffff', border: '1px solid #e9ecef', borderRadius: '6px', fontFamily: "'Fira Code', 'Courier New', monospace", fontSize: '13px', color: '#495057', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                                            {productionsText}
+                                        </pre>
                                     </div>
                                 </div>
                             </div>
@@ -241,22 +287,17 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                                 <button
                                     onClick={handlePasoAPaso}
                                     style={{ flex: 1, padding: '10px', backgroundColor: 'white', border: '1px solid #ced4da', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, color: '#495057', transition: 'all 0.2s' }}
-                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'}
-                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
                                 >
                                     Paso a Paso
                                 </button>
                                 <button
                                     onClick={handleComprobar}
                                     style={{ flex: 1, padding: '10px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s', boxShadow: '0 4px 10px rgba(76, 110, 245, 0.3)' }}
-                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                                 >
                                     Comprobar
                                 </button>
                             </div>
 
-                            {/* CARTEL DE RESULTADO */}
                             {simulationResult && (
                                 <div style={{
                                     marginTop: '20px', padding: '12px', borderRadius: '8px', textAlign: 'center',
@@ -278,9 +319,99 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                         </div>
                     </div>
                 )}
+
+                {/* ---------------- PESTAÑA 4: LEMA DEL BOMBEO ---------------- */}
+                {activeTab === 'pumping' && (
+                    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        {nodes.length === 0 ? (
+                            <div style={{ textAlign: 'center', marginTop: '40px', color: '#adb5bd' }}>
+                                <div style={{ fontSize: '32px', marginBottom: '10px' }}>Sin Datos</div>
+                                <p style={{ fontSize: '13px', margin: 0 }}>El autómata está vacío.</p>
+                            </div>
+                        ) : (
+                            <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #dee2e6' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #dee2e6', paddingBottom: '10px' }}>
+                                    <h3 style={{ fontSize: '14px', margin: 0, color: '#212529' }}>Lema del Bombeo</h3>
+                                    <span style={{ backgroundColor: '#4c6ef5', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                                        p = {nodes.length}
+                                    </span>
+                                </div>
+
+                                <p style={{ fontSize: '12px', color: '#868e96', marginBottom: '15px', lineHeight: '1.4' }}>
+                                    Ingresá una cadena <strong>w</strong> que pertenezca al lenguaje y cuya longitud sea mayor o igual a <strong>p</strong>.
+                                </p>
+
+                                <input
+                                    type="text"
+                                    placeholder={`Ej: cadena de largo ${nodes.length} o más`}
+                                    value={pumpInput}
+                                    onChange={(e) => setPumpInput(e.target.value)}
+                                    style={{ width: '100%', padding: '10px', marginBottom: '10px', borderRadius: '6px', border: '1px solid #ced4da', boxSizing: 'border-box', fontFamily: "'Fira Code', monospace", fontSize: '14px', outline: 'none' }}
+                                />
+
+                                <button
+                                    onClick={handleDecompose}
+                                    style={{ width: '100%', padding: '10px', backgroundColor: '#e9ecef', color: '#495057', border: '1px solid #ced4da', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s', marginBottom: '15px' }}
+                                >
+                                    Descomponer w = xyz
+                                </button>
+
+                                {pumpError && (
+                                    <div style={{ color: '#e03131', backgroundColor: '#fff5f5', padding: '10px', borderRadius: '6px', border: '1px solid #ffc9c9', fontSize: '12px', marginBottom: '15px' }}>
+                                        {pumpError}
+                                    </div>
+                                )}
+
+                                {pumpData && (
+                                    <div style={{ animation: 'popIn 0.3s ease' }}>
+                                        <div style={{ display: 'flex', gap: '5px', marginBottom: '15px', fontFamily: "'Fira Code', monospace", textAlign: 'center' }}>
+                                            <div style={{ flex: 1, backgroundColor: '#e3fafc', border: '1px solid #99e9f2', padding: '8px', borderRadius: '6px' }}>
+                                                <div style={{ fontSize: '10px', color: '#0b7285', fontWeight: 'bold' }}>X</div>
+                                                <div style={{ color: '#0b7285' }}>{pumpData.x || 'λ'}</div>
+                                            </div>
+                                            <div style={{ flex: 1, backgroundColor: '#fff0f6', border: '1px solid #fcc2d7', padding: '8px', borderRadius: '6px' }}>
+                                                <div style={{ fontSize: '10px', color: '#a61e4d', fontWeight: 'bold' }}>Y (Bucle)</div>
+                                                <div style={{ color: '#a61e4d' }}>{pumpData.y}</div>
+                                            </div>
+                                            <div style={{ flex: 1, backgroundColor: '#e3fafc', border: '1px solid #99e9f2', padding: '8px', borderRadius: '6px' }}>
+                                                <div style={{ fontSize: '10px', color: '#0b7285', fontWeight: 'bold' }}>Z</div>
+                                                <div style={{ color: '#0b7285' }}>{pumpData.z || 'λ'}</div>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ backgroundColor: '#ffffff', border: '1px solid #dee2e6', padding: '15px', borderRadius: '6px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#495057' }}>Bombear (i):</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <button onClick={() => setPumpI(Math.max(0, pumpI - 1))} style={{ width: '28px', height: '28px', borderRadius: '4px', border: '1px solid #ced4da', background: '#f8f9fa', cursor: 'pointer' }}>-</button>
+                                                    <span style={{ fontFamily: "'Fira Code', monospace", fontWeight: 'bold', width: '20px', textAlign: 'center' }}>{pumpI}</span>
+                                                    <button onClick={() => setPumpI(pumpI + 1)} style={{ width: '28px', height: '28px', borderRadius: '4px', border: '1px solid #ced4da', background: '#f8f9fa', cursor: 'pointer' }}>+</button>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ fontSize: '12px', color: '#868e96', marginBottom: '5px' }}>Cadena bombeada (xy<sup>{pumpI}</sup>z):</div>
+                                            <div style={{ fontFamily: "'Fira Code', monospace", backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '4px', border: '1px solid #e9ecef', wordBreak: 'break-all', color: '#212529', marginBottom: '15px' }}>
+                                                {pumpData.x}
+                                                <span style={{ color: '#a61e4d', fontWeight: 'bold' }}>{pumpData.y.repeat(pumpI)}</span>
+                                                {pumpData.z}
+                                            </div>
+
+                                            <button
+                                                onClick={handleTestPumpedString}
+                                                style={{ width: '100%', padding: '10px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s' }}
+                                            >
+                                                Verificar en Simulador
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
             </div>
 
-            {/* Keyframes embebidos para las animaciones CSS */}
             <style>
                 {`
                     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }

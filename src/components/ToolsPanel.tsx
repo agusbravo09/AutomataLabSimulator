@@ -24,11 +24,13 @@ interface ToolsPanelProps {
     onSaveAutomatonA: () => void;
     onClearAutomatonA: () => void;
     onCompareMoore: (isInstant: boolean) => void;
+    onGenerateFromGrammar: (text: string) => void;
 }
 
-const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses, onClearAutomatonA, onCompareMoore, onSaveAutomatonA, savedAutomatonA }) => {
+const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses, onClearAutomatonA, onCompareMoore, onSaveAutomatonA, savedAutomatonA, onGenerateFromGrammar }) => {
     const [regexInput, setRegexInput] = useState('');
     const [generatedRegexResult, setGeneratedRegexResult] = useState<string | null>(null);
+    const [grammarInput, setGrammarInput] = useState('S -> aS | bA | λ\nA -> a');
 
     // Condicionamos qué herramientas se muestran según el tipo de autómata
     const isFiniteAutomata = automataType === 'DFA' || automataType === 'NFA';
@@ -119,6 +121,23 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, 
                                     </span>
                                 </div>
                             )}
+                        </div>
+
+                        {/*GRAMATICA A AUTOMATA*/}
+                        <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #dee2e6', marginBottom: '15px' }}>
+                            <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#495057' }}>Generar desde Gramática</h3>
+                            <textarea
+                                value={grammarInput}
+                                onChange={(e) => setGrammarInput(e.target.value)}
+                                placeholder="S -> aS | bA&#10;A -> a | λ"
+                                style={{ width: '100%', height: '80px', padding: '10px', borderRadius: '4px', border: '1px solid #ced4da', fontFamily: 'monospace', fontSize: '13px', marginBottom: '10px', resize: 'vertical', boxSizing: 'border-box' }}
+                            />
+                            <button
+                                onClick={() => onGenerateFromGrammar(grammarInput)}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+                            >
+                                Dibujar Autómata
+                            </button>
                         </div>
 
                         {/* DETERMINIZACIÓN */}

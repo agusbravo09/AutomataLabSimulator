@@ -62,7 +62,7 @@ function InfinityCanvas() {
 
     const { simMode, setSimMode, simulationResult, setSimulationResult, handleRunSimulation, handleStartStepByStep } = useSimulation(nodes, transitions);
 
-    const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses } = useToolsLogic(
+    const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses, handleGenerateFromGrammar } = useToolsLogic(
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera
     );
 
@@ -127,6 +127,7 @@ function InfinityCanvas() {
                 onSaveAutomatonA={handleSaveAutomatonA}
                 onClearAutomatonA={handleClearAutomatonA}
                 onCompareMoore={handleCompareMoore}
+                onGenerateFromGrammar={handleGenerateFromGrammar}
             />
 
             {/* ESTADO VACÍO */}

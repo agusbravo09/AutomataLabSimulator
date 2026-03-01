@@ -3,6 +3,7 @@ import { regexToAutomata } from '../utils/converters/glushkov';
 import type { StateNode, Transition } from '../types/types';
 import { minimizeDfaStepByStep, minimizeDfaClassesStepByStep } from '../utils/converters/dfaMinimization';
 import { centerAutomatonInCamera } from '../utils/centerAutomaton';
+import { convertGrammarToAutomata } from '../utils/converters/grammarToAutomata';
 
 export const useToolsLogic = (
     nodes: StateNode[],
@@ -44,6 +45,30 @@ export const useToolsLogic = (
             setAutomataType('NFA');
         } catch (error: any) {
             alert("Error al generar: " + error.message);
+        }
+    };
+
+    const handleGenerateFromGrammar = (grammarText: string) => {
+        try {
+            if (!grammarText || grammarText.trim() === '') {
+                alert("Por favor, ingresá las producciones de la gramática.");
+                return;
+            }
+
+            // Llamamos a nuestro nuevo convertidor
+            const result = convertGrammarToAutomata(grammarText);
+
+            // MAGIA: Centramos el autómata generado a donde esté mirando la cámara
+            const { centeredNodes } = centerAutomatonInCamera(result.nodes, [], camera);
+
+            // Actualizamos el lienzo
+            setNodes(centeredNodes);
+            setTransitions(result.transitions);
+            setAutomataType('NFA'); // Una gramática siempre genera un AFND por defecto
+            setBuildMode({ active: false, steps: [], currentIndex: 0 });
+
+        } catch (error: any) {
+            alert("Error al parsear la gramática: " + error.message);
         }
     };
 
@@ -137,5 +162,5 @@ export const useToolsLogic = (
         }
     };
 
-    return { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handleInstantClasses, handlePlayClasses };
+    return { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handleInstantClasses, handlePlayClasses, handleGenerateFromGrammar };
 };
