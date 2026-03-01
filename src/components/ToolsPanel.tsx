@@ -4,7 +4,6 @@ import type { StateNode, Transition } from '../types/types';
 import { convertAutomataToRegex } from '../utils/converters/automataToRegex';
 import { convertNfaToDfa } from '../utils/converters/nfaToDfa';
 
-
 interface ToolsPanelProps {
     isOpen: boolean;
     onClose: () => void;
@@ -21,9 +20,13 @@ interface ToolsPanelProps {
     onInstantMinimization: () => void;
     onInstantClasses: () => void;
     onPlayClasses: () => void;
+    savedAutomatonA: { nodes: StateNode[], transitions: Transition[] } | null;
+    onSaveAutomatonA: () => void;
+    onClearAutomatonA: () => void;
+    onCompareMoore: (isInstant: boolean) => void;
 }
 
-const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses }) => {
+const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses, onClearAutomatonA, onCompareMoore, onSaveAutomatonA, savedAutomatonA }) => {
     const [regexInput, setRegexInput] = useState('');
     const [generatedRegexResult, setGeneratedRegexResult] = useState<string | null>(null);
 
@@ -179,10 +182,48 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, 
 
                                 {automataType !== 'DFA' && <span style={{ fontSize: '10px', color: '#e03131', marginTop: '8px', display: 'block' }}>* Requiere que el tipo sea AFD.</span>}
                             </div>
+                        {/* SECCIÓN 5: EQUIVALENCIA (MOORE) */}
+                        <div style={{ backgroundColor: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '15px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                <h3 style={{ margin: 0, fontSize: '14px', color: '#495057', fontWeight: 600 }}>Equivalencia (Teorema de Moore)</h3>
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#868e96', margin: '0 0 10px 0' }}>Comprueba si dos Autómatas Finitos reconocen el mismo lenguaje.</p>
+
+                            {!savedAutomatonA ? (
+                                // ESTADO 1: NO HAY NADA GUARDADO
+                                <button
+                                    onClick={onSaveAutomatonA}
+                                    disabled={automataType !== 'DFA'}
+                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: automataType === 'DFA' ? '1px dashed #4c6ef5' : '1px dashed #ced4da', backgroundColor: '#f8f9fa', color: automataType === 'DFA' ? '#4c6ef5' : '#adb5bd', fontSize: '13px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
+                                >
+                                    Fijar lienzo como Autómata A
+                                </button>
+                            ) : (
+                                // ESTADO 2: AUTÓMATA 'A' GUARDADO EN MEMORIA
+                                <div style={{ display: 'flex', gap: '5px' }}>
+                                    <button
+                                        onClick={() => onCompareMoore(true)}
+                                        disabled={automataType !== 'DFA'}
+                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', border: automataType === 'DFA' ? '1px solid #be4bdb' : '1px solid #ced4da', backgroundColor: automataType === 'DFA' ? '#be4bdb' : '#e9ecef', color: automataType === 'DFA' ? 'white' : '#adb5bd', fontSize: '12px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: automataType === 'DFA' ? '0 2px 4px rgba(190, 75, 219, 0.2)' : 'none' }}
+                                    >
+                                        Instantáneo
+                                    </button>
+                                    <button
+                                        onClick={() => onCompareMoore(false)}
+                                        disabled={automataType !== 'DFA'}
+                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', border: automataType === 'DFA' ? '1px solid #be4bdb' : '1px solid #ced4da', backgroundColor: 'white', color: automataType === 'DFA' ? '#be4bdb' : '#adb5bd', fontSize: '12px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
+                                    >
+                                        Paso a Paso
+                                    </button>
+                                </div>
+                            )}
+
+                            {automataType !== 'DFA' && <span style={{ fontSize: '10px', color: '#e03131', marginTop: '8px', display: 'block' }}>* Requiere que el tipo sea AFD.</span>}
+                        </div>
                     </>
                 ) : (
                     <div style={{ textAlign: 'center', color: '#adb5bd', marginTop: '20px' }}>
-                        <div style={{ fontSize: '32px', marginBottom: '10px' }}>🚧</div>
+                        <div style={{ fontSize: '32px', marginBottom: '10px' }}>¡Epa! ¿Qué rompimo'?</div>
                         <p style={{ fontSize: '13px' }}>Las herramientas para {automataType} estarán disponibles pronto.</p>
                     </div>
                 )}

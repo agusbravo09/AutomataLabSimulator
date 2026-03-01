@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toolsIcon from '../../public/Toolbar/tools.svg';
 
 // Definimos los tipos de herramientas
 export type Tool = 'CURSOR' | 'STATE' | 'TRANSITION';
@@ -54,7 +55,11 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataTy
                         backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', color: '#495057'
                     }}
                 >
-                    <span style={{ fontSize: '20px' }}>+</span>
+                    <img
+                        src={toolsIcon}
+                        alt="Herramientas"
+                        style={{ width: '22px', height: '22px', opacity: 0.7, filter: 'invert(30%) sepia(10%) saturate(500%) hue-rotate(180deg) brightness(80%) contrast(90%)' }} // El filter es opcional, sirve para darle un color grisáceo similar al texto que tenías
+                    />
                 </button>
                 {renderTooltip('Herramientas Avanzadas', hoveredTool === 'TOOLS')}
             </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Stage, Layer } from 'react-konva';
 import type { StateNode, Transition } from '../types/types';
+import { checkEquivalenceMooreStepByStep } from '../utils/converters/mooreEquivalence';
 
 // --- HOOKS CUSTOM ---
 import { useAutomata } from '../hooks/useAutomata';
@@ -27,6 +28,7 @@ import { GhostArrow } from './canvas/GhostArrow';
 import { TransitionsRenderer } from './canvas/TransitionRenderer';
 import { NodesRenderer } from './canvas/NodesRenderer';
 
+
 function InfinityCanvas() {
     // 1. Estados de UI
     const [activeTool, setActiveTool] = useState<Tool>('CURSOR');
@@ -51,6 +53,9 @@ function InfinityCanvas() {
         nodes, setNodes, transitions, setTransitions, camera, activeTool, setSelectedElement
     });
 
+    // Nuevo estado para guardar el Autómata A en memoria (Teorema de Moore)
+    const [savedAutomatonA, setSavedAutomatonA] = useState<{ nodes: StateNode[], transitions: Transition[] } | null>(null);
+
     const { handleSaveElement, handleDeleteElement, handleClearWorkspace } = useElementEditor({
         selectedElement, setSelectedElement, setNodes, setTransitions, setIsConfirmOpen, clearWorkspace
     });
@@ -63,6 +68,47 @@ function InfinityCanvas() {
     const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses } = useToolsLogic(
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode
     );
+
+    // --- LÓGICA DE UI PARA TEOREMA DE MOORE ---
+    const handleSaveAutomatonA = () => {
+        if (nodes.length === 0) {
+            alert("El lienzo está vacío. Dibujá el Autómata A primero.");
+            return;
+        }
+        setSavedAutomatonA({ nodes: [...nodes], transitions: [...transitions] });
+        if (window.confirm("¡Autómata A guardado en memoria!\n\n¿Querés limpiar el lienzo ahora para empezar a dibujar el Autómata B?")) {
+            setNodes([]);
+            setTransitions([]);
+        }
+    };
+
+    const handleClearAutomatonA = () => {
+        setSavedAutomatonA(null);
+    };
+
+    const handleCompareMoore = (isInstant: boolean) => {
+        if (!savedAutomatonA) return;
+        if (nodes.length === 0) {
+            alert("El lienzo está vacío. Dibujá el Autómata B."); return;
+        }
+
+        try {
+            const { isEquivalent, steps } = checkEquivalenceMooreStepByStep(
+                savedAutomatonA.nodes, savedAutomatonA.transitions, nodes, transitions
+            );
+
+            if (isInstant) {
+                alert(isEquivalent ? "✅ ¡LOS AUTÓMATAS SON EQUIVALENTES!" : "❌ ¡LOS AUTÓMATAS SON INCOMPATIBLES!");
+            } else {
+                setBuildMode({
+                    active: true, steps, currentIndex: 0,
+                    backupNodes: [...nodes], backupTransitions: [...transitions]
+                });
+            }
+        } catch (err: any) {
+            alert("Error: " + err.message);
+        }
+    };
 
     // 3. Estilos Base
     const GRID_GAP = 40;
@@ -105,6 +151,11 @@ function InfinityCanvas() {
                 onPlaySubset={handlePlaySubset} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType}
                 onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization}
                 onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses}
+                /* NUEVAS PROPS PARA MOORE */
+                savedAutomatonA={savedAutomatonA}
+                onSaveAutomatonA={handleSaveAutomatonA}
+                onClearAutomatonA={handleClearAutomatonA}
+                onCompareMoore={handleCompareMoore}
             />
 
             {/* ESTADO VACÍO */}

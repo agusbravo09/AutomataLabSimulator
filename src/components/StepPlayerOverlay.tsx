@@ -23,6 +23,7 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
     const isMinimization = currentStep.minimizationTable !== undefined;
     const isClassesMinimization = currentStep.currentPartitions !== undefined;
     const isLastStep = buildMode.currentIndex === buildMode.steps.length - 1;
+    const isMooreTree = currentStep.mooreTree !== undefined;
 
     const handleNext = () => {
         if (!isLastStep) {
@@ -52,6 +53,61 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
         setBuildMode((prev: any) => ({ ...prev, currentIndex: newIdx }));
         setNodes(buildMode.steps[newIdx].nodes);
         setTransitions(buildMode.steps[newIdx].transitions);
+    };
+
+    // --- COMPONENTE RECURSIVO DEL ARBOLITO DE MOORE ---
+    const MooreTreeBranch = ({ node }: { node: any }) => {
+        let bgColor = '#f8f9fa'; let borderColor = '#ced4da';
+        if (node.status === 'evaluating') { bgColor = '#fff3cd'; borderColor = '#ffe066'; }
+        if (node.status === 'ok') { bgColor = '#d3f9d8'; borderColor = '#40c057'; }
+        if (node.status === 'fail') { bgColor = '#ffe3e3'; borderColor = '#fa5252'; }
+        if (node.status === 'duplicate') { bgColor = '#e9ecef'; borderColor = '#adb5bd'; }
+
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {/* Cajita del Nodo */}
+                <div style={{
+                    padding: '6px 12px', borderRadius: '8px', border: `2px solid ${borderColor}`,
+                    backgroundColor: bgColor, fontSize: '13px', fontWeight: 'bold', fontFamily: "'Fira Code', monospace",
+                    color: '#495057', zIndex: 2, position: 'relative', margin: '0 8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}>
+                    ({node.fA ? '*' : ''}{node.nameA}, {node.fB ? '*' : ''}{node.nameB})
+                </div>
+
+                {/* Hijos */}
+                {node.children && node.children.length > 0 && (
+                    <>
+                        <div style={{ width: '2px', height: '15px', backgroundColor: '#ced4da' }}></div>
+                        <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+                            {node.children.map((child: any, i: number) => {
+                                const isFirst = i === 0;
+                                const isLast = i === node.children.length - 1;
+                                const isOnly = node.children.length === 1;
+                                return (
+                                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+                                        {/* Barra horizontal conectora */}
+                                        {!isOnly && <div style={{ position: 'absolute', top: 0, height: '2px', backgroundColor: '#ced4da', left: isFirst ? '50%' : 0, right: isLast ? '50%' : 0 }} />}
+
+                                        {/* Tronquito vertical hacia abajo */}
+                                        <div style={{ width: '2px', height: '15px', backgroundColor: '#ced4da' }} />
+
+                                        {/* Etiqueta de la letra (0, 1, a, b) */}
+                                        <div style={{ fontSize: '11px', color: '#4c6ef5', fontWeight: 'bold', backgroundColor: 'white', padding: '0 4px', zIndex: 3, marginTop: '-8px', border: '1px solid #ced4da', borderRadius: '4px' }}>
+                                            {child.symbol}
+                                        </div>
+
+                                        {/* Llamada recursiva al hijo */}
+                                        <div style={{ marginTop: '5px' }}>
+                                            <MooreTreeBranch node={child.node} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
+            </div>
+        );
     };
 
     return (
@@ -207,6 +263,12 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
                             )}
                         </div>
                     )}
+                </div>
+            )}
+            {/* ARBOLITO DE EQUIVALENCIA (MOORE) */}
+            {isMooreTree && currentStep.mooreTree && (
+                <div style={{ width: '100%', overflowX: 'auto', padding: '10px 0', display: 'flex', justifyContent: 'center' }}>
+                    <MooreTreeBranch node={currentStep.mooreTree} />
                 </div>
             )}
             {/*BOTONES*/}
