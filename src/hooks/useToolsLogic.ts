@@ -3,7 +3,8 @@ import { regexToAutomata } from '../utils/converters/glushkov';
 import type { StateNode, Transition } from '../types/types';
 import { minimizeDfaStepByStep, minimizeDfaClassesStepByStep } from '../utils/converters/dfaMinimization';
 import { centerAutomatonInCamera } from '../utils/centerAutomaton';
-import { convertGrammarToAutomata } from '../utils/converters/grammarToAutomata';
+import { convertGrammarToAutomataStepByStep } from '../utils/converters/grammarToAutomata';
+import { convertLeftGrammarToAutomataStepByStep } from '../utils/converters/leftGrammarToAutomata';
 
 export const useToolsLogic = (
     nodes: StateNode[],
@@ -48,25 +49,58 @@ export const useToolsLogic = (
         }
     };
 
-    const handleGenerateFromGrammar = (grammarText: string) => {
+    const handleGenerateFromGrammar = (grammarText: string, isStepByStep: boolean) => {
         try {
             if (!grammarText || grammarText.trim() === '') {
                 alert("Por favor, ingresá las producciones de la gramática.");
                 return;
             }
 
-            // Llamamos a nuestro nuevo convertidor
-            const result = convertGrammarToAutomata(grammarText);
+            // Llamamos al nuevo motor
+            const result = convertGrammarToAutomataStepByStep(grammarText);
 
-            // MAGIA: Centramos el autómata generado a donde esté mirando la cámara
-            const { centeredNodes } = centerAutomatonInCamera(result.nodes, [], camera);
+            // Centramos la película entera donde mira la cámara
+            const { centeredNodes, centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
 
-            // Actualizamos el lienzo
-            setNodes(centeredNodes);
-            setTransitions(result.transitions);
-            setAutomataType('NFA'); // Una gramática siempre genera un AFND por defecto
-            setBuildMode({ active: false, steps: [], currentIndex: 0 });
+            if (isStepByStep && centeredSteps.length > 0) {
+                // MODO PELÍCULA
+                setBuildMode({ active: true, steps: centeredSteps, currentIndex: 0 });
+                setNodes(centeredSteps[0].nodes);
+                setTransitions(centeredSteps[0].transitions);
+            } else {
+                // MODO INSTANTÁNEO
+                setNodes(centeredNodes);
+                setTransitions(result.transitions);
+                setBuildMode({ active: false, steps: [], currentIndex: 0 });
+            }
 
+            setAutomataType('NFA');
+
+        } catch (error: any) {
+            alert("Error al parsear la gramática: " + error.message);
+        }
+    };
+
+    const handleGenerateFromLeftGrammar = (grammarText: string, isStepByStep: boolean) => {
+        try {
+            if (!grammarText || grammarText.trim() === '') {
+                alert("Por favor, ingresá las producciones de la gramática.");
+                return;
+            }
+
+            const result = convertLeftGrammarToAutomataStepByStep(grammarText);
+            const { centeredNodes, centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
+
+            if (isStepByStep && centeredSteps.length > 0) {
+                setBuildMode({ active: true, steps: centeredSteps, currentIndex: 0 });
+                setNodes(centeredSteps[0].nodes);
+                setTransitions(centeredSteps[0].transitions);
+            } else {
+                setNodes(centeredNodes);
+                setTransitions(result.transitions);
+                setBuildMode({ active: false, steps: [], currentIndex: 0 });
+            }
+            setAutomataType('NFA');
         } catch (error: any) {
             alert("Error al parsear la gramática: " + error.message);
         }
@@ -162,5 +196,5 @@ export const useToolsLogic = (
         }
     };
 
-    return { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handleInstantClasses, handlePlayClasses, handleGenerateFromGrammar };
+    return { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handleInstantClasses, handlePlayClasses, handleGenerateFromGrammar, handleGenerateFromLeftGrammar };
 };

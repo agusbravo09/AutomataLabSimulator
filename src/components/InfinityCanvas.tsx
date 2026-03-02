@@ -62,7 +62,7 @@ function InfinityCanvas() {
 
     const { simMode, setSimMode, simulationResult, setSimulationResult, handleRunSimulation, handleStartStepByStep } = useSimulation(nodes, transitions);
 
-    const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses, handleGenerateFromGrammar } = useToolsLogic(
+    const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses, handleGenerateFromGrammar, handleGenerateFromLeftGrammar } = useToolsLogic(
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera
     );
 
@@ -128,6 +128,7 @@ function InfinityCanvas() {
                 onClearAutomatonA={handleClearAutomatonA}
                 onCompareMoore={handleCompareMoore}
                 onGenerateFromGrammar={handleGenerateFromGrammar}
+                onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar}
             />
 
             {/* ESTADO VACÍO */}
@@ -184,9 +185,9 @@ function InfinityCanvas() {
                 onClick={handleStageClick} onMouseMove={handleMouseMoveStage} onMouseUp={handleMouseUpStage}
             >
                 <Layer>
-                    <TransitionsRenderer transitions={transitions} nodes={nodes} simMode={simMode} setSelectedElement={setSelectedElement} />
+                    <TransitionsRenderer transitions={transitions} nodes={nodes} simMode={simMode} setSelectedElement={setSelectedElement} buildMode={buildMode} />
                     <GhostArrow drawingTransition={drawingTransition} nodes={nodes} />
-                    <NodesRenderer nodes={nodes} simMode={simMode} selectedElement={selectedElement} activeTool={activeTool} updateNodePosition={updateNodePosition} handleMouseDownNode={handleMouseDownNode} handleMouseUpNode={handleMouseUpNode} setSelectedElement={setSelectedElement}/>
+                    <NodesRenderer nodes={nodes} simMode={simMode} selectedElement={selectedElement} activeTool={activeTool} updateNodePosition={updateNodePosition} handleMouseDownNode={handleMouseDownNode} handleMouseUpNode={handleMouseUpNode} setSelectedElement={setSelectedElement} buildMode={buildMode}/>
                 </Layer>
             </Stage>
         </div>

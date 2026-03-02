@@ -24,13 +24,15 @@ interface ToolsPanelProps {
     onSaveAutomatonA: () => void;
     onClearAutomatonA: () => void;
     onCompareMoore: (isInstant: boolean) => void;
-    onGenerateFromGrammar: (text: string) => void;
+    onGenerateFromGrammar: (text: string, isStepByStep: boolean) => void;
+    onGenerateFromLeftGrammar: (text: string, isStepByStep: boolean) => void;
 }
 
-const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses, onClearAutomatonA, onCompareMoore, onSaveAutomatonA, savedAutomatonA, onGenerateFromGrammar }) => {
+const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses, onClearAutomatonA, onCompareMoore, onSaveAutomatonA, savedAutomatonA, onGenerateFromGrammar, onGenerateFromLeftGrammar }) => {
     const [regexInput, setRegexInput] = useState('');
     const [generatedRegexResult, setGeneratedRegexResult] = useState<string | null>(null);
     const [grammarInput, setGrammarInput] = useState('S -> aS | bA | λ\nA -> a');
+    const [grammarType, setGrammarType] = useState<'right' | 'left'>('right');
 
     // Condicionamos qué herramientas se muestran según el tipo de autómata
     const isFiniteAutomata = automataType === 'DFA' || automataType === 'NFA';
@@ -61,6 +63,70 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, 
 
                 {isFiniteAutomata ? (
                     <>
+
+                        {/* HERRAMIENTA: GENERAR DESDE GRAMÁTICA */}
+                        <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #dee2e6', marginBottom: '15px' }}>
+                            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#212529' }}>Generar desde Gramática</h3>
+
+                            {/* SELECTOR DE TIPO DE GRAMÁTICA */}
+                            <div style={{ display: 'flex', gap: '15px', marginBottom: '12px', padding: '8px', backgroundColor: '#e9ecef', borderRadius: '6px' }}>
+                                <label style={{ fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', color: '#495057', fontWeight: grammarType === 'right' ? 'bold' : 'normal' }}>
+                                    <input
+                                        type="radio"
+                                        name="grammarType"
+                                        checked={grammarType === 'right'}
+                                        onChange={() => setGrammarType('right')}
+                                        style={{ margin: 0, cursor: 'pointer' }}
+                                    />
+                                    GLD (Derecha)
+                                </label>
+                                <label style={{ fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', color: '#495057', fontWeight: grammarType === 'left' ? 'bold' : 'normal' }}>
+                                    <input
+                                        type="radio"
+                                        name="grammarType"
+                                        checked={grammarType === 'left'}
+                                        onChange={() => setGrammarType('left')}
+                                        style={{ margin: 0, cursor: 'pointer' }}
+                                    />
+                                    GLI (Izquierda)
+                                </label>
+                            </div>
+
+                            {/* INPUT DE PRODUCCIONES */}
+                            <textarea
+                                value={grammarInput}
+                                onChange={(e) => setGrammarInput(e.target.value)}
+                                placeholder={grammarType === 'right' ? "S -> aS | bA\nA -> a | λ" : "S -> Sa | Ab\nA -> a | λ"}
+                                style={{ width: '100%', height: '100px', padding: '10px', borderRadius: '6px', border: '1px solid #ced4da', fontFamily: "'Fira Code', monospace", fontSize: '13px', marginBottom: '12px', resize: 'vertical', boxSizing: 'border-box', backgroundColor: '#ffffff', outline: 'none' }}
+                            />
+
+                            {/* BOTONERA */}
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button
+                                    onClick={() => {
+                                        if (grammarType === 'right') onGenerateFromGrammar(grammarInput, true);
+                                        else onGenerateFromLeftGrammar(grammarInput, true);
+                                    }}
+                                    style={{ flex: 1, padding: '8px', backgroundColor: '#ffffff', color: '#495057', border: '1px solid #ced4da', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                                >
+                                    Paso a Paso
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (grammarType === 'right') onGenerateFromGrammar(grammarInput, false);
+                                        else onGenerateFromLeftGrammar(grammarInput, false);
+                                    }}
+                                    style={{ flex: 1, padding: '8px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(76, 110, 245, 0.2)' }}
+                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                >
+                                    Generar AFND
+                                </button>
+                            </div>
+                        </div>
+
                         {/* REGEX A AUTÓMATA */}
                         <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
@@ -132,12 +198,20 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, 
                                 placeholder="S -> aS | bA&#10;A -> a | λ"
                                 style={{ width: '100%', height: '80px', padding: '10px', borderRadius: '4px', border: '1px solid #ced4da', fontFamily: 'monospace', fontSize: '13px', marginBottom: '10px', resize: 'vertical', boxSizing: 'border-box' }}
                             />
-                            <button
-                                onClick={() => onGenerateFromGrammar(grammarInput)}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
-                            >
-                                Dibujar Autómata
-                            </button>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button
+                                    onClick={() => onGenerateFromGrammar(grammarInput, true)} // true = Paso a Paso
+                                    style={{ flex: 1, padding: '8px', backgroundColor: 'white', color: '#495057', border: '1px solid #ced4da', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+                                >
+                                    Paso a Paso
+                                </button>
+                                <button
+                                    onClick={() => onGenerateFromGrammar(grammarInput, false)} // false = Instantáneo
+                                    style={{ flex: 1, padding: '8px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+                                >
+                                    Generar
+                                </button>
+                            </div>
                         </div>
 
                         {/* DETERMINIZACIÓN */}

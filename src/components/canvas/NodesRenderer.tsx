@@ -12,17 +12,22 @@ interface Props {
     handleMouseDownNode: (id: string) => void;
     handleMouseUpNode: (id: string) => void;
     setSelectedElement: (el: any) => void;
+    buildMode?: any;
 }
 
 export const NodesRenderer: React.FC<Props> = ({
-                                                   nodes, simMode, selectedElement, activeTool, updateNodePosition, handleMouseDownNode, handleMouseUpNode, setSelectedElement
+                                                   nodes, simMode, buildMode, selectedElement, activeTool, updateNodePosition, handleMouseDownNode, handleMouseUpNode, setSelectedElement
                                                }) => {
     return (
         <>
             {nodes.map((node) => {
                 let isHighlighted = false;
-                if (simMode.active && simMode.path[simMode.currentIndex]) {
-                    isHighlighted = simMode.path[simMode.currentIndex].activeStates.includes(node.id);
+
+                if (simMode?.active && simMode?.path?.[simMode.currentIndex]) {
+                    isHighlighted = simMode.path[simMode.currentIndex].activeNodes?.includes(node.id) || false;
+                }
+                else if (buildMode?.active && buildMode?.steps?.[buildMode.currentIndex]) {
+                    isHighlighted = buildMode.steps[buildMode.currentIndex].activeNodes?.includes(node.id) || false;
                 }
 
                 return (

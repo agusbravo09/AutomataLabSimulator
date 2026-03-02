@@ -8,10 +8,11 @@ interface Props {
     transitions: Transition[];
     nodes: StateNode[];
     simMode: any;
+    buildMode?: any;
     setSelectedElement: (el: any) => void;
 }
 
-export const TransitionsRenderer: React.FC<Props> = ({ transitions, nodes, simMode, setSelectedElement }) => {
+export const TransitionsRenderer: React.FC<Props> = ({ transitions, nodes, simMode, buildMode, setSelectedElement }) => {
     const RADIUS = 30;
 
     // Calcula la separación para flechas superpuestas
@@ -154,10 +155,15 @@ export const TransitionsRenderer: React.FC<Props> = ({ transitions, nodes, simMo
                     points = getEdgePoints(fromNode, toNode, RADIUS);
                 }
 
-                // Lógica de resaltado (se mantiene igual)
                 let isHighlighted = false;
-                if (simMode.active && simMode.path[simMode.currentIndex]) {
-                    isHighlighted = simMode.path[simMode.currentIndex].activeTransitions.includes(t.id);
+
+                // 1. Resaltado si estamos simulando una cadena
+                if (simMode?.active && simMode?.path?.[simMode.currentIndex]) {
+                    isHighlighted = simMode.path[simMode.currentIndex].activeTransitions?.includes(t.id) || false;
+                }
+                // 2. Resaltado si estamos construyendo paso a paso (nuestro Lema/Gramática)
+                else if (buildMode?.active && buildMode?.steps?.[buildMode.currentIndex]) {
+                    isHighlighted = buildMode.steps[buildMode.currentIndex].activeTransitions?.includes(t.id) || false;
                 }
 
                 // Renderizamos usando TU componente existente

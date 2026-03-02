@@ -1,8 +1,9 @@
 import React, {useState} from 'react';
 import type { AutomataType } from './Toolbar';
 import type { StateNode, Transition } from '../types/types';
-import { generateRightLinearProductions } from "../utils/converters/grammarGenerator";
+import { generateRightLinearProductions, generateLeftLinearGrammar } from "../utils/converters/grammarGenerator";
 import { decomposePumping } from '../utils/converters/pumpingLemma';
+import { PumpingModal } from './PumpingModal';
 
 interface SidePanelProps {
     isOpen: boolean;
@@ -28,7 +29,20 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
     const [pumpInput, setPumpInput] = useState('');
     const [pumpData, setPumpData] = useState<{x: string, y: string, z: string, p: number} | null>(null);
     const [pumpError, setPumpError] = useState('');
-    const [pumpI, setPumpI] = useState(2);
+    const [pumpK, setPumpK] = useState(0);
+
+    // ESTADOS PARA EL LEMA DEL BOMBEO (MODO MANUAL / PIZARRÓN)
+    const [isPumpManual, setIsPumpManual] = useState(false);
+    const [manualN, setManualN] = useState(3);
+    const [manualW, setManualW] = useState('0001000');
+    const [manualX, setManualX] = useState('0');
+    const [manualY, setManualY] = useState('00');
+    const [manualK, setManualK] = useState(0);
+
+    // Calculamos Z automáticamente en el modo manual
+    const manualZ = manualW.substring(manualX.length + manualY.length);
+
+    const [isPumpingModalOpen, setIsPumpingModalOpen] = useState(false);
 
     const handleComprobar = () => {
         if (onSimulate) onSimulate(inputValue.trim());
@@ -43,7 +57,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
             setPumpError('');
             const data = decomposePumping(nodes, transitions, pumpInput.trim());
             setPumpData(data);
-            setPumpI(2); // Por defecto bombeamos con i=2
+            setPumpK(0); // Por defecto probamos con k=0 como en el PDF
         } catch(e: any) {
             setPumpError(e.message);
             setPumpData(null);
@@ -52,7 +66,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
 
     const handleTestPumpedString = () => {
         if (!pumpData || !onSimulate) return;
-        const pumpedString = pumpData.x + pumpData.y.repeat(pumpI) + pumpData.z;
+        const pumpedString = pumpData.x + pumpData.y.repeat(pumpK) + pumpData.z;
         setActiveTab('simulate');
         setInputValue(pumpedString);
         onSimulate(pumpedString);
@@ -76,6 +90,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
     const initialStates = nodes.filter(n => n.isInitial).map(n => n.name).join(', ');
     const finalStates = nodes.filter(n => n.isFinal).map(n => n.name).join(', ');
     const productionsText = generateRightLinearProductions(nodes, transitions);
+    const leftProductionsText = generateLeftLinearGrammar(nodes, transitions);
 
     return (
         <div style={{
@@ -243,22 +258,41 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                                     </div>
                                 </div>
 
-                                <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
-                                    <div style={{ fontWeight: 600, marginBottom: '12px', color: '#212529', fontFamily: "'Inter', sans-serif", borderBottom: '1px solid #dee2e6', paddingBottom: '8px' }}>
-                                        Cuádrupla de la Gramática
+                                {/* GRAMÁTICAS REGULARES */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+
+                                    {/* GLD */}
+                                    <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                                        <div style={{ fontWeight: 600, marginBottom: '12px', color: '#212529', fontFamily: "'Inter', sans-serif", borderBottom: '1px solid #dee2e6', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                                            <span>Lineal por Derecha (GLD)</span>
+                                            <span style={{ fontSize: '11px', backgroundColor: '#e3fafc', color: '#0b7285', padding: '2px 6px', borderRadius: '4px' }}>A → aB</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <div><strong style={{color: '#212529'}}>V</strong> = {`{ ${qSet || '∅'} }`}</div>
+                                            <div><strong style={{color: '#212529'}}>S (Axioma)</strong> = {initialStates.includes(',') ? `{${initialStates}}` : (initialStates || '∅')}</div>
+                                            <div><strong style={{color: '#212529'}}>P (Producciones)</strong>:</div>
+                                            <pre style={{ margin: '0 0 0 10px', padding: '10px', backgroundColor: '#ffffff', border: '1px solid #e9ecef', borderRadius: '6px', fontFamily: "'Fira Code', monospace", fontSize: '13px', color: '#495057', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                                                {productionsText}
+                                            </pre>
+                                        </div>
                                     </div>
-                                    <div style={{ fontSize: '16px', color: '#4c6ef5', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>
-                                        G = (V, Σ, P, S)
+
+                                    {/* GLI */}
+                                    <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                                        <div style={{ fontWeight: 600, marginBottom: '12px', color: '#212529', fontFamily: "'Inter', sans-serif", borderBottom: '1px solid #dee2e6', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                                            <span>Lineal por Izquierda (GLI)</span>
+                                            <span style={{ fontSize: '11px', backgroundColor: '#fff0f6', color: '#a61e4d', padding: '2px 6px', borderRadius: '4px' }}>A → Ba</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <div><strong style={{color: '#212529'}}>V</strong> = {`{ ${qSet || '∅'} }`}</div>
+                                            <div><strong style={{color: '#212529'}}>S (Axioma)</strong> = {finalStates.includes(',') ? 'S_Axioma' : (finalStates || '∅')}</div>
+                                            <div><strong style={{color: '#212529'}}>P (Producciones)</strong>:</div>
+                                            <pre style={{ margin: '0 0 0 10px', padding: '10px', backgroundColor: '#ffffff', border: '1px solid #e9ecef', borderRadius: '6px', fontFamily: "'Fira Code', monospace", fontSize: '13px', color: '#495057', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                                                {leftProductionsText}
+                                            </pre>
+                                        </div>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <div><strong style={{color: '#212529'}}>V (No Terminales)</strong> = {`{ ${qSet || '∅'} }`}</div>
-                                        <div><strong style={{color: '#212529'}}>Σ (Terminales)</strong> = {`{ ${sigmaSet || '∅'} }`}</div>
-                                        <div><strong style={{color: '#212529'}}>S (Axioma)</strong> = {initialStates.includes(',') ? `{${initialStates}}` : (initialStates || '∅')}</div>
-                                        <div><strong style={{color: '#212529'}}>P (Producciones)</strong>:</div>
-                                        <pre style={{ margin: '0 0 0 10px', padding: '10px', backgroundColor: '#ffffff', border: '1px solid #e9ecef', borderRadius: '6px', fontFamily: "'Fira Code', 'Courier New', monospace", fontSize: '13px', color: '#495057', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-                                            {productionsText}
-                                        </pre>
-                                    </div>
+
                                 </div>
                             </div>
                         )}
@@ -323,23 +357,36 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                 {/* ---------------- PESTAÑA 4: LEMA DEL BOMBEO ---------------- */}
                 {activeTab === 'pumping' && (
                     <div style={{ animation: 'fadeIn 0.3s ease' }}>
+
+                        {/* BOTÓN PARA ABRIR EL PIZARRÓN (MODO MANUAL/DEMOSTRACIÓN) */}
+                        <div style={{ backgroundColor: '#e3fafc', border: '1px solid #99e9f2', padding: '15px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center' }}>
+                            <p style={{ fontSize: '12px', margin: '0 0 15px 0', color: '#1098ad', lineHeight: '1.4' }}>Utilizá el pizarrón interactivo para demostrar que lenguajes complejos NO son regulares.</p>
+                            <button
+                                onClick={() => setIsPumpingModalOpen(true)}
+                                style={{ width: '100%', padding: '10px', backgroundColor: '#0c8599', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 10px rgba(12, 133, 153, 0.3)' }}
+                            >
+                                Abrir Pizarrón Manual
+                            </button>
+                        </div>
+
+                        {/* --- LEMA SOBRE EL AUTÓMATA DEL LIENZO --- */}
                         {nodes.length === 0 ? (
-                            <div style={{ textAlign: 'center', marginTop: '40px', color: '#adb5bd' }}>
+                            <div style={{ textAlign: 'center', marginTop: '20px', color: '#adb5bd' }}>
                                 <div style={{ fontSize: '32px', marginBottom: '10px' }}>Sin Datos</div>
-                                <p style={{ fontSize: '13px', margin: 0 }}>El autómata está vacío.</p>
+                                <p style={{ fontSize: '13px', margin: 0 }}>El autómata está vacío. Dibujá uno para evaluarlo.</p>
                             </div>
                         ) : (
                             <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #dee2e6' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #dee2e6', paddingBottom: '10px' }}>
-                                    <h3 style={{ fontSize: '14px', margin: 0, color: '#212529' }}>Lema del Bombeo</h3>
+                                    <h3 style={{ fontSize: '14px', margin: 0, color: '#212529' }}>Comprobar Lema (En Lienzo)</h3>
                                     <span style={{ backgroundColor: '#4c6ef5', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                                         p = {nodes.length}
                                     </span>
                                 </div>
 
-                                <p style={{ fontSize: '12px', color: '#868e96', marginBottom: '15px', lineHeight: '1.4' }}>
-                                    Ingresá una cadena <strong>w</strong> que pertenezca al lenguaje y cuya longitud sea mayor o igual a <strong>p</strong>.
-                                </p>
+                                <div style={{ fontSize: '12px', color: '#495057', marginBottom: '15px', lineHeight: '1.5' }}>
+                                    <strong style={{ color: '#212529' }}>1.</strong> Seleccioná una cadena <strong>w</strong> que pertenezca a L tal que <strong>|w| ≥ p</strong>.
+                                </div>
 
                                 <input
                                     type="text"
@@ -353,7 +400,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                                     onClick={handleDecompose}
                                     style={{ width: '100%', padding: '10px', backgroundColor: '#e9ecef', color: '#495057', border: '1px solid #ced4da', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s', marginBottom: '15px' }}
                                 >
-                                    Descomponer w = xyz
+                                    2. Descomponer w = xyz
                                 </button>
 
                                 {pumpError && (
@@ -364,6 +411,8 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
 
                                 {pumpData && (
                                     <div style={{ animation: 'popIn 0.3s ease' }}>
+
+                                        {/* CAJAS DE X, Y, Z */}
                                         <div style={{ display: 'flex', gap: '5px', marginBottom: '15px', fontFamily: "'Fira Code', monospace", textAlign: 'center' }}>
                                             <div style={{ flex: 1, backgroundColor: '#e3fafc', border: '1px solid #99e9f2', padding: '8px', borderRadius: '6px' }}>
                                                 <div style={{ fontSize: '10px', color: '#0b7285', fontWeight: 'bold' }}>X</div>
@@ -379,20 +428,27 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                                             </div>
                                         </div>
 
+                                        {/* COMPROBACIÓN DE REGLAS */}
+                                        <div style={{ backgroundColor: '#f8f9fa', border: '1px dashed #ced4da', padding: '10px', borderRadius: '6px', marginBottom: '15px', fontSize: '12px', color: '#495057', fontFamily: "'Fira Code', monospace" }}>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#2b8a3e' }}>✓ Condiciones del Lema:</div>
+                                            <div>|xy| ≤ p → |{pumpData.x + pumpData.y}| ≤ {pumpData.p}</div>
+                                            <div>y ≠ λ → {pumpData.y} ≠ λ</div>
+                                        </div>
+
                                         <div style={{ backgroundColor: '#ffffff', border: '1px solid #dee2e6', padding: '15px', borderRadius: '6px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#495057' }}>Bombear (i):</span>
+                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#495057' }}>3. Elegir valor "k":</span>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <button onClick={() => setPumpI(Math.max(0, pumpI - 1))} style={{ width: '28px', height: '28px', borderRadius: '4px', border: '1px solid #ced4da', background: '#f8f9fa', cursor: 'pointer' }}>-</button>
-                                                    <span style={{ fontFamily: "'Fira Code', monospace", fontWeight: 'bold', width: '20px', textAlign: 'center' }}>{pumpI}</span>
-                                                    <button onClick={() => setPumpI(pumpI + 1)} style={{ width: '28px', height: '28px', borderRadius: '4px', border: '1px solid #ced4da', background: '#f8f9fa', cursor: 'pointer' }}>+</button>
+                                                    <button onClick={() => setPumpK(Math.max(0, pumpK - 1))} style={{ width: '28px', height: '28px', borderRadius: '4px', border: '1px solid #ced4da', background: '#f8f9fa', cursor: 'pointer' }}>-</button>
+                                                    <span style={{ fontFamily: "'Fira Code', monospace", fontWeight: 'bold', width: '20px', textAlign: 'center' }}>{pumpK}</span>
+                                                    <button onClick={() => setPumpK(pumpK + 1)} style={{ width: '28px', height: '28px', borderRadius: '4px', border: '1px solid #ced4da', background: '#f8f9fa', cursor: 'pointer' }}>+</button>
                                                 </div>
                                             </div>
 
-                                            <div style={{ fontSize: '12px', color: '#868e96', marginBottom: '5px' }}>Cadena bombeada (xy<sup>{pumpI}</sup>z):</div>
+                                            <div style={{ fontSize: '12px', color: '#868e96', marginBottom: '5px' }}>4. Comprobar xy<sup>k</sup>z ∈ L:</div>
                                             <div style={{ fontFamily: "'Fira Code', monospace", backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '4px', border: '1px solid #e9ecef', wordBreak: 'break-all', color: '#212529', marginBottom: '15px' }}>
                                                 {pumpData.x}
-                                                <span style={{ color: '#a61e4d', fontWeight: 'bold' }}>{pumpData.y.repeat(pumpI)}</span>
+                                                <span style={{ color: '#a61e4d', fontWeight: 'bold' }}>{pumpData.y.repeat(pumpK)}</span>
                                                 {pumpData.z}
                                             </div>
 
@@ -407,11 +463,14 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                                 )}
                             </div>
                         )}
+
+                        <PumpingModal
+                            isOpen={isPumpingModalOpen}
+                            onClose={() => setIsPumpingModalOpen(false)}
+                        />
                     </div>
                 )}
-
             </div>
-
             <style>
                 {`
                     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
