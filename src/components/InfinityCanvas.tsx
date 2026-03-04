@@ -124,6 +124,22 @@ function InfinityCanvas() {
         setAutomataType('MOORE');
     };
 
+    const handlePlayTransducerConversion = (steps: any[], newType: AutomataType) => {
+        takeSnapshot();
+
+        // Le pasamos los datos al reproductor que ya tenés armado (StepPlayerOverlay)
+        setBuildMode({
+            active: true,
+            steps: steps,
+            currentIndex: 0,
+            backupNodes: [...nodes], // Para que pueda cancelar y volver atrás
+            backupTransitions: [...transitions]
+        });
+
+        // Cambiamos el tipo de autómata para que el lienzo dibuje correctamente las cosas de Mealy o Moore
+        setAutomataType(newType);
+    };
+
     return (
         <div style={backgroundStyle}>
             {/* UI FLOTANTE */}
@@ -156,6 +172,7 @@ function InfinityCanvas() {
                 onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar}
                 onConvertMooreToMealy={handleConvertMooreToMealy}
                 onConvertMealyToMoore={handleConvertMealyToMoore}
+                onPlayTransducerConversion={handlePlayTransducerConversion}
             />
 
             {/* ESTADO VACÍO */}

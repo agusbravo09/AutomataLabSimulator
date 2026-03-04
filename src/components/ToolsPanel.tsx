@@ -3,6 +3,7 @@ import type { AutomataType } from './Toolbar';
 import type { StateNode, Transition } from '../types/types';
 import { convertAutomataToRegex } from '../utils/converters/automataToRegex';
 import { convertNfaToDfa } from '../utils/converters/nfaToDfa';
+import { convertMooreToMealy, convertMealyToMoore } from '../utils/converters/transducerConverter';
 
 interface ToolsPanelProps {
     isOpen: boolean;
@@ -28,9 +29,10 @@ interface ToolsPanelProps {
     onGenerateFromLeftGrammar: (text: string, isStepByStep: boolean) => void;
     onConvertMooreToMealy?: () => void;
     onConvertMealyToMoore?: () => void;
+    onPlayTransducerConversion?: (steps: any[], newType: AutomataType) => void;
 }
 
-const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses, onClearAutomatonA, onCompareMoore, onSaveAutomatonA, savedAutomatonA, onGenerateFromGrammar, onGenerateFromLeftGrammar, onConvertMooreToMealy, onConvertMealyToMoore }) => {
+const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses, onClearAutomatonA, onCompareMoore, onSaveAutomatonA, savedAutomatonA, onGenerateFromGrammar, onGenerateFromLeftGrammar, onConvertMooreToMealy, onConvertMealyToMoore, onPlayTransducerConversion }) => {
     const [regexInput, setRegexInput] = useState('');
     const [generatedRegexResult, setGeneratedRegexResult] = useState<string | null>(null);
     const [grammarInput, setGrammarInput] = useState('S -> aS | bA | λ\nA -> a');
@@ -332,17 +334,33 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, 
                                     : 'Convierte la Máquina de Mealy actual en una Máquina de Moore equivalente.'}
                             </p>
 
-                            <button
-                                onClick={automataType === 'MOORE' ? onConvertMooreToMealy : onConvertMealyToMoore}
-                                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: 'none', backgroundColor: '#4c6ef5', color: 'white', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s', boxShadow: '0 2px 5px rgba(76,110,245,0.2)' }}
-                            >
-                                Convertir a {automataType === 'MOORE' ? 'Mealy' : 'Moore'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                    onClick={() => {
+                                        if (automataType === 'MOORE' && onPlayTransducerConversion) {
+                                            const { steps } = convertMooreToMealy(nodes, transitions);
+                                            onPlayTransducerConversion(steps, 'MEALY');
+                                        } else if (automataType === 'MEALY' && onPlayTransducerConversion) {
+                                            const { steps } = convertMealyToMoore(nodes, transitions);
+                                            onPlayTransducerConversion(steps, 'MOORE');
+                                        }
+                                    }}
+                                    style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #4c6ef5', backgroundColor: 'white', color: '#4c6ef5', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                                >
+                                    Paso a Paso
+                                </button>
+                                <button
+                                    onClick={automataType === 'MOORE' ? onConvertMooreToMealy : onConvertMealyToMoore}
+                                    style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: '#e9ecef', color: '#495057', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                                >
+                                    Instantáneo
+                                </button>
+                            </div>
 
                             {automataType === 'MEALY' && (
                                 <div style={{ marginTop: '12px', padding: '8px', backgroundColor: '#fff3cd', border: '1px solid #ffe066', borderRadius: '6px' }}>
                                     <span style={{ fontSize: '11px', color: '#d9480f', display: 'block', lineHeight: '1.4' }}>
-                                        <strong>* Nota:</strong> Si a un estado de Mealy le llegan transiciones con salidas distintas, el algoritmo lo clonará automáticamente.
+                                        <strong>* Nota:</strong> Si a un estado le llegan transiciones con salidas distintas, el algoritmo lo dividirá (clonará) automáticamente.
                                     </span>
                                 </div>
                             )}
