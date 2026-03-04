@@ -15,13 +15,22 @@ export const TransitionArrowView = ({ transition, points, tension, type, onClick
     //calculamos la posicion del texto
     const textPos = getTextPosition(points, type);
 
-    // formateamos la etiqueta a mostrar
-    let label = transition.symbols.join(', ');
+// formateamos la etiqueta a mostrar
+    let label = '';
+
+    // Si tiene salidas (Modo MEALY) y coinciden con la cantidad de símbolos
+    if (transition.outputs && transition.outputs.length > 0) {
+        label = transition.symbols.map((sym, i) => `${sym} / ${transition.outputs![i] || '?'}`).join(', ');
+    } else {
+        // Modo Normal (AFD/AFND)
+        label = transition.symbols.join(', ');
+    }
+
     if (transition.hasLambda) {
         label = label.length > 0 ? `${label}, λ` : `λ`;
     }
 
-    //Si no hay simbolos ni lambda, mostrar un cuadrado sutil para indicar que esta vacio
+    // Si no hay simbolos ni lambda, mostrar un cuadrado sutil para indicar que esta vacio
     if (label.length === 0) label = '☐';
 
 

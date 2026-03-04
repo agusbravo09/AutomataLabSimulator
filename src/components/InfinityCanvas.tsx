@@ -166,6 +166,7 @@ function InfinityCanvas() {
                 element={selectedElement} nodes={nodes} isSidePanelOpen={isPanelOpen}
                 onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)}
                 onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement}
+                automataType={automataType}
             />
 
             <ConfirmationModal

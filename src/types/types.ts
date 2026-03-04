@@ -5,6 +5,7 @@ export interface StateNode {
     y: number;         // Coordenada Y en el mundo infinito
     isInitial: boolean; // ¿Es el estado de arranque?
     isFinal: boolean;   // ¿Es un estado de aceptación?
+    output?: string; // salida para la Máquina de Moore (va en el estado)
 }
 
 export interface Transition {
@@ -13,4 +14,5 @@ export interface Transition {
     to: string;        // ID del nodo destino
     symbols: string[]; // ['a', 'b', '0']
     hasLambda: boolean;
+    outputs?: string[]; // Las salidas para la Máquina de Mealy (van en la flecha)
 }

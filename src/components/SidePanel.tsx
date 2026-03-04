@@ -340,12 +340,38 @@ const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, no
                                     border: `1px solid ${simulationResult.accepted ? '#b2f2bb' : '#ffc9c9'}`,
                                     animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                                 }}>
-                                    <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: simulationResult.error ? '6px' : '0' }}>
-                                        {simulationResult.accepted ? 'Cadena Aceptada' : 'Cadena Rechazada'}
+                                    {/* Título Dinámico: Reconocedor vs Transductor */}
+                                    <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: (simulationResult.error || simulationResult.outputString !== undefined) ? '8px' : '0' }}>
+                                        {simulationResult.outputString !== undefined
+                                            ? (simulationResult.accepted ? 'Traducción Exitosa' : 'Traducción Incompleta')
+                                            : (simulationResult.accepted ? 'Cadena Aceptada' : 'Cadena Rechazada')
+                                        }
                                     </div>
+
+                                    {/* Mensaje de Error (si se trabó la cadena) */}
                                     {simulationResult.error && (
-                                        <div style={{ fontSize: '12px', fontWeight: 'normal', lineHeight: '1.4' }}>
+                                        <div style={{ fontSize: '12px', fontWeight: 'normal', lineHeight: '1.4', marginBottom: simulationResult.outputString !== undefined ? '8px' : '0' }}>
                                             {simulationResult.error}
+                                        </div>
+                                    )}
+
+                                    {/* Cajita con la Salida (Solo aparece en Mealy/Moore) */}
+                                    {simulationResult.outputString !== undefined && (
+                                        <div style={{
+                                            marginTop: '8px',
+                                            padding: '8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                                            borderRadius: '6px',
+                                            border: `1px dashed ${simulationResult.accepted ? '#51cf66' : '#ff8787'}`,
+                                            display: 'inline-block',
+                                            minWidth: '80%'
+                                        }}>
+                <span style={{ fontSize: '11px', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#495057' }}>
+                    Cadena de Salida:
+                </span>
+                                            <span style={{ fontFamily: "'Fira Code', monospace", fontSize: '18px', fontWeight: 'bold', letterSpacing: '2px' }}>
+                    {simulationResult.outputString === '' ? 'λ' : simulationResult.outputString}
+                </span>
                                         </div>
                                     )}
                                 </div>

@@ -14,6 +14,7 @@ export interface SimulationResult {
     accepted: boolean;
     path: Step[]; // Guardamos el rastro paso a paso
     error?: string; // Por si la cadena se traba a la mitad
+    outputString?: string; // El texto traducido que devuelven Mealy y Moore
 }
 
 
@@ -118,6 +119,65 @@ const simulateNFA = (nodes: StateNode[], transitions: Transition[], inputString:
     return { accepted: isAccepted, path, error: died ? `Murió en el símbolo '${path[path.length-1].charRead}'.` : undefined };
 };
 
+// Maquina de Moore
+export const simulateMoore = (nodes: StateNode[], transitions: Transition[], inputString: string): SimulationResult => {
+    const initialNodes = nodes.filter(n => n.isInitial);
+    if (initialNodes.length === 0) return { accepted: false, path: [], error: "No hay estado inicial." };
+    if (initialNodes.length > 1) return { accepted: false, path: [], error: "Moore no puede tener múltiples estados iniciales." };
+
+    let currentState = initialNodes[0];
+    // En Moore, la salida inicial arranca con lo que escupa el estado inicial
+    let outputString = currentState.output || '';
+    const path: Step[] = [{ charRead: '', activeStates: [currentState.id], activeTransitions: [] }];
+
+    for (const char of inputString) {
+        const validTransition = transitions.find(t => t.from === currentState.id && t.symbols.includes(char));
+
+        if (validTransition) {
+            currentState = nodes.find(n => n.id === validTransition.to)!;
+            // Concatenamos la salida del nuevo estado al que llegamos
+            outputString += (currentState.output || '');
+
+            path.push({ charRead: char, activeStates: [currentState.id], activeTransitions: [validTransition.id] });
+        } else {
+            return { accepted: false, path, outputString, error: `Se trabó en el estado '${currentState.name}': sin transición para '${char}'.` };
+        }
+    }
+    return { accepted: true, path, outputString };
+};
+
+// Maquina de Mealy
+export const simulateMealy = (nodes: StateNode[], transitions: Transition[], inputString: string): SimulationResult => {
+    const initialNodes = nodes.filter(n => n.isInitial);
+    if (initialNodes.length === 0) return { accepted: false, path: [], error: "No hay estado inicial." };
+    if (initialNodes.length > 1) return { accepted: false, path: [], error: "Mealy no puede tener múltiples estados iniciales." };
+
+    let currentState = initialNodes[0];
+    let outputString = '';
+    const path: Step[] = [{ charRead: '', activeStates: [currentState.id], activeTransitions: [] }];
+
+    for (const char of inputString) {
+        const validTransition = transitions.find(t => t.from === currentState.id && t.symbols.includes(char));
+
+        if (validTransition) {
+            // Buscamos qué posición ocupa la letra que leímos adentro de la flecha,
+            // para escupir la salida correspondiente a esa letra en particular.
+            const symbolIndex = validTransition.symbols.indexOf(char);
+            const outputForChar = (validTransition.outputs && validTransition.outputs.length > symbolIndex)
+                ? validTransition.outputs[symbolIndex]
+                : '';
+
+            outputString += outputForChar;
+            currentState = nodes.find(n => n.id === validTransition.to)!;
+
+            path.push({ charRead: char, activeStates: [currentState.id], activeTransitions: [validTransition.id] });
+        } else {
+            return { accepted: false, path, outputString, error: `Se trabó en el estado '${currentState.name}': sin transición para '${char}'.` };
+        }
+    }
+    return { accepted: true, path, outputString };
+};
+
 // MOTORES FUTUROS
 const simulatePDA = (): SimulationResult => {
     return { accepted: false, path: [], error: "Simulación de Autómata a Pila (PDA) en desarrollo..." };
@@ -129,7 +189,7 @@ const simulateTM = (): SimulationResult => {
 
 // Enrutador
 export const runSimulation = (
-    type: AutomataType,
+    type: AutomataType | string,
     nodes: StateNode[],
     transitions: Transition[],
     inputString: string
@@ -137,6 +197,8 @@ export const runSimulation = (
     switch (type) {
         case 'DFA': return simulateDFA(nodes, transitions, inputString);
         case 'NFA': return simulateNFA(nodes, transitions, inputString);
+        case 'MOORE': return simulateMoore(nodes, transitions, inputString);
+        case 'MEALY': return simulateMealy(nodes, transitions, inputString);
         case 'PDA': return simulatePDA();
         case 'TM':  return simulateTM();
         default:    return { accepted: false, path: [], error: "Tipo de autómata desconocido." };

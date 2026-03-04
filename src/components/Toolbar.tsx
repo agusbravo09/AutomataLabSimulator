@@ -4,7 +4,7 @@ import toolsIcon from '../../public/Toolbar/tools.svg';
 // Definimos los tipos de herramientas
 export type Tool = 'CURSOR' | 'STATE' | 'TRANSITION';
 //Definimos los tipos de automatas
-export type AutomataType = 'DFA' | 'NFA' | 'PDA' | 'TM';
+export type AutomataType = 'DFA' | 'NFA' | 'PDA' | 'TM' | 'MOORE' | 'MEALY';
 
 interface ToolbarProps {
     activeTool: Tool;
@@ -99,6 +99,8 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataTy
             >
                 <option value="DFA">Autómata Finito Determinista (AFD)</option>
                 <option value="NFA">Autómata Finito No Determinista (AFND)</option>
+                <option value="MOORE">TEST MOORE</option>
+                <option value="MEALY">TEST MEALY</option>
                 <option value="PDA">Autómata de Pila (AP)</option>
                 <option value="TM">Máquina de Turing (MT)</option>
             </select>

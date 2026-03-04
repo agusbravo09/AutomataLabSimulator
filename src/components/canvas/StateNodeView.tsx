@@ -1,4 +1,4 @@
-import { Group, Circle, Text, Arrow } from 'react-konva';
+import { Group, Circle, Text, Arrow, Line } from 'react-konva';
 import type { StateNode } from '../../types/types';
 
 interface Props {
@@ -15,6 +15,10 @@ interface Props {
 export const StateNodeView = ({
                                   node, isSelected, isDraggable, onDragMove, onClick, onMouseDown, onMouseUp, isHighlighted
                               }: Props) => {
+
+    // Chequeamos si el nodo tiene una salida guardada (Modo Moore)
+    const isMooreNode = node.output !== undefined && node.output !== '';
+
     return (
         <Group
             x={node.x}
@@ -39,8 +43,22 @@ export const StateNodeView = ({
             {/* Si es final, dibujamos un círculo interno más chico */}
             {node.isFinal && <Circle radius={24} stroke="#4c6ef5" strokeWidth={2} />}
 
-            {/* Texto (Nombre del estado) */}
-            <Text text={node.name} fontSize={16} fontFamily="'Fira Code', monospace" fill="#495057" x={-30} y={-8} width={60} align="center" />
+            {/* --- LÓGICA DE DIBUJADO DE TEXTO (MOORE vs NORMAL) --- */}
+            {isMooreNode ? (
+                <>
+                    {/* Línea horizontal divisoria */}
+                    <Line points={[-30, 0, 30, 0]} stroke={isHighlighted ? "#f59f00" : "#4c6ef5"} strokeWidth={1.5} />
+
+                    {/* Nombre del estado (Arriba) */}
+                    <Text text={node.name} fontSize={13} fontFamily="'Fira Code', monospace" fill="#495057" x={-30} y={-20} width={60} align="center" />
+
+                    {/* Salida de la Máquina de Moore (Abajo) */}
+                    <Text text={node.output} fontSize={14} fontStyle="bold" fontFamily="'Fira Code', monospace" fill="#d9480f" x={-30} y={5} width={60} align="center" />
+                </>
+            ) : (
+                /* Texto Normal Centrado */
+                <Text text={node.name} fontSize={16} fontFamily="'Fira Code', monospace" fill="#495057" x={-30} y={-8} width={60} align="center" />
+            )}
         </Group>
     );
 };

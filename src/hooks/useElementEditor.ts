@@ -22,12 +22,18 @@ export const useElementEditor = ({
     const handleSaveElement = () => {
         if (!selectedElement) return;
 
-        takeSnapshot();
+        takeSnapshot(); // Guardamos el estado para el historial (Ctrl+Z)
 
         if (selectedElement.type === 'STATE') {
             setNodes(prevNodes => prevNodes.map(node => {
                 if (node.id === selectedElement.id){
-                    return { ...node, name: selectedElement.name, isInitial: selectedElement.isInitial, isFinal: selectedElement.isFinal };
+                    return {
+                        ...node,
+                        name: selectedElement.name,
+                        isInitial: selectedElement.isInitial,
+                        isFinal: selectedElement.isFinal,
+                        output: selectedElement.output // Guardamos la salida de Moore
+                    };
                 }
                 // Si el editado es inicial, le sacamos la corona al resto
                 if (selectedElement.isInitial) return { ...node, isInitial: false};
@@ -37,15 +43,33 @@ export const useElementEditor = ({
         else if (selectedElement.type === 'TRANSITION') {
             setTransitions(prevTransitions => prevTransitions.map(t => {
                 if (t.id === selectedElement.id) {
+
                     let parsedSymbols = selectedElement.symbols;
                     if (typeof parsedSymbols === 'string') {
                         parsedSymbols = parsedSymbols.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '');
                     }
-                    return { ...t, symbols: parsedSymbols, hasLambda: selectedElement.hasLambda };
+
+                    let parsedOutputs = selectedElement.outputs;
+                    if (typeof parsedOutputs === 'string') {
+                        parsedOutputs = parsedOutputs.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '');
+                    }
+
+                    // CORRECCIÓN 2: Forzamos a que las salidas de Mealy NUNCA superen a los símbolos
+                    if (Array.isArray(parsedOutputs) && Array.isArray(parsedSymbols)) {
+                        parsedOutputs = parsedOutputs.slice(0, parsedSymbols.length);
+                    }
+
+                    return {
+                        ...t,
+                        symbols: parsedSymbols,
+                        hasLambda: selectedElement.hasLambda,
+                        outputs: parsedOutputs
+                    };
                 }
                 return t;
             }));
         }
+        // Cerramos el panel
         setSelectedElement(null);
     };
 
