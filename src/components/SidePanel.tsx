@@ -12,7 +12,7 @@ interface SidePanelProps {
     nodes: StateNode[];
     transitions: Transition[];
     onSimulate?: (input: string) => void;
-    simulationResult?: { accepted: boolean; error?: string } | null;
+    simulationResult?: { outputString: string; accepted: boolean; error?: string } | null;
     onClearResult?: () => void;
     onStepByStep?: (input: string) => void;
 }

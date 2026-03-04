@@ -26,9 +26,11 @@ interface ToolsPanelProps {
     onCompareMoore: (isInstant: boolean) => void;
     onGenerateFromGrammar: (text: string, isStepByStep: boolean) => void;
     onGenerateFromLeftGrammar: (text: string, isStepByStep: boolean) => void;
+    onConvertMooreToMealy?: () => void;
+    onConvertMealyToMoore?: () => void;
 }
 
-const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses, onClearAutomatonA, onCompareMoore, onSaveAutomatonA, savedAutomatonA, onGenerateFromGrammar, onGenerateFromLeftGrammar }) => {
+const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, onGenerateRegex, nodes, transitions, onPlayElimination, setAutomataType, setNodes, setTransitions, onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses, onClearAutomatonA, onCompareMoore, onSaveAutomatonA, savedAutomatonA, onGenerateFromGrammar, onGenerateFromLeftGrammar, onConvertMooreToMealy, onConvertMealyToMoore }) => {
     const [regexInput, setRegexInput] = useState('');
     const [generatedRegexResult, setGeneratedRegexResult] = useState<string | null>(null);
     const [grammarInput, setGrammarInput] = useState('S -> aS | bA | λ\nA -> a');
@@ -36,6 +38,7 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, 
 
     // Condicionamos qué herramientas se muestran según el tipo de autómata
     const isFiniteAutomata = automataType === 'DFA' || automataType === 'NFA';
+    const isTransducer = automataType === 'MOORE' || automataType === 'MEALY';
 
     return (
         <div style={{
@@ -312,6 +315,37 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ isOpen, onClose, automataType, 
                             )}
 
                             {automataType !== 'DFA' && <span style={{ fontSize: '10px', color: '#e03131', marginTop: '8px', display: 'block' }}>* Requiere que el tipo sea AFD.</span>}
+                        </div>
+                    </>
+                ) : isTransducer ? (
+                    <>
+                        {/* NUEVA SECCIÓN DE TRANSDUCTORES */}
+                        <div style={{ backgroundColor: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '15px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                                <h3 style={{ margin: 0, fontSize: '14px', color: '#495057', fontWeight: 600 }}>
+                                    Conversión de Transductores
+                                </h3>
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#868e96', margin: '0 0 15px 0' }}>
+                                {automataType === 'MOORE'
+                                    ? 'Convierte la Máquina de Moore actual en una Máquina de Mealy equivalente.'
+                                    : 'Convierte la Máquina de Mealy actual en una Máquina de Moore equivalente.'}
+                            </p>
+
+                            <button
+                                onClick={automataType === 'MOORE' ? onConvertMooreToMealy : onConvertMealyToMoore}
+                                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: 'none', backgroundColor: '#4c6ef5', color: 'white', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s', boxShadow: '0 2px 5px rgba(76,110,245,0.2)' }}
+                            >
+                                Convertir a {automataType === 'MOORE' ? 'Mealy' : 'Moore'}
+                            </button>
+
+                            {automataType === 'MEALY' && (
+                                <div style={{ marginTop: '12px', padding: '8px', backgroundColor: '#fff3cd', border: '1px solid #ffe066', borderRadius: '6px' }}>
+                                    <span style={{ fontSize: '11px', color: '#d9480f', display: 'block', lineHeight: '1.4' }}>
+                                        <strong>* Nota:</strong> Si a un estado de Mealy le llegan transiciones con salidas distintas, el algoritmo lo clonará automáticamente.
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </>
                 ) : (

@@ -1,6 +1,7 @@
 import { useState} from 'react';
 import { Stage, Layer } from 'react-konva';
 import type { StateNode, Transition } from '../types/types';
+import { convertMooreToMealy, convertMealyToMoore } from '../utils/converters/transducerConverter';
 
 
 // --- HOOKS CUSTOM ---
@@ -106,6 +107,22 @@ function InfinityCanvas() {
         ? simMode.path[simMode.currentIndex].activeTransitions
         : [];
 
+    // Creamos los handlers para conectar la lógica con el estado del lienzo
+    const handleConvertMooreToMealy = () => {
+        const { nodes: n, transitions: t } = convertMooreToMealy(nodes, transitions);
+        takeSnapshot(); // Opcional: si tenés historial para hacer Ctrl+Z
+        setNodes(n);
+        setTransitions(t);
+        setAutomataType('MEALY'); // Le cambiamos el selector automáticamente
+    };
+
+    const handleConvertMealyToMoore = () => {
+        const { nodes: n, transitions: t } = convertMealyToMoore(nodes, transitions);
+        takeSnapshot();
+        setNodes(n);
+        setTransitions(t);
+        setAutomataType('MOORE');
+    };
 
     return (
         <div style={backgroundStyle}>
@@ -137,6 +154,8 @@ function InfinityCanvas() {
                 onCompareMoore={handleCompareMoore}
                 onGenerateFromGrammar={handleGenerateFromGrammar}
                 onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar}
+                onConvertMooreToMealy={handleConvertMooreToMealy}
+                onConvertMealyToMoore={handleConvertMealyToMoore}
             />
 
             {/* ESTADO VACÍO */}
