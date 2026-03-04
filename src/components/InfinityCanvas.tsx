@@ -98,6 +98,14 @@ function InfinityCanvas() {
         cursor: getCursorStyle()
     };
 
+    // Extraemos qué estados y transiciones están activos en este preciso fotograma
+    const activeStates = simMode.active && simMode.path.length > 0
+        ? simMode.path[simMode.currentIndex].activeStates
+        : [];
+    const activeTransitions = simMode.active && simMode.path.length > 0
+        ? simMode.path[simMode.currentIndex].activeTransitions
+        : [];
+
 
     return (
         <div style={backgroundStyle}>
@@ -176,7 +184,7 @@ function InfinityCanvas() {
 
             <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} onSubmit={() => alert('¡Gracias por tu feedback!')} />
 
-            <SimulationPlayer simMode={simMode} setSimMode={setSimMode} />
+            <SimulationPlayer simMode={simMode} setSimMode={setSimMode} simulationResult={simulationResult} />
 
             {/* LIENZO DE KONVA */}
             <Stage

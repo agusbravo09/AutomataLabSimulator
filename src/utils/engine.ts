@@ -15,6 +15,7 @@ export interface SimulationResult {
     path: Step[]; // Guardamos el rastro paso a paso
     error?: string; // Por si la cadena se traba a la mitad
     outputString?: string; // El texto traducido que devuelven Mealy y Moore
+    partialOutput?: string;
 }
 
 
@@ -128,7 +129,7 @@ export const simulateMoore = (nodes: StateNode[], transitions: Transition[], inp
     let currentState = initialNodes[0];
     // En Moore, la salida inicial arranca con lo que escupa el estado inicial
     let outputString = currentState.output || '';
-    const path: Step[] = [{ charRead: '', activeStates: [currentState.id], activeTransitions: [] }];
+    const path: Step[] = [{ charRead: '', activeStates: [currentState.id], activeTransitions: [], partialOutput: outputString }];
 
     for (const char of inputString) {
         const validTransition = transitions.find(t => t.from === currentState.id && t.symbols.includes(char));
@@ -138,7 +139,7 @@ export const simulateMoore = (nodes: StateNode[], transitions: Transition[], inp
             // Concatenamos la salida del nuevo estado al que llegamos
             outputString += (currentState.output || '');
 
-            path.push({ charRead: char, activeStates: [currentState.id], activeTransitions: [validTransition.id] });
+            path.push({ charRead: char, activeStates: [currentState.id], activeTransitions: [validTransition.id], partialOutput: outputString });
         } else {
             return { accepted: false, path, outputString, error: `Se trabó en el estado '${currentState.name}': sin transición para '${char}'.` };
         }
@@ -154,7 +155,7 @@ export const simulateMealy = (nodes: StateNode[], transitions: Transition[], inp
 
     let currentState = initialNodes[0];
     let outputString = '';
-    const path: Step[] = [{ charRead: '', activeStates: [currentState.id], activeTransitions: [] }];
+    const path: Step[] = [{ charRead: '', activeStates: [currentState.id], activeTransitions: [], partialOutput: outputString }];
 
     for (const char of inputString) {
         const validTransition = transitions.find(t => t.from === currentState.id && t.symbols.includes(char));
@@ -170,7 +171,7 @@ export const simulateMealy = (nodes: StateNode[], transitions: Transition[], inp
             outputString += outputForChar;
             currentState = nodes.find(n => n.id === validTransition.to)!;
 
-            path.push({ charRead: char, activeStates: [currentState.id], activeTransitions: [validTransition.id] });
+            path.push({ charRead: char, activeStates: [currentState.id], activeTransitions: [validTransition.id], partialOutput: outputString });
         } else {
             return { accepted: false, path, outputString, error: `Se trabó en el estado '${currentState.name}': sin transición para '${char}'.` };
         }
