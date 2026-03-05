@@ -7,7 +7,7 @@ type SelectedElement =
     | null;
 
 interface PropertiesPanelProps {
-    element: SelectedElement;
+    element: SelectedElement | null;
     nodes: StateNode[];
     onClose: () => void;
     onDelete: () => void;

@@ -1,22 +1,6 @@
 import type { StateNode, Transition } from '../types/types';
 import type { AutomataType } from '../components/Toolbar';
-
-
-//Interfaces Unificadas
-//Todos los simuladores devuelven este mismo formato para que la UI no se rompa.
-export interface Step {
-    charRead: string;
-    activeStates: string[];
-    activeTransitions: string[];
-}
-
-export interface SimulationResult {
-    accepted: boolean;
-    path: Step[]; // Guardamos el rastro paso a paso
-    error?: string; // Por si la cadena se traba a la mitad
-    outputString?: string; // El texto traducido que devuelven Mealy y Moore
-    partialOutput?: string;
-}
+import type { SimulationResult, Step } from '../types/types';
 
 
 //Automata Finito Determinista

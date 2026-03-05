@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Stage, Layer } from 'react-konva';
-import type { StateNode, Transition } from '../types/types';
+import type { StateNode, Transition, AutomataElement } from '../types/types';
 import { useAutomataStore } from '../store/useAutomataStore';
 
 // --- HOOKS CUSTOM ---
@@ -16,7 +16,7 @@ import { useTransducerLogic } from '../hooks/useTransducerLogic';
 import { useUI } from '../hooks/useUI';
 
 // --- COMPONENTES UI ---
-import Toolbar, { type Tool, type AutomataType } from './Toolbar';
+import Toolbar, { type Tool } from './Toolbar';
 import SidePanel from './SidePanel';
 import ZoomControl from './ZoomControl';
 import PropertiesPanel from './PropertiesPanel';
@@ -36,7 +36,7 @@ import { NodesRenderer } from './canvas/NodesRenderer';
 function InfinityCanvas() {
     // 1. Estados Globales
     const [activeTool, setActiveTool] = useState<Tool>('CURSOR');
-    const [selectedElement, setSelectedElement] = useState<any>(null);
+    const [selectedElement, setSelectedElement] = useState<AutomataElement | null>(null);
     const [buildMode, setBuildMode] = useState<{
         active: boolean, steps: any[], currentIndex: number, backupNodes?: StateNode[], backupTransitions?: Transition[]
     }>({ active: false, steps: [], currentIndex: 0 });

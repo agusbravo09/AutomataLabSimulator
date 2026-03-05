@@ -1,18 +1,36 @@
 export interface StateNode {
-    id: string;        // ID único (ej. "167890123" o uuid)
-    name: string;      // Nombre visible (q0, q1)
-    x: number;         // Coordenada X en el mundo infinito
-    y: number;         // Coordenada Y en el mundo infinito
-    isInitial: boolean; // ¿Es el estado de arranque?
-    isFinal: boolean;   // ¿Es un estado de aceptación?
-    output?: string; // salida para la Máquina de Moore (va en el estado)
+    type: 'STATE';
+    id: string;
+    name: string;
+    x: number;
+    y: number;
+    isInitial: boolean;
+    isFinal: boolean;
+    output?: string; // Para la Máquina de Moore
 }
 
 export interface Transition {
+    type: 'TRANSITION'
     id: string;
-    from: string;      // ID del nodo origen
-    to: string;        // ID del nodo destino
-    symbols: string[]; // ['a', 'b', '0']
+    from: string;
+    to: string;
+    symbols: string[];
     hasLambda: boolean;
-    outputs?: string[]; // Las salidas para la Máquina de Mealy (van en la flecha)
+    outputs?: string[]; // Para la Máquina de Mealy
+}
+
+export type AutomataElement = StateNode | Transition;
+
+export interface Step {
+    charRead: string;
+    activeStates: string[];
+    activeTransitions: string[];
+}
+
+export interface SimulationResult {
+    accepted: boolean;
+    path: Step[]; // Guardamos el rastro paso a paso
+    error?: string; // Por si la cadena se traba a la mitad
+    outputString?: string; // El texto traducido que devuelven Mealy y Moore
+    partialOutput?: string;
 }

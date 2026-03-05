@@ -33,6 +33,7 @@ export const useCanvasInteractions = ({
         const worldY = (pointer.y - camera.y) / camera.scale;
 
         const newNode: StateNode = {
+            type: 'STATE',
             id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
             name: `q${nodes.length}`,
             x: worldX, y: worldY,
@@ -67,6 +68,7 @@ export const useCanvasInteractions = ({
             return;
         }
         const newTransition: Transition = {
+            type: 'TRANSITION',
             id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
             from: drawingTransition.fromNodeId, to: toNodeId, symbols: [], hasLambda: false
         };

@@ -2,17 +2,18 @@ import { useState } from 'react';
 import { useAutomataStore } from '../store/useAutomataStore';
 import { runSimulation } from '../utils/engine';
 import type { AutomataType } from "../components/Toolbar";
+import type { SimulationResult, Step } from '../types/types';
 
 export const useSimulation = () => {
     const { nodes, transitions } = useAutomataStore();
 
-    const [simulationResult, setSimulationResult] = useState<any>(null);
+    const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null);
     const [simMode, setSimMode] = useState<{
         active: boolean;
-        path: any[];
+        path: Step[];
         currentIndex: number;
         stringToEvaluate: string;
-    }>({active: false, path: [], currentIndex: 0, stringToEvaluate: '' });
+    }>({ active: false, path: [], currentIndex: 0, stringToEvaluate: '' });
 
     const handleRunSimulation = (inputString: string, type: AutomataType) => {
         const result = runSimulation(type, nodes, transitions, inputString);
