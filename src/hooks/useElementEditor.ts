@@ -16,7 +16,7 @@ export const useElementEditor = ({
                                      setNodes,
                                      setTransitions,
                                      setIsConfirmOpen,
-                                     clearWorkspace, takeSnapshot
+                                     takeSnapshot
                                  }: UseElementEditorProps) => {
 
     const handleSaveElement = () => {
@@ -96,13 +96,5 @@ export const useElementEditor = ({
         setSelectedElement(null);
     };
 
-    const handleClearWorkspace = () => {
-        if (window.confirm('¿Estás seguro de que querés borrar todo el autómata? Esta acción no se puede deshacer.')) {
-            takeSnapshot();
-            clearWorkspace();
-            setSelectedElement(null);
-        }
-    };
-
-    return { handleSaveElement, handleDeleteElement, handleClearWorkspace };
+    return { handleSaveElement, handleDeleteElement };
 };

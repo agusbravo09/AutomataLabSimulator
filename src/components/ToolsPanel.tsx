@@ -1,6 +1,7 @@
 import React from 'react';
 import type { AutomataType } from './Toolbar';
 import type { StateNode, Transition } from '../types/types';
+import { useAutomataStore } from '../store/useAutomataStore';
 
 import { GeneratorTools } from './panel-tools/GeneratorTools';
 import { FiniteAutomataTools } from './panel-tools/FiniteAutomataTools';
@@ -9,12 +10,6 @@ import { TransducerTools } from './panel-tools/TransducerTools';
 interface ToolsPanelProps {
     isOpen: boolean;
     onClose: () => void;
-    automataType: AutomataType;
-    nodes: StateNode[];
-    transitions: Transition[];
-    setNodes: (nodes: StateNode[]) => void;
-    setTransitions: (transitions: Transition[]) => void;
-    setAutomataType: (type: AutomataType) => void;
 
     // Props de Generadores
     onGenerateRegex: (regex: string, isStepByStep: boolean) => void;
@@ -40,8 +35,10 @@ interface ToolsPanelProps {
 }
 
 const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
-    const isFiniteAutomata = props.automataType === 'DFA' || props.automataType === 'NFA';
-    const isTransducer = props.automataType === 'MOORE' || props.automataType === 'MEALY';
+    const { automataType, nodes, transitions, setNodes, setTransitions, setAutomataType } = useAutomataStore();
+
+    const isFiniteAutomata = automataType === 'DFA' || automataType === 'NFA';
+    const isTransducer = automataType === 'MOORE' || automataType === 'MEALY';
 
     return (
         <div style={{
@@ -66,13 +63,13 @@ const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
                 {isFiniteAutomata && (
                     <>
                         <GeneratorTools
-                            nodes={props.nodes} transitions={props.transitions}
+                            nodes={nodes} transitions={transitions}
                             onGenerateRegex={props.onGenerateRegex} onPlayElimination={props.onPlayElimination}
                             onGenerateFromGrammar={props.onGenerateFromGrammar} onGenerateFromLeftGrammar={props.onGenerateFromLeftGrammar}
                         />
                         <FiniteAutomataTools
-                            automataType={props.automataType} nodes={props.nodes} transitions={props.transitions}
-                            setNodes={props.setNodes} setTransitions={props.setTransitions} setAutomataType={props.setAutomataType}
+                            automataType={automataType} nodes={nodes} transitions={transitions}
+                            setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType}
                             onPlaySubset={props.onPlaySubset} onPlayMinimization={props.onPlayMinimization}
                             onInstantMinimization={props.onInstantMinimization} onInstantClasses={props.onInstantClasses}
                             onPlayClasses={props.onPlayClasses} savedAutomatonA={props.savedAutomatonA}
@@ -83,7 +80,7 @@ const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
 
                 {isTransducer && (
                     <TransducerTools
-                        automataType={props.automataType} nodes={props.nodes} transitions={props.transitions}
+                        automataType={automataType} nodes={nodes} transitions={transitions}
                         onConvertMooreToMealy={props.onConvertMooreToMealy} onConvertMealyToMoore={props.onConvertMealyToMoore}
                         onPlayTransducerConversion={props.onPlayTransducerConversion}
                     />
@@ -92,7 +89,7 @@ const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
                 {!isFiniteAutomata && !isTransducer && (
                     <div style={{ textAlign: 'center', color: '#adb5bd', marginTop: '20px' }}>
                         <div style={{ fontSize: '32px', marginBottom: '10px' }}>¡Epa! ¿Qué rompimo'?</div>
-                        <p style={{ fontSize: '13px' }}>Las herramientas para {props.automataType} estarán disponibles pronto.</p>
+                        <p style={{ fontSize: '13px' }}>Las herramientas para {automataType} estarán disponibles pronto.</p>
                     </div>
                 )}
             </div>

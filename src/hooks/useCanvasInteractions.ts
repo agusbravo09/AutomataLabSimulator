@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import type { StateNode, Transition } from '../types/types.ts';
-import type { Tool } from '../components/Toolbar.tsx';
+import { useAutomataStore } from '../store/useAutomataStore';
+import type { StateNode, Transition } from '../types/types';
+import type { Tool } from '../components/Toolbar';
 
 interface UseCanvasInteractionsProps {
-    nodes: StateNode[];
-    setNodes: React.Dispatch<React.SetStateAction<StateNode[]>>;
-    transitions: Transition[];
-    setTransitions: React.Dispatch<React.SetStateAction<Transition[]>>;
+    // ¡Chau nodes y transitions!
     camera: { x: number; y: number; scale: number };
     activeTool: Tool;
     setSelectedElement: React.Dispatch<React.SetStateAction<any>>;
@@ -14,13 +12,14 @@ interface UseCanvasInteractionsProps {
 }
 
 export const useCanvasInteractions = ({
-                                          nodes, setNodes, transitions, setTransitions, camera, activeTool, setSelectedElement, takeSnapshot
+                                          camera, activeTool, setSelectedElement, takeSnapshot
                                       }: UseCanvasInteractionsProps) => {
+
+    const { nodes, setNodes, transitions, setTransitions } = useAutomataStore();
 
     const [drawingTransition, setDrawingTransition] = useState<{fromNodeId: string; toX: number; toY: number;} | null>(null);
 
     const handleStageClick = (e: any) => {
-
         if (e.target !== e.target.getStage()) return;
         if (activeTool !== 'STATE') {
             setSelectedElement(null);
@@ -53,6 +52,8 @@ export const useCanvasInteractions = ({
         if (!drawingTransition || activeTool !== 'TRANSITION') return;
         const stage = e.target.getStage();
         const pointer = stage.getPointerPosition();
+        if (!pointer) return;
+
         const worldX = (pointer.x - camera.x) / camera.scale;
         const worldY = (pointer.y - camera.y) / camera.scale;
         setDrawingTransition({ ...drawingTransition, toX: worldX, toY: worldY });

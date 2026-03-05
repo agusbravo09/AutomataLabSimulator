@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Stage, Layer } from 'react-konva';
 import type { StateNode, Transition } from '../types/types';
+import { useAutomataStore } from '../store/useAutomataStore';
 
 // --- HOOKS CUSTOM ---
-import { useAutomata } from '../hooks/useAutomata';
 import { useCamera } from '../hooks/useCamera';
 import { useCanvasInteractions } from '../hooks/useCanvasInteractions';
 import { useElementEditor } from '../hooks/useElementEditor';
@@ -36,7 +36,6 @@ import { NodesRenderer } from './canvas/NodesRenderer';
 function InfinityCanvas() {
     // 1. Estados Globales
     const [activeTool, setActiveTool] = useState<Tool>('CURSOR');
-    const [automataType, setAutomataType] = useState<AutomataType>('DFA');
     const [selectedElement, setSelectedElement] = useState<any>(null);
     const [buildMode, setBuildMode] = useState<{
         active: boolean, steps: any[], currentIndex: number, backupNodes?: StateNode[], backupTransitions?: Transition[]
@@ -44,19 +43,19 @@ function InfinityCanvas() {
 
     // 2. Cerebros (Custom Hooks)
     const { isPanelOpen, setIsPanelOpen, isToolsPanelOpen, setIsToolsPanelOpen, isConfirmOpen, setIsConfirmOpen, isFeedbackOpen, setIsFeedbackOpen } = useUI();
-    const { nodes, setNodes, transitions, setTransitions, updateNodePosition, clearWorkspace } = useAutomata();
+    const { nodes, setNodes, transitions, setTransitions, automataType, setAutomataType, updateNodePosition, clearWorkspace } = useAutomataStore();
     const { camera, setCamera, handleWheel, handleManualZoom } = useCamera();
-    const { takeSnapshot } = useHistory(nodes, setNodes, transitions, setTransitions);
+    const { takeSnapshot } = useHistory();
 
     const { drawingTransition, handleStageClick, handleMouseDownNode, handleMouseMoveStage, handleMouseUpNode, handleMouseUpStage } = useCanvasInteractions({
-        nodes, setNodes, transitions, setTransitions, camera, activeTool, setSelectedElement, takeSnapshot
-    });
+        camera, activeTool, setSelectedElement, takeSnapshot
+    })
 
-    const { handleSaveElement, handleDeleteElement, handleClearWorkspace } = useElementEditor({
+    const { handleSaveElement, handleDeleteElement } = useElementEditor({
         selectedElement, setSelectedElement, setNodes, setTransitions, setIsConfirmOpen, clearWorkspace, takeSnapshot
     });
 
-    const { simMode, setSimMode, simulationResult, setSimulationResult, handleRunSimulation, handleStartStepByStep } = useSimulation(nodes, transitions);
+    const { simMode, setSimMode, simulationResult, setSimulationResult, handleRunSimulation, handleStartStepByStep } = useSimulation();
 
     const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses, handleGenerateFromGrammar, handleGenerateFromLeftGrammar } = useToolsLogic(
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera
@@ -81,9 +80,9 @@ function InfinityCanvas() {
         <div style={backgroundStyle}>
             {/* UI FLOTANTE */}
             <Toolbar
-                activeTool={activeTool as Tool} setActiveTool={setActiveTool}
-                automataType={automataType} setAutomataType={setAutomataType}
-                onClear={handleClearWorkspace} onToggleTools={() => setIsToolsPanelOpen(!isToolsPanelOpen)}
+                activeTool={activeTool as Tool}
+                setActiveTool={setActiveTool}
+                onToggleTools={() => setIsToolsPanelOpen(!isToolsPanelOpen)}
             />
 
             {/* botones importar-exportar (ESTO MAS ADELANTE VUELA XD)*/}
@@ -96,9 +95,8 @@ function InfinityCanvas() {
 
             <ToolsPanel
                 isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)}
-                automataType={automataType} nodes={nodes} transitions={transitions}
                 onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination}
-                onPlaySubset={handlePlaySubset} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType}
+                onPlaySubset={handlePlaySubset}
                 onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization}
                 onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses}
                 savedAutomatonA={savedAutomatonA}
@@ -137,9 +135,11 @@ function InfinityCanvas() {
             </button>
 
             <SidePanel
-                isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} automataType={automataType}
-                onSimulate={(input) => handleRunSimulation(input, automataType)} nodes={nodes} transitions={transitions}
-                simulationResult={simulationResult} onClearResult={() => setSimulationResult(null)}
+                isOpen={isPanelOpen}
+                onClose={() => setIsPanelOpen(false)}
+                onSimulate={(input) => handleRunSimulation(input, automataType)}
+                simulationResult={simulationResult}
+                onClearResult={() => setSimulationResult(null)}
                 onStepByStep={(input) => handleStartStepByStep(input, automataType, () => setIsPanelOpen(false), () => setSelectedElement(null))}
             />
 

@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useAutomataStore } from '../store/useAutomataStore';
 import { runSimulation } from '../utils/engine';
-import type { StateNode, Transition } from '../types/types';
-import type { AutomataType } from "../components/Toolbar.tsx";
+import type { AutomataType } from "../components/Toolbar";
 
-export const useSimulation = (nodes: StateNode[], transitions: Transition[]) => {
+export const useSimulation = () => {
+    const { nodes, transitions } = useAutomataStore();
+
     const [simulationResult, setSimulationResult] = useState<any>(null);
     const [simMode, setSimMode] = useState<{
         active: boolean;
@@ -17,7 +19,6 @@ export const useSimulation = (nodes: StateNode[], transitions: Transition[]) => 
         setSimulationResult(result);
     };
 
-    // Le pasamos las funciones de UI por parámetro para que el hook no necesite conocer los estados del canvas
     const handleStartStepByStep = (
         inputString: string,
         type: AutomataType,

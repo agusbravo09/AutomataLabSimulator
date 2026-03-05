@@ -1,27 +1,26 @@
 import React, {useState} from 'react';
-import type { AutomataType } from './Toolbar';
-import type { StateNode, Transition } from '../types/types';
 import { generateRightLinearProductions, generateLeftLinearGrammar } from "../utils/converters/grammarGenerator";
 import { decomposePumping } from '../utils/converters/pumpingLemma';
 import { PumpingModal } from './PumpingModal';
+import { useAutomataStore } from '../store/useAutomataStore';
 
 interface SidePanelProps {
     isOpen: boolean;
     onClose: () => void;
-    automataType: AutomataType;
-    nodes: StateNode[];
-    transitions: Transition[];
-    onSimulate?: (input: string) => void;
-    simulationResult?: { outputString: string; accepted: boolean; error?: string } | null;
-    onClearResult?: () => void;
-    onStepByStep?: (input: string) => void;
+    onSimulate: (input: string) => void;
+    simulationResult: any;
+    onClearResult: () => void;
+    onStepByStep: (input: string) => void;
 }
 
 // AGREGAMOS 'pumping' A LOS TIPOS DE PESTAÑA
 type TabType = 'matrix' | 'definition' | 'simulate' | 'pumping';
 
-const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, automataType, nodes, transitions, onSimulate, simulationResult, onClearResult, onStepByStep }) => {
+const SidePanel: React.FC<SidePanelProps> = ({
+                                                 isOpen, onClose, onSimulate, simulationResult, onClearResult, onStepByStep
+                                             }) => {
 
+    const { automataType, nodes, transitions } = useAutomataStore();
     const [inputValue, setInputValue] = useState('');
     const [activeTab, setActiveTab] = useState<TabType>('matrix');
 

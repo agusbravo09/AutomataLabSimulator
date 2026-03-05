@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import toolsIcon from '../../public/Toolbar/tools.svg';
+import { useAutomataStore } from '../store/useAutomataStore';
 
 // Definimos los tipos de herramientas
 export type Tool = 'CURSOR' | 'STATE' | 'TRANSITION';
@@ -9,13 +10,11 @@ export type AutomataType = 'DFA' | 'NFA' | 'PDA' | 'TM' | 'MOORE' | 'MEALY';
 interface ToolbarProps {
     activeTool: Tool;
     setActiveTool: (tool: Tool) => void;
-    automataType: AutomataType;
-    setAutomataType: (type: AutomataType) => void;
-    onClear: () => void;
     onToggleTools: () => void;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataType, setAutomataType, onClear, onToggleTools }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTools }) => {
+    const { automataType, setAutomataType, clearWorkspace } = useAutomataStore();
     const [hoveredTool, setHoveredTool] = useState<string | null>(null);
 
     const menuItems: { id: Tool; label: string; iconSrc: string }[] = [
@@ -109,7 +108,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, automataTy
 
             {/* BOTÓN LIMPIAR */}
             <button
-                onClick={onClear}
+                onClick={clearWorkspace}
                 style={{
                     display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 15px', borderRadius: '8px',
                     border: '1px solid #ffc9c9', backgroundColor: '#fff5f5', color: '#e03131', fontSize: '14px',
