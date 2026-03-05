@@ -1,8 +1,6 @@
-import { useState} from 'react';
+import { useState, useMemo } from 'react';
 import { Stage, Layer } from 'react-konva';
 import type { StateNode, Transition } from '../types/types';
-import { convertMooreToMealy, convertMealyToMoore } from '../utils/converters/transducerConverter';
-
 
 // --- HOOKS CUSTOM ---
 import { useAutomata } from '../hooks/useAutomata';
@@ -14,6 +12,8 @@ import { useToolsLogic } from '../hooks/useToolsLogic';
 import { useFileManager } from '../hooks/useFileManager';
 import { useMooreLogic } from '../hooks/useMooreLogic';
 import { useHistory } from '../hooks/useHistory';
+import { useTransducerLogic } from '../hooks/useTransducerLogic';
+import { useUI } from '../hooks/useUI';
 
 // --- COMPONENTES UI ---
 import Toolbar, { type Tool, type AutomataType } from './Toolbar';
@@ -34,26 +34,21 @@ import { NodesRenderer } from './canvas/NodesRenderer';
 
 
 function InfinityCanvas() {
-    // 1. Estados de UI
+    // 1. Estados Globales
     const [activeTool, setActiveTool] = useState<Tool>('CURSOR');
     const [automataType, setAutomataType] = useState<AutomataType>('DFA');
-    const [isPanelOpen, setIsPanelOpen] = useState(false);
-    const [isToolsPanelOpen, setIsToolsPanelOpen] = useState(false);
     const [selectedElement, setSelectedElement] = useState<any>(null);
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const [buildMode, setBuildMode] = useState<{
         active: boolean, steps: any[], currentIndex: number, backupNodes?: StateNode[], backupTransitions?: Transition[]
     }>({ active: false, steps: [], currentIndex: 0 });
 
     // 2. Cerebros (Custom Hooks)
+    const { isPanelOpen, setIsPanelOpen, isToolsPanelOpen, setIsToolsPanelOpen, isConfirmOpen, setIsConfirmOpen, isFeedbackOpen, setIsFeedbackOpen } = useUI();
     const { nodes, setNodes, transitions, setTransitions, updateNodePosition, clearWorkspace } = useAutomata();
     const { camera, setCamera, handleWheel, handleManualZoom } = useCamera();
     const { takeSnapshot } = useHistory(nodes, setNodes, transitions, setTransitions);
-    const {
-        drawingTransition, handleStageClick, handleMouseDownNode,
-        handleMouseMoveStage, handleMouseUpNode, handleMouseUpStage
-    } = useCanvasInteractions({
+
+    const { drawingTransition, handleStageClick, handleMouseDownNode, handleMouseMoveStage, handleMouseUpNode, handleMouseUpStage } = useCanvasInteractions({
         nodes, setNodes, transitions, setTransitions, camera, activeTool, setSelectedElement, takeSnapshot
     });
 
@@ -67,77 +62,19 @@ function InfinityCanvas() {
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera
     );
 
-    const { handleExportAutomaton, handleImportAutomaton } = useFileManager(
-        nodes, transitions, automataType, setNodes, setTransitions, setAutomataType, takeSnapshot
+    const { handleExportAutomaton, handleImportAutomaton } = useFileManager(nodes, transitions, automataType, setNodes, setTransitions, setAutomataType, takeSnapshot);
+    const { savedAutomatonA, handleSaveAutomatonA, handleClearAutomatonA, handleCompareMoore } = useMooreLogic(nodes, transitions, setNodes, setTransitions, setBuildMode);
+
+    const { handleConvertMooreToMealy, handleConvertMealyToMoore, handlePlayTransducerConversion } = useTransducerLogic(
+        nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, takeSnapshot
     );
-
-    const { savedAutomatonA, handleSaveAutomatonA, handleClearAutomatonA, handleCompareMoore } = useMooreLogic(
-        nodes, transitions, setNodes, setTransitions, setBuildMode
-    );
-
-    // 3. Estilos Base
-    const GRID_GAP = 40;
-
-    const getCursorStyle = () => {
-        switch (activeTool) {
-            case 'CURSOR': return 'default';
-            case 'STATE': return 'crosshair';
-            case 'TRANSITION': return 'alias';
-            default: return 'default';
-        }
-    };
 
     const backgroundStyle: React.CSSProperties = {
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: '#f8f9fa',
+        width: '100vw', height: '100vh', backgroundColor: '#f8f9fa',
         backgroundImage: `radial-gradient(#ced4da 1.5px, transparent 1.5px)`,
-        backgroundSize: `${GRID_GAP}px ${GRID_GAP}px`,
-        backgroundPosition: `${camera.x}px ${camera.y}px`,
-        position: 'relative',
-        overflow: 'hidden',
-        cursor: getCursorStyle()
-    };
-
-    // Extraemos qué estados y transiciones están activos en este preciso fotograma
-    const activeStates = simMode.active && simMode.path.length > 0
-        ? simMode.path[simMode.currentIndex].activeStates
-        : [];
-    const activeTransitions = simMode.active && simMode.path.length > 0
-        ? simMode.path[simMode.currentIndex].activeTransitions
-        : [];
-
-    // Creamos los handlers para conectar la lógica con el estado del lienzo
-    const handleConvertMooreToMealy = () => {
-        const { nodes: n, transitions: t } = convertMooreToMealy(nodes, transitions);
-        takeSnapshot(); // Opcional: si tenés historial para hacer Ctrl+Z
-        setNodes(n);
-        setTransitions(t);
-        setAutomataType('MEALY'); // Le cambiamos el selector automáticamente
-    };
-
-    const handleConvertMealyToMoore = () => {
-        const { nodes: n, transitions: t } = convertMealyToMoore(nodes, transitions);
-        takeSnapshot();
-        setNodes(n);
-        setTransitions(t);
-        setAutomataType('MOORE');
-    };
-
-    const handlePlayTransducerConversion = (steps: any[], newType: AutomataType) => {
-        takeSnapshot();
-
-        // Le pasamos los datos al reproductor que ya tenés armado (StepPlayerOverlay)
-        setBuildMode({
-            active: true,
-            steps: steps,
-            currentIndex: 0,
-            backupNodes: [...nodes], // Para que pueda cancelar y volver atrás
-            backupTransitions: [...transitions]
-        });
-
-        // Cambiamos el tipo de autómata para que el lienzo dibuje correctamente las cosas de Mealy o Moore
-        setAutomataType(newType);
+        backgroundSize: `40px 40px`, backgroundPosition: `${camera.x}px ${camera.y}px`,
+        position: 'relative', overflow: 'hidden',
+        cursor: activeTool === 'STATE' ? 'crosshair' : (activeTool === 'TRANSITION' ? 'alias' : 'default')
     };
 
     return (
