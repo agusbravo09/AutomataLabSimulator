@@ -17,13 +17,16 @@ interface FiniteAutomataToolsProps {
     onPlayClasses: () => void;
     savedAutomatonA: { nodes: StateNode[], transitions: Transition[] } | null;
     onSaveAutomatonA: () => void;
+    onClearAutomatonA: () => void;
     onCompareMoore: (isInstant: boolean) => void;
+    isVisorOpen: boolean;
+    onToggleVisor: () => void;
 }
 
 export const FiniteAutomataTools: React.FC<FiniteAutomataToolsProps> = ({
                                                                             automataType, nodes, transitions, setNodes, setTransitions, setAutomataType,
                                                                             onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses,
-                                                                            savedAutomatonA, onSaveAutomatonA, onCompareMoore
+                                                                            savedAutomatonA, onSaveAutomatonA, onCompareMoore, onClearAutomatonA, isVisorOpen, onToggleVisor
                                                                         }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -100,13 +103,41 @@ export const FiniteAutomataTools: React.FC<FiniteAutomataToolsProps> = ({
                         Fijar lienzo como Autómata A
                     </button>
                 ) : (
-                    <div style={{ display: 'flex', gap: '5px' }}>
-                        <button onClick={() => onCompareMoore(true)} disabled={automataType !== 'DFA'} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: automataType === 'DFA' ? '1px solid #be4bdb' : '1px solid #ced4da', backgroundColor: automataType === 'DFA' ? '#be4bdb' : '#e9ecef', color: automataType === 'DFA' ? 'white' : '#adb5bd', fontSize: '12px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed' }}>
-                            Instantáneo
-                        </button>
-                        <button onClick={() => onCompareMoore(false)} disabled={automataType !== 'DFA'} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: automataType === 'DFA' ? '1px solid #be4bdb' : '1px solid #ced4da', backgroundColor: 'white', color: automataType === 'DFA' ? '#be4bdb' : '#adb5bd', fontSize: '12px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed' }}>
-                            Paso a Paso
-                        </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {/* Cartelito verde de Autómata guardado */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e6fcf5', color: '#0ca678', padding: '8px 12px', borderRadius: '6px', border: '1px solid #69db7c', fontSize: '12px', fontWeight: 600 }}>
+                            <span>Autómata A fijado</span>
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <button
+                                    onClick={onToggleVisor}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: 0, filter: isVisorOpen ? 'grayscale(0)' : 'grayscale(100%)' }}
+                                    title={isVisorOpen ? "Ocultar Visor" : "Mostrar Visor"}
+                                >
+                                    <img
+
+                                        src="../../icons/new-window.svg"
+                                        alt="Visor"
+                                        style={{ width: '15px', height: '15px' }}
+                                    />
+                                </button>
+                                <button
+                                    onClick={onClearAutomatonA}
+                                    style={{ background: 'none', border: 'none', color: '#e03131', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', padding: 0 }}
+                                    title="Descartar Autómata A (Borrar)"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                            <button onClick={() => onCompareMoore(true)} disabled={automataType !== 'DFA'} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: automataType === 'DFA' ? '1px solid #be4bdb' : '1px solid #ced4da', backgroundColor: automataType === 'DFA' ? '#be4bdb' : '#e9ecef', color: automataType === 'DFA' ? 'white' : '#adb5bd', fontSize: '12px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed' }}>
+                                Instantáneo
+                            </button>
+                            <button onClick={() => onCompareMoore(false)} disabled={automataType !== 'DFA'} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: automataType === 'DFA' ? '1px solid #be4bdb' : '1px solid #ced4da', backgroundColor: 'white', color: automataType === 'DFA' ? '#be4bdb' : '#adb5bd', fontSize: '12px', fontWeight: 600, cursor: automataType === 'DFA' ? 'pointer' : 'not-allowed' }}>
+                                Paso a Paso
+                            </button>
+                        </div>
                     </div>
                 )}
                 {automataType !== 'DFA' && <span style={{ fontSize: '10px', color: '#e03131', marginTop: '8px', display: 'block' }}>* Requiere que el tipo sea AFD.</span>}

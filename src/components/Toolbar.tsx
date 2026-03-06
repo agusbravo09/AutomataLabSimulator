@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import toolsIcon from '../../public/Toolbar/tools.svg';
 import { useAutomataStore } from '../store/useAutomataStore';
 
 // Definimos los tipos de herramientas
@@ -55,7 +54,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
                     }}
                 >
                     <img
-                        src={toolsIcon}
+                        src={'../../public/Toolbar/tools.svg'}
                         alt="Herramientas"
                         style={{ width: '22px', height: '22px', opacity: 0.7, filter: 'invert(30%) sepia(10%) saturate(500%) hue-rotate(180deg) brightness(80%) contrast(90%)' }} // El filter es opcional, sirve para darle un color grisáceo similar al texto que tenías
                     />

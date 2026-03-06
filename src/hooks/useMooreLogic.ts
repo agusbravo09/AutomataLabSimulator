@@ -1,23 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import type { StateNode, Transition } from '../types/types';
 import { checkEquivalenceMooreStepByStep } from '../utils/converters/mooreEquivalence';
+import { useAutomataStore } from '../store/useAutomataStore';
 
 export const useMooreLogic = (
     nodes: StateNode[], transitions: Transition[],
-    setNodes: (n: StateNode[]) => void, setTransitions: (t: Transition[]) => void,
     setBuildMode: (mode: any) => void
 ) => {
-    const [savedAutomatonA, setSavedAutomatonA] = useState<{ nodes: StateNode[], transitions: Transition[] } | null>(null);
-
-    const handleSaveAutomatonA = useCallback(() => {
-        if (nodes.length === 0) { alert("El lienzo está vacío."); return; }
-        setSavedAutomatonA({ nodes: [...nodes], transitions: [...transitions] });
-        if (window.confirm("¡Autómata A guardado!\n\n¿Querés limpiar el lienzo ahora?")) {
-            setNodes([]); setTransitions([]);
-        }
-    }, [nodes, transitions, setNodes, setTransitions]);
-
-    const handleClearAutomatonA = useCallback(() => setSavedAutomatonA(null), []);
+    // leemos el Autómata A
+    const { savedAutomatonA } = useAutomataStore();
 
     const handleCompareMoore = useCallback((isInstant: boolean) => {
         if (!savedAutomatonA) return;
@@ -37,5 +28,5 @@ export const useMooreLogic = (
         } catch (err: any) { alert("Error: " + err.message); }
     }, [nodes, transitions, savedAutomatonA, setBuildMode]);
 
-    return { savedAutomatonA, handleSaveAutomatonA, handleClearAutomatonA, handleCompareMoore };
+    return { handleCompareMoore };
 };

@@ -1,6 +1,5 @@
 import React from 'react';
 import { TransitionArrowView } from './TransitionArrowView';
-// Importamos solo getEdgePoints, ya que para curvas y bucles calcularemos los puntos aquí para manejar el offset
 import { getEdgePoints } from '../../utils/geometry';
 import type { StateNode, Transition } from '../../types/types';
 
@@ -121,7 +120,7 @@ export const TransitionsRenderer: React.FC<Props> = ({ transitions, nodes, simMo
                 } else if (offsetValue !== 0) {
                     // --- CASO 2: Curva (Multi-flecha o Ida y Vuelta) ---
                     type = 'curved';
-                    tension = 0.5; // Konva hará la curva suave con estos 3 puntos
+                    tension = 0.5;
 
                     const dx = toNode.x - fromNode.x;
                     const dy = toNode.y - fromNode.y;
@@ -151,7 +150,6 @@ export const TransitionsRenderer: React.FC<Props> = ({ transitions, nodes, simMo
                     // --- CASO 3: Recta (Flecha única) ---
                     type = 'straight';
                     tension = 0;
-                    // Usamos tu función existente para líneas rectas
                     points = getEdgePoints(fromNode, toNode, RADIUS);
                 }
 
@@ -166,7 +164,6 @@ export const TransitionsRenderer: React.FC<Props> = ({ transitions, nodes, simMo
                     isHighlighted = buildMode.steps[buildMode.currentIndex].activeTransitions?.includes(t.id) || false;
                 }
 
-                // Renderizamos usando TU componente existente
                 return (
                     <TransitionArrowView
                         key={t.id}

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SimulationResult } from '../utils/engine';
 
-// Replicamos la interfaz de tu estado simMode
+// Replicamos la interfaz del estado simMode
 interface SimMode {
     active: boolean;
     path: any[];

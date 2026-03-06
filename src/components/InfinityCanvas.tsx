@@ -26,6 +26,7 @@ import { VersionOverlay } from './VersionOverlay';
 import { FeedbackModal } from "./FeedbackModal";
 import ToolsPanel from './ToolsPanel';
 import StepPlayerOverlay from './StepPlayerOverlay';
+import { MiniVisor } from './MiniVisor';
 
 // --- COMPONENTES CANVAS ---
 import { GhostArrow } from './canvas/GhostArrow';
@@ -36,6 +37,7 @@ import { NodesRenderer } from './canvas/NodesRenderer';
 function InfinityCanvas() {
     // 1. Estados Globales
     const [activeTool, setActiveTool] = useState<Tool>('CURSOR');
+    const [isVisorOpen, setIsVisorOpen] = useState(false);
     const [selectedElement, setSelectedElement] = useState<AutomataElement | null>(null);
     const [buildMode, setBuildMode] = useState<{
         active: boolean, steps: any[], currentIndex: number, backupNodes?: StateNode[], backupTransitions?: Transition[]
@@ -43,8 +45,7 @@ function InfinityCanvas() {
 
     // 2. Cerebros (Custom Hooks)
     const { isPanelOpen, setIsPanelOpen, isToolsPanelOpen, setIsToolsPanelOpen, isConfirmOpen, setIsConfirmOpen, isFeedbackOpen, setIsFeedbackOpen } = useUI();
-    const { nodes, setNodes, transitions, setTransitions, automataType, setAutomataType, updateNodePosition, clearWorkspace } = useAutomataStore();
-    const { camera, setCamera, handleWheel, handleManualZoom } = useCamera();
+    const { nodes, setNodes, transitions, setTransitions, automataType, setAutomataType, updateNodePosition, clearWorkspace, savedAutomatonA, setSavedAutomatonA } = useAutomataStore();    const { camera, setCamera, handleWheel, handleManualZoom } = useCamera();
     const { takeSnapshot } = useHistory();
 
     const { drawingTransition, handleStageClick, handleMouseDownNode, handleMouseMoveStage, handleMouseUpNode, handleMouseUpStage } = useCanvasInteractions({
@@ -62,7 +63,7 @@ function InfinityCanvas() {
     );
 
     const { handleExportAutomaton, handleImportAutomaton } = useFileManager(nodes, transitions, automataType, setNodes, setTransitions, setAutomataType, takeSnapshot);
-    const { savedAutomatonA, handleSaveAutomatonA, handleClearAutomatonA, handleCompareMoore } = useMooreLogic(nodes, transitions, setNodes, setTransitions, setBuildMode);
+    const { handleCompareMoore } = useMooreLogic(nodes, transitions, setBuildMode);
 
     const { handleConvertMooreToMealy, handleConvertMealyToMoore, handlePlayTransducerConversion } = useTransducerLogic(
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, takeSnapshot
@@ -99,16 +100,25 @@ function InfinityCanvas() {
                 onPlaySubset={handlePlaySubset}
                 onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization}
                 onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses}
-                savedAutomatonA={savedAutomatonA}
-                onSaveAutomatonA={handleSaveAutomatonA}
-                onClearAutomatonA={handleClearAutomatonA}
                 onCompareMoore={handleCompareMoore}
                 onGenerateFromGrammar={handleGenerateFromGrammar}
                 onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar}
                 onConvertMooreToMealy={handleConvertMooreToMealy}
                 onConvertMealyToMoore={handleConvertMealyToMoore}
                 onPlayTransducerConversion={handlePlayTransducerConversion}
+                isVisorOpen={isVisorOpen}
+                onToggleVisor={() => setIsVisorOpen(!isVisorOpen)}
             />
+
+            {/*Mini visor*/}
+            {savedAutomatonA && isVisorOpen && (
+                <MiniVisor
+                    nodes={savedAutomatonA.nodes}
+                    transitions={savedAutomatonA.transitions}
+                    title="Referencia: Autómata A"
+                    onClose={() => setIsVisorOpen(false)}
+                />
+            )}
 
             {/* ESTADO VACÍO */}
             {nodes.length === 0 && !buildMode.active && (

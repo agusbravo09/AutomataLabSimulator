@@ -1,6 +1,5 @@
 import React from 'react';
 import type { AutomataType } from './Toolbar';
-import type { StateNode, Transition } from '../types/types';
 import { useAutomataStore } from '../store/useAutomataStore';
 
 import { GeneratorTools } from './panel-tools/GeneratorTools';
@@ -23,19 +22,19 @@ interface ToolsPanelProps {
     onInstantMinimization: () => void;
     onInstantClasses: () => void;
     onPlayClasses: () => void;
-    savedAutomatonA: { nodes: StateNode[], transitions: Transition[] } | null;
-    onSaveAutomatonA: () => void;
-    onClearAutomatonA: () => void;
     onCompareMoore: (isInstant: boolean) => void;
 
     // Props de Transductores
     onConvertMooreToMealy?: () => void;
     onConvertMealyToMoore?: () => void;
     onPlayTransducerConversion?: (steps: any[], newType: AutomataType) => void;
+
+    isVisorOpen: boolean;
+    onToggleVisor: () => void;
 }
 
 const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
-    const { automataType, nodes, transitions, setNodes, setTransitions, setAutomataType } = useAutomataStore();
+    const { nodes, transitions, automataType, setNodes, setTransitions, setAutomataType, savedAutomatonA, setSavedAutomatonA } = useAutomataStore();
 
     const isFiniteAutomata = automataType === 'DFA' || automataType === 'NFA';
     const isTransducer = automataType === 'MOORE' || automataType === 'MEALY';
@@ -72,8 +71,21 @@ const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
                             setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType}
                             onPlaySubset={props.onPlaySubset} onPlayMinimization={props.onPlayMinimization}
                             onInstantMinimization={props.onInstantMinimization} onInstantClasses={props.onInstantClasses}
-                            onPlayClasses={props.onPlayClasses} savedAutomatonA={props.savedAutomatonA}
-                            onSaveAutomatonA={props.onSaveAutomatonA} onCompareMoore={props.onCompareMoore}
+                            onPlayClasses={props.onPlayClasses} onCompareMoore={props.onCompareMoore}
+
+                            savedAutomatonA={savedAutomatonA}
+                            isVisorOpen={props.isVisorOpen}
+                            onToggleVisor={props.onToggleVisor}
+
+                            // Hacemos que al guardar se abra automáticamente por comodidad
+                            onSaveAutomatonA={() => {
+                                setSavedAutomatonA({ nodes, transitions });
+                                props.onToggleVisor(); // Abre la ventana al guardar
+                            }}
+                            onClearAutomatonA={() => {
+                                setSavedAutomatonA(null);
+                                if (props.isVisorOpen) props.onToggleVisor(); // Cierra la ventana si se descarta
+                            }}
                         />
                     </>
                 )}

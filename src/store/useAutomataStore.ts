@@ -13,15 +13,19 @@ interface AutomataState {
     setAutomataType: (type: AutomataType | ((prev: AutomataType) => AutomataType)) => void;
     updateNodePosition: (id: string, x: number, y: number) => void;
     clearWorkspace: () => void;
+
+    savedAutomatonA: { nodes: StateNode[], transitions: Transition[] } | null;
+    setSavedAutomatonA: (automaton: { nodes: StateNode[], transitions: Transition[] } | null) => void;
 }
 
 export const useAutomataStore = create<AutomataState>()(
-    // Magia negra de Zustand: persist envuelve todo y hace el localStorage automático
     persist(
         (set) => ({
             nodes: [],
             transitions: [],
             automataType: 'DFA',
+            savedAutomatonA: null,
+            setSavedAutomatonA: (automaton) => set({ savedAutomatonA: automaton }),
 
             setNodes: (update) => set((state) => ({
                 nodes: typeof update === 'function' ? update(state.nodes) : update
@@ -43,6 +47,12 @@ export const useAutomataStore = create<AutomataState>()(
         }),
         {
             name: 'automata-lab-storage', // Este es el nombre del archivo unificado en el navegador
+
+            partialize: (state) => ({
+                nodes: state.nodes,
+                transitions: state.transitions,
+                automataType: state.automataType,
+            }),
         }
     )
 );
