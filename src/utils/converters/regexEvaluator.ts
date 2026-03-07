@@ -1,7 +1,7 @@
 import { toPostfix } from './regexParser';
 import { regexToAutomata } from './glushkov'; // (Asumiendo que le cambiaste el nombre)
 import { runSimulation } from '../engine';
-import type { SimulationResult } from '../engine';
+import type { SimulationResult } from '../../types/types';
 
 export const evaluateRegex = (regex: string, inputString: string): SimulationResult => {
     try {

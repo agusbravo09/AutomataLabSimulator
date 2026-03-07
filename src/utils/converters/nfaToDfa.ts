@@ -135,7 +135,8 @@ export const convertNfaToDfa = (originalNodes: StateNode[], originalTransitions:
             id: row.name, name: row.name,
             isInitial: row.isInitial, isFinal: row.isFinal,
             x: 150 + (index % 3) * 200, // Layout básico en grilla
-            y: 300 + Math.floor(index / 3) * 150
+            y: 300 + Math.floor(index / 3) * 150,
+            type: 'STATE'
         });
 
         // Agrupamos transiciones que van al mismo destino
@@ -150,7 +151,8 @@ export const convertNfaToDfa = (originalNodes: StateNode[], originalTransitions:
         targets.forEach((symbols, target) => {
             dfaTransitions.push({
                 id: `dt_${tId++}`, from: row.name, to: target,
-                symbols: symbols, hasLambda: false
+                symbols: symbols, hasLambda: false,
+                type: 'TRANSITION'
             });
         });
     });

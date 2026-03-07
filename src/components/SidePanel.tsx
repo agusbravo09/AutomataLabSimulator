@@ -31,15 +31,15 @@ const SidePanel: React.FC<SidePanelProps> = ({
     const [pumpK, setPumpK] = useState(0);
 
     // ESTADOS PARA EL LEMA DEL BOMBEO (MODO MANUAL / PIZARRÓN)
-    const [isPumpManual, setIsPumpManual] = useState(false);
-    const [manualN, setManualN] = useState(3);
-    const [manualW, setManualW] = useState('0001000');
-    const [manualX, setManualX] = useState('0');
-    const [manualY, setManualY] = useState('00');
-    const [manualK, setManualK] = useState(0);
+    //const [isPumpManual, setIsPumpManual] = useState(false);
+    //const [manualN, setManualN] = useState(3);
+    //const [manualW, setManualW] = useState('0001000');
+    //const [manualX, setManualX] = useState('0');
+    // [manualY, setManualY] = useState('00');
+    //const [manualK, setManualK] = useState(0);
 
     // Calculamos Z automáticamente en el modo manual
-    const manualZ = manualW.substring(manualX.length + manualY.length);
+    //const manualZ = manualW.substring(manualX.length + manualY.length);
 
     const [isPumpingModalOpen, setIsPumpingModalOpen] = useState(false);
 

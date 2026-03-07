@@ -71,13 +71,13 @@ export const convertLeftGrammarToAutomataStepByStep = (grammarText: string) => {
         if (!nodeMap.has(r.left)) {
             const id = crypto.randomUUID();
             nodeMap.set(r.left, id);
-            nodes1.push({ id, name: r.left, x: 0, y: 0, isInitial: r.left === axiom, isFinal: false });
+            nodes1.push({ id, name: r.left, x: 0, y: 0, isInitial: r.left === axiom, isFinal: false, type: 'STATE' });
         }
     });
 
     // Creamos el nodo final Lambda
     const lambdaNodeId = crypto.randomUUID();
-    nodes1.push({ id: lambdaNodeId, name: 'λ', x: 0, y: 0, isInitial: false, isFinal: true });
+    nodes1.push({ id: lambdaNodeId, name: 'λ', x: 0, y: 0, isInitial: false, isFinal: true, type: 'STATE' });
     nodeMap.set('λ', lambdaNodeId);
 
     // Los ubicamos
@@ -87,7 +87,7 @@ export const convertLeftGrammarToAutomataStepByStep = (grammarText: string) => {
     finalRules.forEach(rule => {
         const fromId = nodeMap.get(rule.left)!;
         rule.rights.forEach(prod => {
-            let toId = lambdaNodeId;
+            let toId: string = lambdaNodeId;
             let symbol = prod;
 
             if (prod === 'λ' || prod.toLowerCase() === 'lambda' || prod === 'ε' || prod === 'e') {
@@ -99,7 +99,7 @@ export const convertLeftGrammarToAutomataStepByStep = (grammarText: string) => {
                     if (!nodeMap.has(nt)) {
                         const newId = crypto.randomUUID();
                         nodeMap.set(nt, newId);
-                        nodes1.push({ id: newId, name: nt, x: 0, y: 0, isInitial: false, isFinal: false });
+                        nodes1.push({ id: newId, name: nt, x: 0, y: 0, isInitial: false, isFinal: false, type: 'STATE' });
                     }
                     toId = nodeMap.get(nt)!;
                     symbol = prod.substring(nt.length).trim();
@@ -111,7 +111,8 @@ export const convertLeftGrammarToAutomataStepByStep = (grammarText: string) => {
                 from: fromId,
                 to: toId,
                 symbols: symbol ? [symbol] : [],
-                hasLambda: !symbol
+                hasLambda: !symbol,
+                type: 'TRANSITION'
             });
         });
     });

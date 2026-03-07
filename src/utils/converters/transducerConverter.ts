@@ -34,6 +34,7 @@ export const convertMooreToMealy = (nodes: StateNode[], transitions: Transition[
 
     // Proceso 2: Limpiar nodos
     const step2Nodes: StateNode[] = nodes.map(node => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { output, ...rest } = node;
         return { ...rest };
     });
@@ -63,7 +64,7 @@ export const convertMealyToMoore = (nodes: StateNode[], transitions: Transition[
     nodes.forEach(n => incomingOutputs[n.id] = new Set());
 
     transitions.forEach(t => {
-        t.symbols.forEach((sym, index) => {
+        t.symbols.forEach((_, index) => {
             const out = (t.outputs && t.outputs[index]) ? t.outputs[index] : '';
             incomingOutputs[t.to].add(out);
         });
@@ -116,7 +117,7 @@ export const convertMealyToMoore = (nodes: StateNode[], transitions: Transition[
             Object.entries(symbolsByTargetClone).forEach(([toCloneId, data]) => {
                 newTransitions.push({
                     id: `t_${fromCloneId}_${toCloneId}_${Math.random().toString(36).substr(2, 5)}`,
-                    from: fromCloneId, to: toCloneId, symbols: data.symbols, hasLambda: t.hasLambda,
+                    from: fromCloneId, to: toCloneId, symbols: data.symbols, hasLambda: t.hasLambda, type: 'TRANSITION'
                 });
             });
         });

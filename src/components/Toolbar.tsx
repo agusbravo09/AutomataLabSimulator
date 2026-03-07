@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAutomataStore } from '../store/useAutomataStore';
+import { type AutomataType } from "../types/types";
 
 // Definimos los tipos de herramientas
 export type Tool = 'CURSOR' | 'STATE' | 'TRANSITION';
-//Definimos los tipos de automatas
-export type AutomataType = 'DFA' | 'NFA' | 'PDA' | 'TM' | 'MOORE' | 'MEALY';
+
 
 interface ToolbarProps {
     activeTool: Tool;
@@ -54,7 +54,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
                     }}
                 >
                     <img
-                        src={'../../public/Toolbar/tools.svg'}
+                        src={'/Toolbar/tools.svg'}
                         alt="Herramientas"
                         style={{ width: '22px', height: '22px', opacity: 0.7, filter: 'invert(30%) sepia(10%) saturate(500%) hue-rotate(180deg) brightness(80%) contrast(90%)' }} // El filter es opcional, sirve para darle un color grisáceo similar al texto que tenías
                     />

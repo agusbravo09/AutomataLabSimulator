@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AutomataType } from '../Toolbar';
+import type { AutomataType } from '../../types/types';
 import type { StateNode, Transition } from '../../types/types';
 import { convertMooreToMealy, convertMealyToMoore } from '../../utils/converters/transducerConverter';
 

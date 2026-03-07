@@ -1,6 +1,4 @@
-import type { StateNode, Transition } from '../types/types';
-import type { AutomataType } from '../components/Toolbar';
-import type { SimulationResult, Step } from '../types/types';
+import type { StateNode, Transition, AutomataType, SimulationResult, Step } from '../types/types';
 
 
 //Automata Finito Determinista

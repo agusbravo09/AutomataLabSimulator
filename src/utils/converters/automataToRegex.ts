@@ -84,9 +84,9 @@ export const convertAutomataToRegex = (originalNodes: StateNode[], originalTrans
             if (orig) {
                 snapNodes.push({ ...orig, isInitial: false, isFinal: false }); // Les sacamos la marca para no confundir
             } else if (id === 'REAL_START') {
-                snapNodes.push({ id, name: 'INICIO', isInitial: true, isFinal: false, x: minX || 100, y: avgY });
+                snapNodes.push({ id, name: 'INICIO', isInitial: true, isFinal: false, x: minX || 100, y: avgY, type: 'STATE' });
             } else if (id === 'REAL_END') {
-                snapNodes.push({ id, name: 'FIN', isInitial: false, isFinal: true, x: maxX || 800, y: avgY });
+                snapNodes.push({ id, name: 'FIN', isInitial: false, isFinal: true, x: maxX || 800, y: avgY, type: 'STATE' });
             }
         });
 
@@ -96,7 +96,8 @@ export const convertAutomataToRegex = (originalNodes: StateNode[], originalTrans
                     snapTransitions.push({
                         id: `snap_t${tId++}`, from, to,
                         symbols: regex === 'λ' ? [] : [regex],
-                        hasLambda: regex === 'λ'
+                        hasLambda: regex === 'λ',
+                        type: 'TRANSITION'
                     });
                 }
             });
@@ -106,7 +107,7 @@ export const convertAutomataToRegex = (originalNodes: StateNode[], originalTrans
 
     // 1. Cargar las transiciones originales
     originalTransitions.forEach(t => {
-        let syms = [...t.symbols];
+        const syms = [...t.symbols];
         if (t.hasLambda) syms.push('λ');
         if (syms.length === 0) return;
         const regex = syms.length > 1 ? `(${syms.join('+')})` : syms[0];
@@ -159,7 +160,7 @@ export const convertAutomataToRegex = (originalNodes: StateNode[], originalTrans
                 const r3 = parenthesize(simplifyRegex(out.regex));
 
                 const parts = [r1, r2, r3].filter(p => p !== '' && p !== 'λ');
-                let bridge = parts.length === 0 ? 'λ' : (parts.length === 1 ? parts[0] : parts.join(''));
+                const bridge = parts.length === 0 ? 'λ' : (parts.length === 1 ? parts[0] : parts.join(''));
 
                 addEdge(u, v, bridge);
             }

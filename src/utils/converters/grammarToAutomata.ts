@@ -19,7 +19,7 @@ export const convertGrammarToAutomataStepByStep = (grammarText: string) => {
         if (!nodeMap.has(left)) {
             const id = crypto.randomUUID();
             nodeMap.set(left, id);
-            nodes.push({ id, name: left, x: 0, y: 0, isInitial: isFirst, isFinal: false });
+            nodes.push({ id, name: left, x: 0, y: 0, isInitial: isFirst, isFinal: false, type: 'STATE' });
             isFirst = false;
         }
     });
@@ -75,25 +75,25 @@ export const convertGrammarToAutomataStepByStep = (grammarText: string) => {
                     if (!nodeMap.has(nonTerminal)) {
                         const newId = crypto.randomUUID();
                         nodeMap.set(nonTerminal, newId);
-                        nodes.push({ id: newId, name: nonTerminal, x: (nodes.length % 3) * 150, y: Math.floor(nodes.length / 3) * 120, isInitial: false, isFinal: false });
+                        nodes.push({ id: newId, name: nonTerminal, x: (nodes.length % 3) * 150, y: Math.floor(nodes.length / 3) * 120, isInitial: false, isFinal: false, type: 'STATE' });
                     }
                     const toId = nodeMap.get(nonTerminal)!;
                     activeNodes.push(toId);
 
                     newTransitionId = crypto.randomUUID();
-                    transitions.push({ id: newTransitionId, from: fromId, to: toId, symbols: [terminal], hasLambda: false });
+                    transitions.push({ id: newTransitionId, from: fromId, to: toId, symbols: [terminal], hasLambda: false, type: 'TRANSITION' });
                     description = `REGLA: ${left} -> ${prod}\nCreamos una transición desde '${left}' hacia '${nonTerminal}' leyendo el símbolo '${terminal}'.`;
                 } else {
                     // CASO C: Producción pura Terminal (A -> a)
                     terminal = prod;
                     if (!hasSpecialFinal) {
                         hasSpecialFinal = true;
-                        nodes.push({ id: specialFinalId, name: 'Z', x: (nodes.length % 3) * 150, y: Math.floor(nodes.length / 3) * 120, isInitial: false, isFinal: true });
+                        nodes.push({ id: specialFinalId, name: 'Z', x: (nodes.length % 3) * 150, y: Math.floor(nodes.length / 3) * 120, isInitial: false, isFinal: true, type: 'STATE' });
                     }
                     activeNodes.push(specialFinalId);
 
                     newTransitionId = crypto.randomUUID();
-                    transitions.push({ id: newTransitionId, from: fromId, to: specialFinalId, symbols: [terminal], hasLambda: false });
+                    transitions.push({ id: newTransitionId, from: fromId, to: specialFinalId, symbols: [terminal], hasLambda: false, type: 'TRANSITION' });
                     description = `REGLA: ${left} -> ${prod}\nComo deriva en un terminal puro, creamos una transición con '${terminal}' hacia el estado final especial 'Z'.`;
                 }
             }

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import type { StateNode, Transition } from '../types/types';
-import type { AutomataType } from '../components/Toolbar';
+import type { AutomataType } from '../types/types';
 
 export const useFileManager = (
     nodes: StateNode[], transitions: Transition[], automataType: AutomataType,

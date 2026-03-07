@@ -1,6 +1,5 @@
 import React from 'react';
-import type { AutomataType } from '../Toolbar';
-import type { StateNode, Transition } from '../../types/types';
+import type { StateNode, Transition, AutomataType } from '../../types/types';
 import { convertNfaToDfa } from '../../utils/converters/nfaToDfa';
 
 interface FiniteAutomataToolsProps {

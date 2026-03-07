@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { StateNode, Transition } from '../types/types';
-import type { AutomataType } from '../components/Toolbar';
+import type { AutomataType } from '../types/types';
 
 interface AutomataState {
     nodes: StateNode[];

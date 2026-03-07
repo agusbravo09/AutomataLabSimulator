@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAutomataStore } from '../store/useAutomataStore';
 import { runSimulation } from '../utils/engine';
-import type { AutomataType } from "../components/Toolbar";
+import type { AutomataType } from "../types/types";
 import type { SimulationResult, Step } from '../types/types';
 
 export const useSimulation = () => {

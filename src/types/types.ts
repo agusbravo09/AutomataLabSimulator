@@ -1,3 +1,5 @@
+export type AutomataType = 'DFA' | 'NFA' | 'PDA' | 'TM' | 'MOORE' | 'MEALY';
+
 export interface StateNode {
     type: 'STATE';
     id: string;
@@ -25,6 +27,7 @@ export interface Step {
     charRead: string;
     activeStates: string[];
     activeTransitions: string[];
+    partialOutput?: string;
 }
 
 export interface SimulationResult {

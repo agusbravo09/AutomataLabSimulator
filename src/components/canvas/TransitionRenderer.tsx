@@ -172,7 +172,7 @@ export const TransitionsRenderer: React.FC<Props> = ({ transitions, nodes, simMo
                         tension={tension}
                         type={type}
                         isHighlighted={isHighlighted}
-                        onClick={() => setSelectedElement({ type: 'TRANSITION', ...t })}
+                        onClick={() => setSelectedElement({...t })}
                     />
                 );
             })}

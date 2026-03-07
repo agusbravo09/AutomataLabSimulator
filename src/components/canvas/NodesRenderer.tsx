@@ -1,7 +1,7 @@
 import React from 'react';
 import { StateNodeView } from './StateNodeView';
 import type { StateNode } from '../../types/types';
-import type { Tool } from '../Toolbar'; // Ajustá la ruta de Toolbar si es necesario
+import type { Tool } from '../Toolbar';
 
 interface Props {
     nodes: StateNode[];
@@ -42,7 +42,7 @@ export const NodesRenderer: React.FC<Props> = ({
                         onMouseUp={() => handleMouseUpNode(node.id)}
                         onClick={(e) => {
                             e.cancelBubble = true;
-                            if (activeTool === 'CURSOR') setSelectedElement({ type: 'STATE', ...node });
+                            if (activeTool === 'CURSOR') setSelectedElement({...node });
                         }}
                     />
                 );

@@ -1,6 +1,6 @@
 import { convertMooreToMealy, convertMealyToMoore } from '../utils/converters/transducerConverter';
 import type { StateNode, Transition } from '../types/types';
-import type { AutomataType } from '../components/Toolbar';
+import type { AutomataType } from '../types/types';
 
 export const useTransducerLogic = (
     nodes: StateNode[],

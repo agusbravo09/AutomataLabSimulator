@@ -1,5 +1,5 @@
 import React from 'react';
-import type { SimulationResult } from '../utils/engine';
+import type { SimulationResult } from '../types/types';
 
 // Replicamos la interfaz del estado simMode
 interface SimMode {

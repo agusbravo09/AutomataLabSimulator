@@ -22,11 +22,11 @@ export const regexToAutomata = (postfix: string): { nodes: StateNode[], transiti
 
     const createState = (): StateNode => {
         const id = `temp_q${stateCounter++}`;
-        return { id, name: id, isInitial: false, isFinal: false, x: 0, y: 0 };
+        return { id, name: id, isInitial: false, isFinal: false, x: 0, y: 0, type: 'STATE' };
     };
 
     const createTransition = (from: string, to: string, symbol: string): Transition => {
-        return { id: `temp_t${transitionCounter++}`, from, to, symbols: symbol === 'λ' ? [] : [symbol], hasLambda: symbol === 'λ' };
+        return { id: `temp_t${transitionCounter++}`, from, to, symbols: symbol === 'λ' ? [] : [symbol], hasLambda: symbol === 'λ', type: 'TRANSITION' };
     };
 
     const replaceNodeId = (transitions: Transition[], oldId: string, newId: string) => {
@@ -37,8 +37,8 @@ export const regexToAutomata = (postfix: string): { nodes: StateNode[], transiti
     };
 
     const snapshot = (char: string, description: string) => {
-        let currentNodes: StateNode[] = [];
-        let currentTransitions: Transition[] = [];
+        const currentNodes: StateNode[] = [];
+        const currentTransitions: Transition[] = [];
 
         stack.forEach(frag => {
             currentNodes.push(...frag.nodes);
