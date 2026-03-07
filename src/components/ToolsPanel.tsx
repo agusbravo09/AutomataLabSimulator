@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AutomataType } from './Toolbar';
+import type { AutomataType } from '../types/types';
 import { useAutomataStore } from '../store/useAutomataStore';
 
 import { GeneratorTools } from './panel-tools/GeneratorTools';
