@@ -7,13 +7,13 @@ import { useAutomataStore } from '../store/useAutomataStore';
 interface SidePanelProps {
     isOpen: boolean;
     onClose: () => void;
-    onSimulate: (input: string) => void;
+    // ACTUALIZACIÓN: Ahora reciben un segundo parámetro opcional para la pila
+    onSimulate: (input: string, initialStack?: string) => void;
     simulationResult: any;
     onClearResult: () => void;
-    onStepByStep: (input: string) => void;
+    onStepByStep: (input: string, initialStack?: string) => void;
 }
 
-// AGREGAMOS 'pumping' A LOS TIPOS DE PESTAÑA
 type TabType = 'matrix' | 'definition' | 'simulate' | 'pumping';
 
 const SidePanel: React.FC<SidePanelProps> = ({
@@ -24,31 +24,24 @@ const SidePanel: React.FC<SidePanelProps> = ({
     const [inputValue, setInputValue] = useState('');
     const [activeTab, setActiveTab] = useState<TabType>('matrix');
 
+    // NUEVO ESTADO PARA EL SÍMBOLO INICIAL DE LA PILA
+    const [initialStackSymbol, setInitialStackSymbol] = useState('S');
+
     // ESTADOS PARA EL LEMA DEL BOMBEO
     const [pumpInput, setPumpInput] = useState('');
     const [pumpData, setPumpData] = useState<{x: string, y: string, z: string, p: number} | null>(null);
     const [pumpError, setPumpError] = useState('');
     const [pumpK, setPumpK] = useState(0);
 
-    // ESTADOS PARA EL LEMA DEL BOMBEO (MODO MANUAL / PIZARRÓN)
-    //const [isPumpManual, setIsPumpManual] = useState(false);
-    //const [manualN, setManualN] = useState(3);
-    //const [manualW, setManualW] = useState('0001000');
-    //const [manualX, setManualX] = useState('0');
-    // [manualY, setManualY] = useState('00');
-    //const [manualK, setManualK] = useState(0);
-
-    // Calculamos Z automáticamente en el modo manual
-    //const manualZ = manualW.substring(manualX.length + manualY.length);
-
     const [isPumpingModalOpen, setIsPumpingModalOpen] = useState(false);
 
+    // ACTUALIZACIÓN: Le pasamos el símbolo de la pila a las funciones
     const handleComprobar = () => {
-        if (onSimulate) onSimulate(inputValue.trim());
+        if (onSimulate) onSimulate(inputValue.trim(), initialStackSymbol.trim());
     };
 
     const handlePasoAPaso = () => {
-        if (onStepByStep) onStepByStep(inputValue.trim());
+        if (onStepByStep) onStepByStep(inputValue.trim(), initialStackSymbol.trim());
     };
 
     const handleDecompose = () => {
@@ -56,7 +49,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
             setPumpError('');
             const data = decomposePumping(nodes, transitions, pumpInput.trim());
             setPumpData(data);
-            setPumpK(0); // Por defecto probamos con k=0 como en el PDF
+            setPumpK(0);
         } catch(e: any) {
             setPumpError(e.message);
             setPumpData(null);
@@ -68,7 +61,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
         const pumpedString = pumpData.x + pumpData.y.repeat(pumpK) + pumpData.z;
         setActiveTab('simulate');
         setInputValue(pumpedString);
-        onSimulate(pumpedString);
+        onSimulate(pumpedString, initialStackSymbol.trim());
     };
 
     // Calculo dinamico del alfabeto
@@ -142,9 +135,10 @@ const SidePanel: React.FC<SidePanelProps> = ({
             {/* CONTENEDOR DESLIZABLE */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px 20px' }}>
 
-                {/* ---------------- PESTAÑA 1: MATRIZ ---------------- */}
+                {/* ... (PESTAÑAS 1 Y 2 INTACTAS) ... */}
                 {activeTab === 'matrix' && (
                     <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        {/* (Mismo código de matriz) */}
                         {nodes.length === 0 ? (
                             <div style={{ textAlign: 'center', marginTop: '40px', color: '#adb5bd' }}>
                                 <div style={{ fontSize: '32px', marginBottom: '10px' }}>Lienzo Vacío</div>
@@ -229,9 +223,9 @@ const SidePanel: React.FC<SidePanelProps> = ({
                     </div>
                 )}
 
-                {/* ---------------- PESTAÑA 2: DEFINICIÓN FORMAL ---------------- */}
                 {activeTab === 'definition' && (
                     <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        {/* (Mismo código de definición formal) */}
                         {nodes.length === 0 ? (
                             <div style={{ textAlign: 'center', marginTop: '40px', color: '#adb5bd' }}>
                                 <div style={{ fontSize: '32px', marginBottom: '10px' }}>Sin Datos</div>
@@ -304,6 +298,22 @@ const SidePanel: React.FC<SidePanelProps> = ({
                         <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #dee2e6' }}>
                             <h3 style={{ fontSize: '14px', margin: '0 0 12px 0', color: '#212529' }}>Evaluar Cadena</h3>
 
+                            {/* NUEVO CAMPO: SÍMBOLO INICIAL DE LA PILA (SOLO PARA PDA) */}
+                            {automataType === 'PDA' && (
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ fontSize: '12px', color: '#495057', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                                        Símbolo Inicial de Pila:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={initialStackSymbol}
+                                        onChange={(e) => setInitialStackSymbol(e.target.value)}
+                                        maxLength={3} // Por si usan 'Z0' o 'S'
+                                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #ced4da', boxSizing: 'border-box', fontFamily: "'Fira Code', monospace", fontSize: '14px', outline: 'none' }}
+                                    />
+                                </div>
+                            )}
+
                             <input
                                 type="text"
                                 placeholder="Ej: 10110 (o dejar vacío para λ)"
@@ -365,12 +375,12 @@ const SidePanel: React.FC<SidePanelProps> = ({
                                             display: 'inline-block',
                                             minWidth: '80%'
                                         }}>
-                <span style={{ fontSize: '11px', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#495057' }}>
-                    Cadena de Salida:
-                </span>
+                                            <span style={{ fontSize: '11px', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#495057' }}>
+                                                Cadena de Salida:
+                                            </span>
                                             <span style={{ fontFamily: "'Fira Code', monospace", fontSize: '18px', fontWeight: 'bold', letterSpacing: '2px' }}>
-                    {simulationResult.outputString === '' ? 'λ' : simulationResult.outputString}
-                </span>
+                                                {simulationResult.outputString === '' ? 'λ' : simulationResult.outputString}
+                                            </span>
                                         </div>
                                     )}
                                 </div>

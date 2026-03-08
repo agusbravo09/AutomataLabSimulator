@@ -161,11 +161,138 @@ export const simulateMealy = (nodes: StateNode[], transitions: Transition[], inp
     return { accepted: true, path, outputString };
 };
 
-// MOTORES FUTUROS
-const simulatePDA = (): SimulationResult => {
-    return { accepted: false, path: [], error: "Simulación de Autómata a Pila (PDA) en desarrollo..." };
-};
+// Autómata a Pila
+const simulatePDA = (nodes: StateNode[], transitions: Transition[], inputString: string, initialStackSymbol: string = 'Z0'): SimulationResult => {
+    const initialNodes = nodes.filter(n => n.isInitial);
+    if (initialNodes.length === 0) return { accepted: false, path: [], error: "No hay estado inicial." };
+    if (initialNodes.length > 1) return { accepted: false, path: [], error: "Este AP básico no soporta múltiples estados iniciales." };
 
+    let currentState = initialNodes[0].id;
+    const stack: string[] = [initialStackSymbol];
+
+    const path: Step[] = [{
+        charRead: '',
+        activeStates: [currentState],
+        activeTransitions: [],
+        stackSnapshot: [...stack]
+    }];
+
+    let charIndex = 0;
+    let stepCount = 0;
+    const MAX_STEPS = 1000;
+
+    while (stepCount < MAX_STEPS) {
+        const isEndOfInput = charIndex >= inputString.length;
+        const char = isEndOfInput ? '' : inputString[charIndex];
+        const topOfStack = stack.length > 0 ? stack[stack.length - 1] : 'λ';
+
+        let validTransition: Transition | null = null;
+        let usedSymbolIndex = -1;
+        let isLambdaTransition = false;
+
+        // --- PRIORIDAD 1: Intentar consumir la letra de la cadena ---
+        if (!isEndOfInput) {
+            for (const t of transitions) {
+                if (t.from !== currentState) continue;
+
+                // CORRECCIÓN: Recorremos TODOS los símbolos, no nos quedamos con el primer indexOf
+                for (let i = 0; i < t.symbols.length; i++) {
+                    if (t.symbols[i] === char) {
+                        const popSymbol = (t.popSymbols && t.popSymbols[i]) ? t.popSymbols[i] : 'λ';
+                        if (popSymbol === 'λ' || popSymbol === topOfStack) {
+                            validTransition = t;
+                            usedSymbolIndex = i;
+                            isLambdaTransition = false;
+                            break; // Encontramos el correcto, rompemos este mini-bucle
+                        }
+                    }
+                }
+                if (validTransition) break; // Rompemos el bucle de transiciones
+            }
+        }
+
+        // --- PRIORIDAD 2: Intentar transición Lambda ---
+        if (!validTransition) {
+            for (const t of transitions) {
+                if (t.from !== currentState) continue;
+
+                // CORRECCIÓN: Recorremos todos buscando Lambdas válidas
+                for (let i = 0; i < t.symbols.length; i++) {
+                    if (t.symbols[i] === 'λ') {
+                        const popSymbol = (t.popSymbols && t.popSymbols[i]) ? t.popSymbols[i] : 'λ';
+                        if (popSymbol === 'λ' || popSymbol === topOfStack) {
+                            validTransition = t;
+                            usedSymbolIndex = i;
+                            isLambdaTransition = true;
+                            break;
+                        }
+                    }
+                }
+                if (validTransition) break;
+            }
+        }
+
+        if (validTransition) {
+            const popSymbol = (validTransition.popSymbols && validTransition.popSymbols[usedSymbolIndex]) ? validTransition.popSymbols[usedSymbolIndex] : 'λ';
+            const pushSymbolStr = (validTransition.pushSymbols && validTransition.pushSymbols[usedSymbolIndex]) ? validTransition.pushSymbols[usedSymbolIndex] : 'λ';
+
+            // --- LÓGICA ACADÉMICA FORMAL ---
+            if (popSymbol !== 'λ' && stack.length > 0) {
+                stack.pop(); // Desapila
+            }
+
+            if (pushSymbolStr !== 'λ') {
+                const pushItems = pushSymbolStr.includes(' ')
+                    ? pushSymbolStr.trim().split(/\s+/)
+                    : pushSymbolStr.split('');
+
+                for (let j = pushItems.length - 1; j >= 0; j--) {
+                    stack.push(pushItems[j]); // Apila
+                }
+            }
+
+            currentState = validTransition.to;
+
+            let charReadInStep = 'λ';
+            if (!isLambdaTransition) {
+                charReadInStep = char;
+                charIndex++; // Solo avanzamos la palabra si NO fue Lambda
+            }
+
+            path.push({
+                charRead: charReadInStep,
+                activeStates: [currentState],
+                activeTransitions: [validTransition.id],
+                stackSnapshot: [...stack]
+            });
+
+        } else {
+            if (isEndOfInput) {
+                break;
+            } else {
+                return {
+                    accepted: false,
+                    path,
+                    error: `Se trabó en '${nodes.find(n => n.id === currentState)?.name}': leyendo '${char}' con tope de pila '${topOfStack}'.`
+                };
+            }
+        }
+        stepCount++;
+    }
+
+    if (stepCount >= MAX_STEPS) {
+        return { accepted: false, path, error: "Error: Bucle infinito de transiciones λ detectado." };
+    }
+
+    const finalState = nodes.find(n => n.id === currentState);
+    const isAccepted = finalState ? finalState.isFinal : false;
+
+    return {
+        accepted: isAccepted,
+        path,
+        error: !isAccepted ? 'Cadena consumida pero el estado no es de aceptación.' : undefined
+    };
+};
 const simulateTM = (): SimulationResult => {
     return { accepted: false, path: [], error: "Simulación de Máquina de Turing en desarrollo..." };
 };
@@ -175,14 +302,15 @@ export const runSimulation = (
     type: AutomataType | string,
     nodes: StateNode[],
     transitions: Transition[],
-    inputString: string
+    inputString: string,
+    initialStackSymbol: string = 'S'
 ): SimulationResult => {
     switch (type) {
         case 'DFA': return simulateDFA(nodes, transitions, inputString);
         case 'NFA': return simulateNFA(nodes, transitions, inputString);
         case 'MOORE': return simulateMoore(nodes, transitions, inputString);
         case 'MEALY': return simulateMealy(nodes, transitions, inputString);
-        case 'PDA': return simulatePDA();
+        case 'PDA': return simulatePDA(nodes, transitions, inputString, initialStackSymbol);
         case 'TM':  return simulateTM();
         default:    return { accepted: false, path: [], error: "Tipo de autómata desconocido." };
     }

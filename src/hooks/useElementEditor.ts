@@ -44,26 +44,43 @@ export const useElementEditor = ({
             setTransitions(prevTransitions => prevTransitions.map(t => {
                 if (t.id === selectedElement.id) {
 
-                    let parsedSymbols = selectedElement.symbols;
-                    if (typeof parsedSymbols === 'string') {
-                        parsedSymbols = parsedSymbols.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '');
-                    }
+                    // FUNCIÓN AUXILIAR: Transforma "a, b, c" en ['a', 'b', 'c']
+                    const parseStringToArray = (input: any) => {
+                        if (typeof input === 'string') {
+                            return input.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '');
+                        }
+                        return Array.isArray(input) ? input : [];
+                    };
 
-                    let parsedOutputs = selectedElement.outputs;
-                    if (typeof parsedOutputs === 'string') {
-                        parsedOutputs = parsedOutputs.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '');
-                    }
+                    const parsedSymbols = parseStringToArray(selectedElement.symbols);
 
-                    // CORRECCIÓN 2: Forzamos a que las salidas de Mealy NUNCA superen a los símbolos
-                    if (Array.isArray(parsedOutputs) && Array.isArray(parsedSymbols)) {
+                    // Parseamos las nuevas propiedades
+                    let parsedOutputs = parseStringToArray(selectedElement.outputs);
+                    let parsedPopSymbols = parseStringToArray(selectedElement.popSymbols);
+                    let parsedPushSymbols = parseStringToArray(selectedElement.pushSymbols);
+                    let parsedWriteSymbols = parseStringToArray(selectedElement.writeSymbols);
+                    let parsedMoveDirections = parseStringToArray(selectedElement.moveDirections);
+
+                    // CORRECCIÓN: Forzar que las acciones NUNCA superen a la cantidad de símbolos leídos
+                    if (parsedSymbols.length > 0) {
                         parsedOutputs = parsedOutputs.slice(0, parsedSymbols.length);
+                        parsedPopSymbols = parsedPopSymbols.slice(0, parsedSymbols.length);
+                        parsedPushSymbols = parsedPushSymbols.slice(0, parsedSymbols.length);
+                        parsedWriteSymbols = parsedWriteSymbols.slice(0, parsedSymbols.length);
+                        parsedMoveDirections = parsedMoveDirections.slice(0, parsedSymbols.length);
                     }
 
                     return {
                         ...t,
                         symbols: parsedSymbols,
                         hasLambda: selectedElement.hasLambda,
-                        outputs: parsedOutputs
+
+                        // Guardamos las propiedades parseadas
+                        outputs: parsedOutputs,
+                        popSymbols: parsedPopSymbols,
+                        pushSymbols: parsedPushSymbols,
+                        writeSymbols: parsedWriteSymbols,
+                        moveDirections: parsedMoveDirections as ('L' | 'R' | 'S')[] // Forzamos el tipado para la TM
                     };
                 }
                 return t;

@@ -57,7 +57,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClo
                                     type="text"
                                     value={element.output || ''}
                                     onChange={(e) => handleUpdate('output', e.target.value)}
-                                    maxLength={1} // <-- CORRECCIÓN 1: Máximo 1 caracter
+                                    maxLength={1}
                                     style={inputStyle}
                                     placeholder="ej: 1"
                                 />
@@ -78,44 +78,102 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClo
                     </>
                 ) : (
                     <>
+                        {/* --- EDITOR DE TRANSICIONES --- */}
                         <div style={{ padding: '10px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '8px', marginBottom: '5px', textAlign: 'center', fontSize: '15px', fontWeight: 600, color: '#4c6ef5' }}>
                             Transición: {nodes.find(n => n.id === element.from)?.name} ➔ {nodes.find(n => n.id === element.to)?.name}
                         </div>
 
+                        {/* EL SÍMBOLO QUE LEE */}
                         <div style={fieldStyle}>
-                            <label style={labelStyle}>Símbolos (separados por coma):</label>
+                            <label style={labelStyle}>
+                                {automataType === 'TM' ? 'Lee de la cinta (separado por coma):' : 'Lee (separado por coma):'}
+                            </label>
                             <input
                                 type="text"
-                                // CORRECCIÓN 3 y 4: Join sin espacio y guardamos el texto crudo
-                                value={Array.isArray(element.symbols) ? element.symbols.join(',') : element.symbols}
+                                value={Array.isArray(element.symbols) ? element.symbols.join(',') : (element.symbols || '')}
                                 onChange={(e) => handleUpdate('symbols', e.target.value)}
                                 style={inputStyle}
                                 placeholder="ej: a,b"
                             />
                         </div>
 
+                        {/* --- CAMPOS PARA PILA (PDA) --- */}
+                        {automataType === 'PDA' && (
+                            <>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Desapila (separado por coma):</label>
+                                    <input
+                                        type="text"
+                                        value={Array.isArray(element.popSymbols) ? element.popSymbols.join(',') : (element.popSymbols || '')}
+                                        onChange={(e) => handleUpdate('popSymbols', e.target.value)}
+                                        style={inputStyle}
+                                        placeholder="ej: Z0,A"
+                                    />
+                                </div>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Apila (separado por coma):</label>
+                                    <input
+                                        type="text"
+                                        value={Array.isArray(element.pushSymbols) ? element.pushSymbols.join(',') : (element.pushSymbols || '')}
+                                        onChange={(e) => handleUpdate('pushSymbols', e.target.value)}
+                                        style={inputStyle}
+                                        placeholder="ej: A Z0,λ"
+                                    />
+                                    <span style={{ fontSize: '11px', color: '#868e96', marginTop: '-3px' }}>* Un valor por cada símbolo leído.</span>
+                                </div>
+                            </>
+                        )}
+
+                        {/* --- CAMPOS PARA TURING (TM) --- */}
+                        {automataType === 'TM' && (
+                            <>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Escribe (separado por coma):</label>
+                                    <input
+                                        type="text"
+                                        value={Array.isArray(element.writeSymbols) ? element.writeSymbols.join(',') : (element.writeSymbols || '')}
+                                        onChange={(e) => handleUpdate('writeSymbols', e.target.value)}
+                                        style={inputStyle}
+                                        placeholder="ej: x,y"
+                                    />
+                                </div>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Movimiento (L, R, S):</label>
+                                    <input
+                                        type="text"
+                                        value={Array.isArray(element.moveDirections) ? element.moveDirections.join(',') : (element.moveDirections || '')}
+                                        onChange={(e) => handleUpdate('moveDirections', e.target.value)}
+                                        style={inputStyle}
+                                        placeholder="ej: R,L,S"
+                                    />
+                                    <span style={{ fontSize: '11px', color: '#868e96', marginTop: '-3px' }}>* L=Izquierda, R=Derecha, S=Quieto.</span>
+                                </div>
+                            </>
+                        )}
+
+                        {/* --- CAMPOS PARA MEALY --- */}
                         {automataType === 'MEALY' && (
                             <div style={fieldStyle}>
                                 <label style={labelStyle}>Salidas Mealy (separadas por coma):</label>
                                 <input
                                     type="text"
-                                    // CORRECCIÓN 3 y 4: Join sin espacio y guardamos el texto crudo
                                     value={Array.isArray(element.outputs) ? element.outputs.join(',') : (element.outputs || '')}
                                     onChange={(e) => handleUpdate('outputs', e.target.value)}
                                     style={inputStyle}
                                     placeholder="ej: 0,1"
                                 />
-                                <span style={{ fontSize: '11px', color: '#868e96', marginTop: '-3px' }}>
-                                    * Debe haber una salida por cada símbolo.
-                                </span>
+                                <span style={{ fontSize: '11px', color: '#868e96', marginTop: '-3px' }}>* Debe haber una salida por cada símbolo.</span>
                             </div>
                         )}
 
-                        <div style={fieldStyle}>
-                            <label style={labelStyle}>
-                                <input type="checkbox" checked={element.hasLambda || false} onChange={(e) => handleUpdate('hasLambda', e.target.checked)} /> Incluir λ (Lambda)
-                            </label>
-                        </div>
+                        {/* CHECKBOX DE LAMBDA (Oculto en Turing porque no usa Lambda) */}
+                        {automataType !== 'TM' && (
+                            <div style={fieldStyle}>
+                                <label style={labelStyle}>
+                                    <input type="checkbox" checked={element.hasLambda || false} onChange={(e) => handleUpdate('hasLambda', e.target.checked)} /> Incluir λ (Lambda)
+                                </label>
+                            </div>
+                        )}
                     </>
                 )}
             </div>
@@ -128,7 +186,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClo
     );
 };
 
-// --- ESTILOS ---
+// --- ESTILOS (Intactos) ---
 const panelStyle: React.CSSProperties = { position: 'absolute', top: '80px', right: '20px', width: '280px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '20px', zIndex: 150, display: 'flex', flexDirection: 'column', gap: '20px' };
 const buttonContainerStyle: React.CSSProperties = { display: 'flex', gap: '10px', marginTop: '10px' };
 const deleteButtonStyle: React.CSSProperties = { flex: 1, padding: '10px', backgroundColor: '#fff5f5', color: '#fa5252', border: '1px solid #ffe3e3', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 };

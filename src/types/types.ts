@@ -18,7 +18,17 @@ export interface Transition {
     to: string;
     symbols: string[];
     hasLambda: boolean;
+
+    // Transductores
     outputs?: string[]; // Para la Máquina de Mealy
+
+    // Automatas a Pila
+    popSymbols?: string[]; // Simbolo que desapila
+    pushSymbols?: string[]; //Simbolo que apila
+
+    // Maquinas de Turing
+    writeSymbols?: string[]; // Simbolo que escribe en la cinta
+    moveDirections?: ('L' | 'R' | 'S')[]; // Movimiento del cabezal
 }
 
 export type AutomataElement = StateNode | Transition;
@@ -27,7 +37,12 @@ export interface Step {
     charRead: string;
     activeStates: string[];
     activeTransitions: string[];
-    partialOutput?: string;
+    partialOutput?: string; // Para Transductores
+
+    // Snapshot para animaciones
+    stackSnapshot?: string[]; // Como estaba la pila en este paso (AP)
+    tapeSnapshot?: string[]; // Como estaba la cinta en este paso (MT)
+    headPosition?: number; // Donde estaba el cabezal en este paso (MT)
 }
 
 export interface SimulationResult {

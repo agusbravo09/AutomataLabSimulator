@@ -15,18 +15,19 @@ export const useSimulation = () => {
         stringToEvaluate: string;
     }>({ active: false, path: [], currentIndex: 0, stringToEvaluate: '' });
 
-    const handleRunSimulation = (inputString: string, type: AutomataType) => {
-        const result = runSimulation(type, nodes, transitions, inputString);
+    const handleRunSimulation = (inputString: string, type: AutomataType, initialStackSymbol?: string) => {
+        const result = runSimulation(type, nodes, transitions, inputString, initialStackSymbol);
         setSimulationResult(result);
     };
 
     const handleStartStepByStep = (
         inputString: string,
         type: AutomataType,
+        initialStackSymbol: string,
         closePanel: () => void,
         clearSelection: () => void
     ) => {
-        const result = runSimulation(type, nodes, transitions, inputString);
+        const result = runSimulation(type, nodes, transitions, inputString, initialStackSymbol);
         setSimMode({ active: true, path: result.path, currentIndex: 0, stringToEvaluate: inputString });
         setSimulationResult(result);
         closePanel();

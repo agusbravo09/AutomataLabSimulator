@@ -47,7 +47,6 @@ const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
             zIndex: 140, display: 'flex', flexDirection: 'column', boxSizing: 'border-box',
             visibility: props.isOpen ? 'visible' : 'hidden',
         }}>
-            {/* CABECERA */}
             <div style={{ padding: '20px', borderBottom: '1px solid #dee2e6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                     <h2 style={{ margin: 0, fontSize: '18px', color: '#212529' }}>Herramientas</h2>
@@ -56,7 +55,6 @@ const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
                 <button onClick={props.onClose} style={{ background: '#f8f9fa', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', color: '#495057', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✖</button>
             </div>
 
-            {/* CONTENIDO DEL PANEL DINÁMICO */}
             <div style={{ padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                 {isFiniteAutomata && (
@@ -77,14 +75,13 @@ const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
                             isVisorOpen={props.isVisorOpen}
                             onToggleVisor={props.onToggleVisor}
 
-                            // Hacemos que al guardar se abra automáticamente por comodidad
                             onSaveAutomatonA={() => {
                                 setSavedAutomatonA({ nodes, transitions });
-                                props.onToggleVisor(); // Abre la ventana al guardar
+                                props.onToggleVisor();
                             }}
                             onClearAutomatonA={() => {
                                 setSavedAutomatonA(null);
-                                if (props.isVisorOpen) props.onToggleVisor(); // Cierra la ventana si se descarta
+                                if (props.isVisorOpen) props.onToggleVisor();
                             }}
                         />
                     </>

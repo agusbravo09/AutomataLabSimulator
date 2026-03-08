@@ -1,10 +1,10 @@
 import React from 'react';
-import type { SimulationResult } from '../types/types';
+import type { SimulationResult, Step } from '../types/types';
 
-// Replicamos la interfaz del estado simMode
+// Usamos la interfaz correcta para que TypeScript entienda el stackSnapshot
 interface SimMode {
     active: boolean;
-    path: any[];
+    path: Step[];
     currentIndex: number;
     stringToEvaluate: string;
 }
@@ -16,96 +16,136 @@ interface Props {
 }
 
 export const SimulationPlayer: React.FC<Props> = ({ simMode, setSimMode, simulationResult }) => {
-    // Si no está activo, no renderiza nada (así nos ahorramos el && en el Canvas)
     if (!simMode.active) return null;
 
     const isLastStep = simMode.currentIndex === simMode.path.length - 1;
-    // Extraemos el paso exacto que estamos mirando ahora mismo
     const currentStep = simMode.path[simMode.currentIndex];
 
     return (
         <div style={{
             position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
-            backgroundColor: '#343a40', color: 'white', padding: '15px 25px', borderRadius: '12px',
-            zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+            backgroundColor: '#343a40', color: 'white', padding: '20px 25px', borderRadius: '12px',
+            zIndex: 200, display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: '30px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.3)'
         }}>
-            {/* CINTA DE ENTRADA */}
-            <div style={{ fontSize: '18px', fontFamily: "'Fira Code', monospace", letterSpacing: '2px' }}>
-                {simMode.stringToEvaluate === '' ? (
-                    <span style={{ color: '#adb5bd' }}>λ (Vacía)</span>
-                ) : (
-                    simMode.stringToEvaluate.split('').map((char, index) => (
-                        <span key={index} style={{
-                            color: index === simMode.currentIndex ? '#ffd43b' : (index < simMode.currentIndex ? '#adb5bd' : 'white'),
-                            fontWeight: index === simMode.currentIndex ? 'bold' : 'normal',
-                            borderBottom: index === simMode.currentIndex ? '2px solid #ffd43b' : 'none',
-                            transition: 'all 0.2s'
-                        }}>
-                            {char}
-                        </span>
-                    ))
+
+            {/* --- COLUMNA IZQUIERDA: CONTROLES PRINCIPALES --- */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px', justifyContent: 'center' }}>
+
+                {/* CINTA DE ENTRADA */}
+                <div style={{ fontSize: '18px', fontFamily: "'Fira Code', monospace", letterSpacing: '2px', backgroundColor: '#212529', padding: '10px 20px', borderRadius: '8px', border: '1px solid #495057' }}>
+                    {simMode.stringToEvaluate === '' ? (
+                        <span style={{ color: '#adb5bd' }}>λ (Vacía)</span>
+                    ) : (
+                        simMode.stringToEvaluate.split('').map((char, index) => (
+                            <span key={index} style={{
+                                color: index === simMode.currentIndex ? '#ffd43b' : (index < simMode.currentIndex ? '#adb5bd' : 'white'),
+                                fontWeight: index === simMode.currentIndex ? 'bold' : 'normal',
+                                borderBottom: index === simMode.currentIndex ? '3px solid #ffd43b' : 'none',
+                                transition: 'all 0.2s',
+                                paddingBottom: '2px',
+                                margin: '0 2px'
+                            }}>
+                                {char}
+                            </span>
+                        ))
+                    )}
+                </div>
+
+                {/* PANTALLA DE TRADUCCIÓN (Mealy / Moore) */}
+                {currentStep?.partialOutput !== undefined && !isLastStep && (
+                    <div style={{
+                        padding: '6px 15px', backgroundColor: 'rgba(255, 212, 59, 0.1)', border: '1px dashed #ffd43b',
+                        borderRadius: '6px', color: '#ffd43b', fontSize: '14px', fontWeight: 'bold', fontFamily: "'Fira Code', monospace"
+                    }}>
+                        Salida: <span style={{ color: 'white', letterSpacing: '2px' }}>{currentStep.partialOutput === '' ? 'λ' : currentStep.partialOutput}</span>
+                    </div>
                 )}
+
+                {/* RESULTADO FINAL (Aparece en el último click) */}
+                {isLastStep && simulationResult && (
+                    <div style={{
+                        padding: '8px 15px', width: '100%', boxSizing: 'border-box',
+                        backgroundColor: simulationResult.accepted ? 'rgba(43, 138, 62, 0.2)' : 'rgba(224, 49, 49, 0.2)',
+                        border: `1px solid ${simulationResult.accepted ? '#40c057' : '#fa5252'}`, borderRadius: '8px',
+                        color: simulationResult.accepted ? '#69db7c' : '#ff8787', fontSize: '14px', fontWeight: 'bold', textAlign: 'center'
+                    }}>
+                        {simulationResult.outputString !== undefined
+                            ? `Traducción: ${simulationResult.outputString || 'λ'}`
+                            : (simulationResult.accepted ? 'Cadena Aceptada' : 'Cadena Rechazada')
+                        }
+                    </div>
+                )}
+
+                {/* BOTONERA */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                    <button
+                        disabled={simMode.currentIndex === 0}
+                        onClick={() => setSimMode(prev => ({...prev, currentIndex: prev.currentIndex - 1}))}
+                        style={{ padding: '8px 15px', cursor: simMode.currentIndex === 0 ? 'not-allowed' : 'pointer', borderRadius: '6px', border: 'none', opacity: simMode.currentIndex === 0 ? 0.5 : 1, backgroundColor: '#f8f9fa', color: '#212529', fontWeight: 'bold' }}
+                    >
+                        Anterior
+                    </button>
+                    <button
+                        disabled={isLastStep}
+                        onClick={() => setSimMode(prev => ({...prev, currentIndex: prev.currentIndex + 1}))}
+                        style={{ padding: '8px 15px', cursor: isLastStep ? 'not-allowed' : 'pointer', borderRadius: '6px', border: 'none', backgroundColor: isLastStep ? '#868e96' : '#ffd43b', color: 'black', fontWeight: 'bold' }}
+                    >
+                        Siguiente
+                    </button>
+                    <button
+                        onClick={() => setSimMode({ active: false, path: [], currentIndex: 0, stringToEvaluate: '' })}
+                        style={{ padding: '8px 15px', cursor: 'pointer', borderRadius: '6px', border: 'none', backgroundColor: '#fa5252', color: 'white', fontWeight: 'bold' }}
+                    >
+                        Salir
+                    </button>
+                </div>
             </div>
 
-            {/* NUEVO: PANTALLA DE TRADUCCIÓN EN TIEMPO REAL */}
-            {currentStep?.partialOutput !== undefined && !isLastStep && (
+            {/* --- COLUMNA DERECHA: LA PILA VISUAL (Solo aparece si el motor guardó una pila) --- */}
+            {currentStep?.stackSnapshot && (
                 <div style={{
-                    padding: '6px 15px',
-                    backgroundColor: 'rgba(255, 212, 59, 0.1)',
-                    border: '1px dashed #ffd43b',
-                    borderRadius: '6px',
-                    color: '#ffd43b',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    fontFamily: "'Fira Code', monospace"
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    backgroundColor: '#212529', padding: '15px', borderRadius: '8px', border: '1px solid #495057', minWidth: '90px'
                 }}>
-                    Salida: <span style={{ color: 'white', letterSpacing: '2px' }}>{currentStep.partialOutput === '' ? 'λ' : currentStep.partialOutput}</span>
+                    <span style={{ fontSize: '11px', color: '#adb5bd', fontWeight: 'bold', marginBottom: '10px', letterSpacing: '2px' }}>TOPE</span>
+
+                    {/* El contenedor de la pila con forma de "tubo" */}
+                    <div style={{
+                        display: 'flex', flexDirection: 'column-reverse', gap: '4px',
+                        width: '100%', minHeight: '120px', justifyContent: 'flex-start',
+                        borderLeft: '3px solid #495057', borderRight: '3px solid #495057', borderBottom: '3px solid #495057',
+                        padding: '6px', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px', boxSizing: 'border-box',
+                        backgroundColor: '#1a1d20'
+                    }}>
+                        {currentStep.stackSnapshot.length === 0 ? (
+                            <div style={{ color: '#868e96', textAlign: 'center', fontSize: '14px', padding: '10px 0', fontStyle: 'italic' }}>Vacía</div>
+                        ) : (
+                            currentStep.stackSnapshot.map((sym: string, i: number) => {
+                                const isTop = i === currentStep.stackSnapshot!.length - 1;
+                                return (
+                                    <div key={i} style={{
+                                        backgroundColor: isTop ? '#ffd43b' : '#343a40',
+                                        color: isTop ? '#000' : '#fff',
+                                        padding: '8px',
+                                        textAlign: 'center',
+                                        borderRadius: '4px',
+                                        fontFamily: "'Fira Code', monospace",
+                                        fontWeight: 'bold',
+                                        fontSize: '15px',
+                                        boxShadow: isTop ? '0 0 10px rgba(255, 212, 59, 0.4)' : 'none',
+                                        border: isTop ? 'none' : '1px solid #495057',
+                                        transition: 'all 0.2s ease-in-out'
+                                    }}>
+                                        {sym}
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                    <span style={{ fontSize: '10px', color: '#868e96', marginTop: '10px', letterSpacing: '1px' }}>FONDO</span>
                 </div>
             )}
-
-            {/* RESULTADO FINAL (Aparece en el último click) */}
-            {isLastStep && simulationResult && (
-                <div style={{
-                    padding: '8px 15px',
-                    backgroundColor: simulationResult.accepted ? 'rgba(43, 138, 62, 0.2)' : 'rgba(224, 49, 49, 0.2)',
-                    border: `1px solid ${simulationResult.accepted ? '#40c057' : '#fa5252'}`,
-                    borderRadius: '8px',
-                    color: simulationResult.accepted ? '#69db7c' : '#ff8787',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    textAlign: 'center'
-                }}>
-                    {simulationResult.outputString !== undefined
-                        ? `Traducción Final: ${simulationResult.outputString || 'λ'}`
-                        : (simulationResult.accepted ? 'Cadena Aceptada' : 'Cadena Rechazada')
-                    }
-                </div>
-            )}
-
-            {/* BOTONERA */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                    disabled={simMode.currentIndex === 0}
-                    onClick={() => setSimMode(prev => ({...prev, currentIndex: prev.currentIndex - 1}))}
-                    style={{ padding: '8px 15px', cursor: simMode.currentIndex === 0 ? 'not-allowed' : 'pointer', borderRadius: '6px', border: 'none', opacity: simMode.currentIndex === 0 ? 0.5 : 1 }}
-                >
-                    Anterior
-                </button>
-                <button
-                    disabled={isLastStep}
-                    onClick={() => setSimMode(prev => ({...prev, currentIndex: prev.currentIndex + 1}))}
-                    style={{ padding: '8px 15px', cursor: isLastStep ? 'not-allowed' : 'pointer', borderRadius: '6px', border: 'none', backgroundColor: isLastStep ? '#868e96' : '#ffd43b', color: 'black', fontWeight: 'bold' }}
-                >
-                    Siguiente
-                </button>
-                <button
-                    onClick={() => setSimMode({ active: false, path: [], currentIndex: 0, stringToEvaluate: '' })}
-                    style={{ padding: '8px 15px', cursor: 'pointer', borderRadius: '6px', border: 'none', backgroundColor: '#fa5252', color: 'white', fontWeight: 'bold' }}
-                >
-                    Salir
-                </button>
-            </div>
         </div>
     );
 };
