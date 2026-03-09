@@ -15,8 +15,8 @@ export const useSimulation = () => {
         stringToEvaluate: string;
     }>({ active: false, path: [], currentIndex: 0, stringToEvaluate: '' });
 
-    const handleRunSimulation = (inputString: string, type: AutomataType, initialStackSymbol?: string) => {
-        const result = runSimulation(type, nodes, transitions, inputString, initialStackSymbol);
+    const handleRunSimulation = (inputString: string, type: AutomataType, initialStackSymbol?: string, pdaAcceptance?: 'FINAL_STATE' | 'EMPTY_STACK') => {
+        const result = runSimulation(type, nodes, transitions, inputString, initialStackSymbol, pdaAcceptance);
         setSimulationResult(result);
     };
 
@@ -24,10 +24,11 @@ export const useSimulation = () => {
         inputString: string,
         type: AutomataType,
         initialStackSymbol: string,
+        pdaAcceptance: 'FINAL_STATE' | 'EMPTY_STACK',
         closePanel: () => void,
         clearSelection: () => void
     ) => {
-        const result = runSimulation(type, nodes, transitions, inputString, initialStackSymbol);
+        const result = runSimulation(type, nodes, transitions, inputString, initialStackSymbol, pdaAcceptance);
         setSimMode({ active: true, path: result.path, currentIndex: 0, stringToEvaluate: inputString });
         setSimulationResult(result);
         closePanel();

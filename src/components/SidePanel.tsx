@@ -4,14 +4,15 @@ import { decomposePumping } from '../utils/converters/pumpingLemma';
 import { PumpingModal } from './PumpingModal';
 import { useAutomataStore } from '../store/useAutomataStore';
 
+//TODO: ESTE ARCHIVO DEBE REFACTORIZARSE
+
 interface SidePanelProps {
     isOpen: boolean;
     onClose: () => void;
-    // ACTUALIZACIÓN: Ahora reciben un segundo parámetro opcional para la pila
-    onSimulate: (input: string, initialStack?: string) => void;
+    onSimulate: (input: string, initialStack?: string, pdaAcceptance?: 'FINAL_STATE' | 'EMPTY_STACK') => void;
     simulationResult: any;
     onClearResult: () => void;
-    onStepByStep: (input: string, initialStack?: string) => void;
+    onStepByStep: (input: string, initialStack?: string, pdaAcceptance?: 'FINAL_STATE' | 'EMPTY_STACK') => void;
 }
 
 type TabType = 'matrix' | 'definition' | 'simulate' | 'pumping';
@@ -24,10 +25,12 @@ const SidePanel: React.FC<SidePanelProps> = ({
     const [inputValue, setInputValue] = useState('');
     const [activeTab, setActiveTab] = useState<TabType>('matrix');
 
-    // NUEVO ESTADO PARA EL SÍMBOLO INICIAL DE LA PILA
+    // ESTADOS PARA PDA
     const [initialStackSymbol, setInitialStackSymbol] = useState('S');
+    // Criterio de aceptación
+    const [pdaAcceptance, setPdaAcceptance] = useState<'FINAL_STATE' | 'EMPTY_STACK'>('FINAL_STATE');
 
-    // ESTADOS PARA EL LEMA DEL BOMBEO
+    // LEMA DEL BOMBEO
     const [pumpInput, setPumpInput] = useState('');
     const [pumpData, setPumpData] = useState<{x: string, y: string, z: string, p: number} | null>(null);
     const [pumpError, setPumpError] = useState('');
@@ -35,13 +38,13 @@ const SidePanel: React.FC<SidePanelProps> = ({
 
     const [isPumpingModalOpen, setIsPumpingModalOpen] = useState(false);
 
-    // ACTUALIZACIÓN: Le pasamos el símbolo de la pila a las funciones
+    //Paso el criterio a las funciones
     const handleComprobar = () => {
-        if (onSimulate) onSimulate(inputValue.trim(), initialStackSymbol.trim());
+        if (onSimulate) onSimulate(inputValue.trim(), initialStackSymbol.trim(), pdaAcceptance);
     };
 
     const handlePasoAPaso = () => {
-        if (onStepByStep) onStepByStep(inputValue.trim(), initialStackSymbol.trim());
+        if (onStepByStep) onStepByStep(inputValue.trim(), initialStackSymbol.trim(), pdaAcceptance);
     };
 
     const handleDecompose = () => {
@@ -61,10 +64,9 @@ const SidePanel: React.FC<SidePanelProps> = ({
         const pumpedString = pumpData.x + pumpData.y.repeat(pumpK) + pumpData.z;
         setActiveTab('simulate');
         setInputValue(pumpedString);
-        onSimulate(pumpedString, initialStackSymbol.trim());
+        onSimulate(pumpedString, initialStackSymbol.trim(), pdaAcceptance);
     };
 
-    // Calculo dinamico del alfabeto
     const alphabetSet = new Set<string>();
     let hasLambda = false;
 
@@ -76,7 +78,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
     const alphabet = Array.from(alphabetSet).sort();
     if (hasLambda) alphabet.push('λ');
 
-    //Calculo definicion formal
     const qSet = nodes.map(n => n.name).join(', ');
     const sigmaSet = alphabet.filter(s => s !== 'λ').join(', ');
     const initialStates = nodes.filter(n => n.isInitial).map(n => n.name).join(', ');
@@ -93,7 +94,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
             zIndex: 140, display: 'flex', flexDirection: 'column',
             boxSizing: 'border-box', visibility: isOpen ? 'visible' : 'hidden',
         }}>
-            {/* CABECERA DEL PANEL */}
             <div style={{ padding: '20px 20px 0 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                     <div>
@@ -108,7 +108,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
                     </button>
                 </div>
 
-                {/* BOTONERA DE 4 PESTAÑAS */}
                 <div style={{ display: 'flex', borderBottom: '1px solid #dee2e6', marginBottom: '20px' }}>
                     {(['matrix', 'definition', 'simulate', 'pumping'] as TabType[]).map((tab) => {
                         const labels = { matrix: 'Matriz', definition: 'Definición', simulate: 'Simular', pumping: 'Bombeo' };
@@ -132,13 +131,11 @@ const SidePanel: React.FC<SidePanelProps> = ({
                 </div>
             </div>
 
-            {/* CONTENEDOR DESLIZABLE */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px 20px' }}>
 
-                {/* ... (PESTAÑAS 1 Y 2 INTACTAS) ... */}
+                {/* PESTAÑAS MATRIZ Y DEFINICIÓN */}
                 {activeTab === 'matrix' && (
                     <div style={{ animation: 'fadeIn 0.3s ease' }}>
-                        {/* (Mismo código de matriz) */}
                         {nodes.length === 0 ? (
                             <div style={{ textAlign: 'center', marginTop: '40px', color: '#adb5bd' }}>
                                 <div style={{ fontSize: '32px', marginBottom: '10px' }}>Lienzo Vacío</div>
@@ -225,7 +222,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
 
                 {activeTab === 'definition' && (
                     <div style={{ animation: 'fadeIn 0.3s ease' }}>
-                        {/* (Mismo código de definición formal) */}
                         {nodes.length === 0 ? (
                             <div style={{ textAlign: 'center', marginTop: '40px', color: '#adb5bd' }}>
                                 <div style={{ fontSize: '32px', marginBottom: '10px' }}>Sin Datos</div>
@@ -253,8 +249,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
 
                                 {/* GRAMÁTICAS REGULARES */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-
-                                    {/* GLD */}
                                     <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
                                         <div style={{ fontWeight: 600, marginBottom: '12px', color: '#212529', fontFamily: "'Inter', sans-serif", borderBottom: '1px solid #dee2e6', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
                                             <span>Lineal por Derecha (GLD)</span>
@@ -270,7 +264,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
                                         </div>
                                     </div>
 
-                                    {/* GLI */}
                                     <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
                                         <div style={{ fontWeight: 600, marginBottom: '12px', color: '#212529', fontFamily: "'Inter', sans-serif", borderBottom: '1px solid #dee2e6', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
                                             <span>Lineal por Izquierda (GLI)</span>
@@ -285,32 +278,61 @@ const SidePanel: React.FC<SidePanelProps> = ({
                                             </pre>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* ---------------- PESTAÑA 3: SIMULACIÓN ---------------- */}
+                {/* PESTAÑA SIMULACIÓN */}
                 {activeTab === 'simulate' && (
                     <div style={{ animation: 'fadeIn 0.3s ease' }}>
                         <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #dee2e6' }}>
                             <h3 style={{ fontSize: '14px', margin: '0 0 12px 0', color: '#212529' }}>Evaluar Cadena</h3>
 
-                            {/* NUEVO CAMPO: SÍMBOLO INICIAL DE LA PILA (SOLO PARA PDA) */}
                             {automataType === 'PDA' && (
-                                <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ fontSize: '12px', color: '#495057', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-                                        Símbolo Inicial de Pila:
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={initialStackSymbol}
-                                        onChange={(e) => setInitialStackSymbol(e.target.value)}
-                                        maxLength={3} // Por si usan 'Z0' o 'S'
-                                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #ced4da', boxSizing: 'border-box', fontFamily: "'Fira Code', monospace", fontSize: '14px', outline: 'none' }}
-                                    />
+                                <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: 'white', border: '1px solid #ced4da', borderRadius: '6px' }}>
+
+                                    <div style={{ marginBottom: '10px' }}>
+                                        <label style={{ fontSize: '12px', color: '#495057', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                                            Símbolo Inicial de Pila:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={initialStackSymbol}
+                                            onChange={(e) => setInitialStackSymbol(e.target.value)}
+                                            maxLength={3}
+                                            style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #ced4da', boxSizing: 'border-box', fontFamily: "'Fira Code', monospace", fontSize: '14px', outline: 'none' }}
+                                        />
+                                    </div>
+
+                                    {/* SELECTOR DE CRITERIO DE ACEPTACIÓN */}
+                                    <div>
+                                        <label style={{ fontSize: '12px', color: '#495057', fontWeight: 600, display: 'block', marginBottom: '5px' }}>
+                                            Aceptación por:
+                                        </label>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            <label style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="pdaAcceptance"
+                                                    checked={pdaAcceptance === 'FINAL_STATE'}
+                                                    onChange={() => setPdaAcceptance('FINAL_STATE')}
+                                                />
+                                                Estado Final
+                                            </label>
+                                            <label style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="pdaAcceptance"
+                                                    checked={pdaAcceptance === 'EMPTY_STACK'}
+                                                    onChange={() => setPdaAcceptance('EMPTY_STACK')}
+                                                />
+                                                Pila Vacía
+                                            </label>
+                                        </div>
+                                    </div>
+
                                 </div>
                             )}
 
@@ -349,7 +371,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
                                     border: `1px solid ${simulationResult.accepted ? '#b2f2bb' : '#ffc9c9'}`,
                                     animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                                 }}>
-                                    {/* Título Dinámico: Reconocedor vs Transductor */}
                                     <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: (simulationResult.error || simulationResult.outputString !== undefined) ? '8px' : '0' }}>
                                         {simulationResult.outputString !== undefined
                                             ? (simulationResult.accepted ? 'Traducción Exitosa' : 'Traducción Incompleta')
@@ -357,23 +378,17 @@ const SidePanel: React.FC<SidePanelProps> = ({
                                         }
                                     </div>
 
-                                    {/* Mensaje de Error (si se trabó la cadena) */}
                                     {simulationResult.error && (
                                         <div style={{ fontSize: '12px', fontWeight: 'normal', lineHeight: '1.4', marginBottom: simulationResult.outputString !== undefined ? '8px' : '0' }}>
                                             {simulationResult.error}
                                         </div>
                                     )}
 
-                                    {/* Cajita con la Salida (Solo aparece en Mealy/Moore) */}
                                     {simulationResult.outputString !== undefined && (
                                         <div style={{
-                                            marginTop: '8px',
-                                            padding: '8px',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                                            borderRadius: '6px',
-                                            border: `1px dashed ${simulationResult.accepted ? '#51cf66' : '#ff8787'}`,
-                                            display: 'inline-block',
-                                            minWidth: '80%'
+                                            marginTop: '8px', padding: '8px', backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                                            borderRadius: '6px', border: `1px dashed ${simulationResult.accepted ? '#51cf66' : '#ff8787'}`,
+                                            display: 'inline-block', minWidth: '80%'
                                         }}>
                                             <span style={{ fontSize: '11px', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#495057' }}>
                                                 Cadena de Salida:
@@ -389,11 +404,9 @@ const SidePanel: React.FC<SidePanelProps> = ({
                     </div>
                 )}
 
-                {/* ---------------- PESTAÑA 4: LEMA DEL BOMBEO ---------------- */}
+                {/* PESTAÑA BOMBEO */}
                 {activeTab === 'pumping' && (
                     <div style={{ animation: 'fadeIn 0.3s ease' }}>
-
-                        {/* BOTÓN PARA ABRIR EL PIZARRÓN (MODO MANUAL/DEMOSTRACIÓN) */}
                         <div style={{ backgroundColor: '#e3fafc', border: '1px solid #99e9f2', padding: '15px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center' }}>
                             <p style={{ fontSize: '12px', margin: '0 0 15px 0', color: '#1098ad', lineHeight: '1.4' }}>Utilizá el pizarrón interactivo para demostrar que lenguajes complejos NO son regulares.</p>
                             <button
@@ -404,7 +417,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
                             </button>
                         </div>
 
-                        {/* --- LEMA SOBRE EL AUTÓMATA DEL LIENZO --- */}
                         {nodes.length === 0 ? (
                             <div style={{ textAlign: 'center', marginTop: '20px', color: '#adb5bd' }}>
                                 <div style={{ fontSize: '32px', marginBottom: '10px' }}>Sin Datos</div>
@@ -446,8 +458,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
 
                                 {pumpData && (
                                     <div style={{ animation: 'popIn 0.3s ease' }}>
-
-                                        {/* CAJAS DE X, Y, Z */}
                                         <div style={{ display: 'flex', gap: '5px', marginBottom: '15px', fontFamily: "'Fira Code', monospace", textAlign: 'center' }}>
                                             <div style={{ flex: 1, backgroundColor: '#e3fafc', border: '1px solid #99e9f2', padding: '8px', borderRadius: '6px' }}>
                                                 <div style={{ fontSize: '10px', color: '#0b7285', fontWeight: 'bold' }}>X</div>
@@ -463,7 +473,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
                                             </div>
                                         </div>
 
-                                        {/* COMPROBACIÓN DE REGLAS */}
                                         <div style={{ backgroundColor: '#f8f9fa', border: '1px dashed #ced4da', padding: '10px', borderRadius: '6px', marginBottom: '15px', fontSize: '12px', color: '#495057', fontFamily: "'Fira Code', monospace" }}>
                                             <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#2b8a3e' }}>✓ Condiciones del Lema:</div>
                                             <div>|xy| ≤ p → |{pumpData.x + pumpData.y}| ≤ {pumpData.p}</div>
@@ -498,11 +507,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
                                 )}
                             </div>
                         )}
-
-                        <PumpingModal
-                            isOpen={isPumpingModalOpen}
-                            onClose={() => setIsPumpingModalOpen(false)}
-                        />
                     </div>
                 )}
             </div>

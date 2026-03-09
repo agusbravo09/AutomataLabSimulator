@@ -162,7 +162,7 @@ export const simulateMealy = (nodes: StateNode[], transitions: Transition[], inp
 };
 
 // Autómata a Pila
-const simulatePDA = (nodes: StateNode[], transitions: Transition[], inputString: string, initialStackSymbol: string = 'Z0'): SimulationResult => {
+const simulatePDA = (nodes: StateNode[], transitions: Transition[], inputString: string, initialStackSymbol: string = 'Z0', pdaAcceptance: 'FINAL_STATE' | 'EMPTY_STACK' = 'FINAL_STATE'): SimulationResult => {
     const initialNodes = nodes.filter(n => n.isInitial);
     if (initialNodes.length === 0) return { accepted: false, path: [], error: "No hay estado inicial." };
     if (initialNodes.length > 1) return { accepted: false, path: [], error: "Este AP básico no soporta múltiples estados iniciales." };
@@ -284,15 +284,29 @@ const simulatePDA = (nodes: StateNode[], transitions: Transition[], inputString:
         return { accepted: false, path, error: "Error: Bucle infinito de transiciones λ detectado." };
     }
 
-    const finalState = nodes.find(n => n.id === currentState);
-    const isAccepted = finalState ? finalState.isFinal : false;
+    // --- NUEVA LÓGICA DE ACEPTACIÓN DUAL ---
+    let isAccepted = false;
+    let finalError = '';
+
+    if (pdaAcceptance === 'FINAL_STATE') {
+        // Criterio Clásico: Ignoramos la pila, miramos si el estado final tiene doble círculo
+        const finalState = nodes.find(n => n.id === currentState);
+        isAccepted = finalState ? finalState.isFinal : false;
+        finalError = !isAccepted ? 'Cadena consumida pero el estado no es de aceptación.' : '';
+    } else {
+        // Criterio Pila Vacía: Ignoramos el estado, miramos si vaciamos el arreglo
+        isAccepted = stack.length === 0;
+        finalError = !isAccepted ? `Cadena consumida pero la pila no está vacía (quedan ${stack.length} elementos).` : '';
+    }
 
     return {
         accepted: isAccepted,
         path,
-        error: !isAccepted ? 'Cadena consumida pero el estado no es de aceptación.' : undefined
+        error: !isAccepted ? finalError : undefined
     };
 };
+
+
 const simulateTM = (): SimulationResult => {
     return { accepted: false, path: [], error: "Simulación de Máquina de Turing en desarrollo..." };
 };
@@ -303,14 +317,15 @@ export const runSimulation = (
     nodes: StateNode[],
     transitions: Transition[],
     inputString: string,
-    initialStackSymbol: string = 'S'
+    initialStackSymbol: string = 'Z0',
+    pdaAcceptance: 'FINAL_STATE' | 'EMPTY_STACK' = 'FINAL_STATE' // <-- AGREGADO ACÁ
 ): SimulationResult => {
     switch (type) {
         case 'DFA': return simulateDFA(nodes, transitions, inputString);
         case 'NFA': return simulateNFA(nodes, transitions, inputString);
         case 'MOORE': return simulateMoore(nodes, transitions, inputString);
         case 'MEALY': return simulateMealy(nodes, transitions, inputString);
-        case 'PDA': return simulatePDA(nodes, transitions, inputString, initialStackSymbol);
+        case 'PDA': return simulatePDA(nodes, transitions, inputString, initialStackSymbol, pdaAcceptance);
         case 'TM':  return simulateTM();
         default:    return { accepted: false, path: [], error: "Tipo de autómata desconocido." };
     }
