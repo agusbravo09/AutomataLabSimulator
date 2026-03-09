@@ -27,6 +27,7 @@ import { FeedbackModal } from "./FeedbackModal";
 import ToolsPanel from './ToolsPanel';
 import StepPlayerOverlay from './StepPlayerOverlay';
 import { MiniVisor } from './MiniVisor';
+import { GrammarCleanerModal } from "./GrammarCleanerModal";
 
 // --- COMPONENTES CANVAS ---
 import { GhostArrow } from './canvas/GhostArrow';
@@ -42,6 +43,9 @@ function InfinityCanvas() {
     const [buildMode, setBuildMode] = useState<{
         active: boolean, steps: any[], currentIndex: number, backupNodes?: StateNode[], backupTransitions?: Transition[]
     }>({ active: false, steps: [], currentIndex: 0 });
+
+    //Modal de gramatica
+    const [isGrammarModalOpen, setIsGrammarModalOpen] = useState(false);
 
     // 2. Cerebros (Custom Hooks)
     const { isPanelOpen, setIsPanelOpen, isToolsPanelOpen, setIsToolsPanelOpen, isConfirmOpen, setIsConfirmOpen, isFeedbackOpen, setIsFeedbackOpen } = useUI();
@@ -93,6 +97,11 @@ function InfinityCanvas() {
                 Importar
                 <input type="file" accept=".al,.json" style={{ display: 'none' }} onChange={handleImportAutomaton} />
             </label>
+
+            {/*Boton para el modal de gramaticas (iria en el panel de herramientas)*/}
+            <button onClick={() => setIsGrammarModalOpen(true)}>
+                Limpieza de Gramáticas
+            </button>
 
             <ToolsPanel
                 isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)}
@@ -182,6 +191,11 @@ function InfinityCanvas() {
                     <NodesRenderer nodes={nodes} simMode={simMode} selectedElement={selectedElement} activeTool={activeTool} updateNodePosition={updateNodePosition} handleMouseDownNode={handleMouseDownNode} handleMouseUpNode={handleMouseUpNode} setSelectedElement={setSelectedElement} buildMode={buildMode}/>
                 </Layer>
             </Stage>
+
+            <GrammarCleanerModal
+                isOpen={isGrammarModalOpen}
+                onClose={() => setIsGrammarModalOpen(false)}
+            />
         </div>
     );
 }
