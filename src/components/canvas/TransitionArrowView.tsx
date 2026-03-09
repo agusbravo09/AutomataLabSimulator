@@ -1,6 +1,7 @@
 import { Arrow, Group, Text } from 'react-konva';
 import type { Transition } from '../../types/types.ts';
 import { getTextPosition } from '../../utils/geometry.ts';
+import { useAutomataStore } from '../../store/useAutomataStore';
 
 interface Props {
     transition: Transition;
@@ -14,35 +15,38 @@ interface Props {
 export const TransitionArrowView = ({ transition, points, tension, type, onClick, isHighlighted }: Props) => {
     const textPos = getTextPosition(points, type);
 
+    // Traemos el tipo de autómata actual directamente del store
+    const { automataType } = useAutomataStore();
+
     // CONSTRUCTOR DE ETIQUETAS
     const buildLabels = () => {
         const parts = transition.symbols.map((sym, i) => {
-            // 1. Es un PDA (Pila): lee, tope / apila-desapila
-            if (transition.popSymbols !== undefined || transition.pushSymbols !== undefined) {
+            // 1. Si es PDA (Pila)
+            if (automataType === 'PDA') {
                 const pop = (transition.popSymbols && transition.popSymbols[i]) ? transition.popSymbols[i] : 'λ';
                 const push = (transition.pushSymbols && transition.pushSymbols[i]) ? transition.pushSymbols[i] : 'λ';
                 return `${sym}, ${pop} / ${push}`;
             }
-            // 2. Es una Máquina de Turing: lee / escribe, movimiento
-            if (transition.writeSymbols !== undefined || transition.moveDirections !== undefined) {
+            // 2. Si es Máquina de Turing
+            if (automataType === 'TM') {
                 const write = (transition.writeSymbols && transition.writeSymbols[i]) ? transition.writeSymbols[i] : '☐';
                 const move = (transition.moveDirections && transition.moveDirections[i]) ? transition.moveDirections[i] : 'S';
                 return `${sym} / ${write}, ${move}`;
             }
-            // 3. Es Mealy: lee / salida
-            if (transition.outputs && transition.outputs.length > 0) {
-                return `${sym} / ${transition.outputs[i] || '?'}`;
+            // 3. Si es Mealy
+            if (automataType === 'MEALY') {
+                return `${sym} / ${transition.outputs?.[i] || '?'}`;
             }
-            // 4. Es DFA/NFA normal
+            // 4. Si es DFA, NFA o Moore
             return sym;
         });
 
-        // Agregamos Lambda si está checkeado
+        // Agregamos Lambda si el checkbox está activado
         if (transition.hasLambda) {
-            if (transition.popSymbols !== undefined || transition.pushSymbols !== undefined) {
-                parts.push('λ, λ / λ'); // Default PDA para lambda
-            } else if (transition.writeSymbols !== undefined || transition.moveDirections !== undefined) {
-                parts.push('λ / ☐, S'); // Turing por si acaso
+            if (automataType === 'PDA') {
+                parts.push('λ, λ / λ');
+            } else if (automataType === 'TM') {
+                parts.push('λ / ☐, S');
             } else {
                 parts.push('λ');
             }
@@ -53,9 +57,8 @@ export const TransitionArrowView = ({ transition, points, tension, type, onClick
 
     const labelParts = buildLabels();
 
-    // Si es PDA, TM o Mealy, usamos saltos de línea (\n) para que quede vertical y no choque con otras flechas.
-    // Si es normal (DFA/NFA), lo dejamos con comas para que ocupe menos.
-    const isComplex = transition.popSymbols || transition.writeSymbols || (transition.outputs && transition.outputs.length > 0);
+    // Determinamos si es complejo para usar saltos de línea
+    const isComplex = automataType === 'PDA' || automataType === 'TM' || automataType === 'MEALY';
     let finalLabel = labelParts.join(isComplex ? '\n' : ', ');
 
     if (finalLabel.trim().length === 0) finalLabel = '☐';
@@ -77,10 +80,10 @@ export const TransitionArrowView = ({ transition, points, tension, type, onClick
                 tension={tension}
             />
             <Text
-                x={textPos.x - 75} // Ampliamos la caja de texto a 150px de ancho para que entren las fórmulas de PDA
-                y={textPos.y - (isComplex ? 25 : 10)} // Si es complejo, subimos un poco el ancla para que no pise la flecha
+                x={textPos.x - 75}
+                y={textPos.y - (isComplex ? 25 : 10)}
                 text={finalLabel}
-                fontSize={14} // Bajamos la fuente a 14 para mantener la elegancia en fórmulas largas
+                fontSize={14}
                 fontStyle="bold"
                 fontFamily="'Fira Code', monospace"
                 fill={textColor}
