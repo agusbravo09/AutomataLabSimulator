@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { parseGrammar, type ParsedGrammar } from '../utils/converters/grammarParser';
 import { removeUnnecessaryRules, removeUnreachableSymbols, removeInactiveSymbols, removeLambdaProductions, removeUnitaryProductions } from "../utils/converters/grammarCleaner";
+import { convertToChomsky, convertToGreibach } from '../utils/converters/grammarNormalizer';
 
 //TODO: REFACTORIZAR ESTE ARCHIVO UNA VEZ COMPLETADA LA FEAT
 
@@ -58,6 +59,18 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
         setParsedData(cleaned);
     };
 
+    const handleChomsky = () => {
+        if (!parsedData) return;
+        const chomskyGrammar = convertToChomsky(parsedData);
+        setParsedData(chomskyGrammar);
+    };
+
+    const handleGreibach = () => {
+        if (!parsedData) return;
+        const greibachGrammar = convertToGreibach(parsedData);
+        setParsedData(greibachGrammar);
+    };
+
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -66,92 +79,74 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
         }}>
             <div style={{
                 backgroundColor: 'white', padding: '20px', borderRadius: '8px',
-                width: '800px', maxWidth: '90vw', height: '600px', maxHeight: '90vh',
+                width: '850px', maxWidth: '95vw', height: '650px', maxHeight: '90vh',
                 display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
             }}>
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #dee2e6', paddingBottom: '15px', marginBottom: '15px' }}>
-                    <h2 style={{ margin: 0, fontSize: '20px', color: '#212529' }}>Laboratorio de Gramáticas (Limpieza)</h2>
+                    <h2 style={{ margin: 0, fontSize: '20px', color: '#212529' }}>Laboratorio de Gramáticas</h2>
                     <button onClick={onClose} style={{ background: '#f8f9fa', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' }}>✖</button>
                 </div>
 
                 {/* Body */}
                 <div style={{ display: 'flex', gap: '20px', flex: 1, overflow: 'hidden' }}>
 
-                    {/* Panel Izquierdo: Inputs */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Axioma (Opcional):</label>
-                            <input
-                                type="text"
-                                placeholder="Ej: S"
-                                value={customAxiom}
-                                onChange={(e) => setCustomAxiom(e.target.value)}
-                                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da', fontFamily: "'Fira Code', monospace" }}
-                            />
+                    {/* Panel Izquierdo: Inputs y Botones */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <div style={{ flex: 1 }}>
+                                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Axioma:</label>
+                                <input
+                                    type="text" placeholder="Ej: S" value={customAxiom}
+                                    onChange={(e) => setCustomAxiom(e.target.value)}
+                                    style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ced4da', fontFamily: "'Fira Code', monospace", fontSize: '12px' }}
+                                />
+                            </div>
+                            <div style={{ flex: 3, display: 'flex', alignItems: 'flex-end' }}>
+                                <button
+                                    onClick={handleParse}
+                                    style={{ width: '100%', padding: '7px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
+                                >
+                                    Leer y Parsear
+                                </button>
+                            </div>
                         </div>
 
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Reglas de Producción:</label>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Reglas de Producción:</label>
                             <textarea
                                 value={rawGrammar}
                                 onChange={(e) => setRawGrammar(e.target.value)}
                                 placeholder="S -> a A | B&#10;A -> lambda"
-                                style={{ flex: 1, width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ced4da', fontFamily: "'Fira Code', monospace", resize: 'none', whiteSpace: 'pre' }}
+                                style={{ flex: 1, width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da', fontFamily: "'Fira Code', monospace", fontSize: '13px', resize: 'none', whiteSpace: 'pre' }}
                             />
                         </div>
 
-                        <button
-                            onClick={handleParse}
-                            style={{ padding: '10px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-                        >
-                            Leer y Parsear Gramática
-                        </button>
-                        <button
-                            onClick={handleRemoveUnnecessary}
-                            disabled={!parsedData}
-                            style={{ padding: '10px', backgroundColor: parsedData ? '#20c997' : '#e9ecef', color: parsedData ? 'white' : '#adb5bd', border: 'none', borderRadius: '6px', cursor: parsedData ? 'pointer' : 'not-allowed', fontWeight: 'bold', marginTop: '10px' }}
-                        >
-                            1. Quitar Reglas Innecesarias
-                        </button>
-                        <button
-                            onClick={handleRemoveUnreachable}
-                            disabled={!parsedData}
-                            style={{ padding: '10px', backgroundColor: parsedData ? '#12b886' : '#e9ecef', color: parsedData ? 'white' : '#adb5bd', border: 'none', borderRadius: '6px', cursor: parsedData ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
-                        >
-                            2. Quitar Inaccesibles
-                        </button>
-                        <button
-                            onClick={handleRemoveInactive}
-                            disabled={!parsedData}
-                            style={{ padding: '10px', backgroundColor: parsedData ? '#228be6' : '#e9ecef', color: parsedData ? 'white' : '#adb5bd', border: 'none', borderRadius: '6px', cursor: parsedData ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
-                        >
-                            3. Quitar Inactivos (Superfluos)
-                        </button>
-                        <button
-                            onClick={handleRemoveLambda}
-                            disabled={!parsedData}
-                            style={{ padding: '10px', backgroundColor: parsedData ? '#f06595' : '#e9ecef', color: parsedData ? 'white' : '#adb5bd', border: 'none', borderRadius: '6px', cursor: parsedData ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
-                        >
-                            4. Quitar Reglas Lambda
-                        </button>
+                        {/* Botonera de Limpieza en Grilla */}
+                        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#495057', marginTop: '5px' }}>Fase de Limpieza:</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                            <button onClick={handleRemoveUnnecessary} disabled={!parsedData} style={btnStyle(parsedData, '#20c997')}>1. Innecesarias</button>
+                            <button onClick={handleRemoveUnreachable} disabled={!parsedData} style={btnStyle(parsedData, '#12b886')}>2. Inaccesibles</button>
+                            <button onClick={handleRemoveInactive} disabled={!parsedData} style={btnStyle(parsedData, '#228be6')}>3. Inactivos</button>
+                            <button onClick={handleRemoveLambda} disabled={!parsedData} style={btnStyle(parsedData, '#f06595')}>4. Lambdas</button>
+                            <button onClick={handleRemoveUnitary} disabled={!parsedData} style={{ ...btnStyle(parsedData, '#845ef7'), gridColumn: 'span 2' }}>5. Unitarias (Redenominación)</button>
+                        </div>
 
-                        <button
-                            onClick={handleRemoveUnitary}
-                            disabled={!parsedData}
-                            style={{ padding: '10px', backgroundColor: parsedData ? '#845ef7' : '#e9ecef', color: parsedData ? 'white' : '#adb5bd', border: 'none', borderRadius: '6px', cursor: parsedData ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
-                        >
-                            5. Quitar Unitarias (Redenominación)
-                        </button>
+                        {/* Botonera de Normalización en Grilla */}
+                        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#495057', marginTop: '5px', borderTop: '1px solid #dee2e6', paddingTop: '8px' }}>Fase de Normalización:</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                            <button onClick={handleChomsky} disabled={!parsedData} style={btnStyle(parsedData, '#fd7e14')}>✦ Chomsky</button>
+                            <button onClick={handleGreibach} disabled={!parsedData} style={btnStyle(parsedData, '#e03131')}>☠️ Greibach</button>
+                        </div>
                     </div>
 
-                    {/* Panel Derecho: Resultados (Temporal para debug) */}
+                    {/* Panel Derecho: Resultados */}
                     <div style={{ flex: 1, backgroundColor: '#f8f9fa', borderRadius: '6px', border: '1px solid #e9ecef', padding: '15px', overflowY: 'auto' }}>
-                        <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#495057' }}>Resultado del Parser</h3>
+                        <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#495057' }}>Resultado de las Operaciones</h3>
 
-                        {error && <div style={{ color: '#e03131', backgroundColor: '#fff5f5', padding: '10px', borderRadius: '4px', border: '1px solid #ffc9c9' }}>{error}</div>}
+                        {error && <div style={{ color: '#e03131', backgroundColor: '#fff5f5', padding: '10px', borderRadius: '4px', border: '1px solid #ffc9c9', fontSize: '13px' }}>{error}</div>}
 
-                        {!parsedData && !error && <div style={{ color: '#868e96', fontSize: '13px' }}>Hacé clic en "Leer y Parsear" para ver cómo el motor entiende tu texto.</div>}
+                        {!parsedData && !error && <div style={{ color: '#868e96', fontSize: '13px' }}>Hacé clic en "Leer y Parsear" para comenzar.</div>}
 
                         {parsedData && (
                             <div style={{ fontFamily: "'Fira Code', monospace", fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -175,3 +170,16 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
         </div>
     );
 };
+
+// Función auxiliar para mantener limpio el código de los botones
+const btnStyle = (parsedData: any, color: string): React.CSSProperties => ({
+    padding: '8px 4px',
+    backgroundColor: parsedData ? color : '#e9ecef',
+    color: parsedData ? 'white' : '#adb5bd',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: parsedData ? 'pointer' : 'not-allowed',
+    fontWeight: 'bold',
+    fontSize: '11px',
+    textAlign: 'center'
+});
