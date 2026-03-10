@@ -31,8 +31,7 @@ export const parseGrammar = (rawText: string, customAxiom?: string): ParsedGramm
         const bodies = parts.slice(1).join('->').split('|');
 
         for (const body of bodies) {
-            // CORRECCIÓN 1: Quitamos la 'e' suelta para que sirva de terminal.
-            // CORRECCIÓN 2: [A-Z]'? ahora solo atrapa UNA mayúscula como No Terminal.
+            // [A-Z]'? ahora solo atrapa UNA mayúscula como No Terminal.
             const tokenRegex = /(lambda|\\lambda|ε|λ|[A-Z]'?|[^A-Z\s])/g;
 
             const tokens = body.match(tokenRegex) || [];
@@ -42,7 +41,7 @@ export const parseGrammar = (rawText: string, customAxiom?: string): ParsedGramm
             if (tokens.length === 0) {
                 parsedTokens.push('λ');
             } else {
-                for (let token of tokens) {
+                for (const token of tokens) {
                     if (['lambda', '\\lambda', 'ε', 'λ'].includes(token.toLowerCase())) {
                         parsedTokens.push('λ');
                     } else {
@@ -77,3 +76,8 @@ export const parseGrammar = (rawText: string, customAxiom?: string): ParsedGramm
 
     return { axiom, nonTerminals, terminals, productions };
 };
+
+export interface StepResult {
+    grammar: ParsedGrammar;
+    logs: string[]; // Acá vamos a guardar los mensajes: "Se eliminó A -> A"
+}
