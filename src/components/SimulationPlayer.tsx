@@ -74,21 +74,37 @@ export const SimulationPlayer: React.FC<Props> = ({ simMode, setSimMode, simulat
                     {isLastStep && simulationResult && (
                         <div style={{
                             padding: '8px 15px', width: '100%', boxSizing: 'border-box',
-                            // Si hay error (bucle infinito), pintamos de naranja. Si no, verde o rojo clásico.
                             backgroundColor: simulationResult.error ? 'rgba(255, 168, 0, 0.15)' : (simulationResult.accepted ? 'rgba(43, 138, 62, 0.2)' : 'rgba(224, 49, 49, 0.2)'),
                             border: `1px solid ${simulationResult.error ? '#f08c00' : (simulationResult.accepted ? '#40c057' : '#fa5252')}`,
                             borderRadius: '8px',
                             color: simulationResult.error ? '#ffd43b' : (simulationResult.accepted ? '#69db7c' : '#ff8787'),
-                            fontSize: '14px', fontWeight: 'bold', textAlign: 'center'
+                            fontSize: '14px', fontWeight: 'bold', textAlign: 'center',
+                            display: 'flex', flexDirection: 'column', gap: '5px'
                         }}>
                             {simulationResult.error ? (
-                                // Si el motor nos mandó el aviso del bucle, mostramos eso
-                                <span>Amigo dale, no podes hacer tantos clics</span>
+                                <span>{simulationResult.error}</span>
                             ) : (
-                                // Si no hay error, evaluamos si es Traducción o Aceptada/Rechazada
-                                simulationResult.outputString !== undefined
-                                    ? `Traducción: ${simulationResult.outputString || 'λ'}`
-                                    : (simulationResult.accepted ? 'Cadena Aceptada' : 'Cadena Rechazada')
+                                <>
+                                <span>
+                                    {simulationResult.outputString !== undefined
+                                        ? `Traducción: ${simulationResult.outputString || 'λ'}`
+                                        : (simulationResult.accepted ? 'Cadena Aceptada' : 'Cadena Rechazada')
+                                    }
+                                </span>
+
+                                    {/* Resultado en cinta para Turing */}
+                                    {isTuringMachine && currentStep.tapeSnapshot && (
+                                        <div style={{
+                                            marginTop: '4px', paddingTop: '6px', borderTop: `1px dashed ${simulationResult.accepted ? 'rgba(105, 219, 124, 0.3)' : 'rgba(255, 135, 135, 0.3)'}`,
+                                            fontSize: '13px', color: 'white', fontFamily: "'Fira Code', monospace"
+                                        }}>
+                                            Resultado en cinta: <span style={{ color: '#ffd43b', letterSpacing: '2px' }}>
+                                            {/* Unimos la cinta y limpiamos los blancos (_) de las puntas */}
+                                            {currentStep.tapeSnapshot.join('').replace(/^_+|_+$/g, '') || 'λ'}
+                                        </span>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     )}

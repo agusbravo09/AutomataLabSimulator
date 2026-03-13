@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 interface FeedbackModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (type: string, message: string) => void;
 }
 
-export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit }) => {
+export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
     const [feedbackType, setFeedbackType] = useState('SUGERENCIA');
     const [message, setMessage] = useState('');
 

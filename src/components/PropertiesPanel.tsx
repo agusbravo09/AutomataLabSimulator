@@ -86,7 +86,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClo
                         {/* EL SÍMBOLO QUE LEE */}
                         <div style={fieldStyle}>
                             <label style={labelStyle}>
-                                {automataType === 'TM' ? 'Lee de la cinta (separado por coma):' : 'Lee (separado por coma):'}
+                                {automataType === 'TM' ? 'Lee de la cinta (separado por coma) el simbolo _ es la palabra vacia:' : 'Lee (separado por coma):'}
                             </label>
                             <input
                                 type="text"
@@ -128,11 +128,14 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClo
                         {automataType === 'TM' && (
                             <>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Escribe (separado por coma):</label>
+                                    <label style={labelStyle}>Escribe (separado por coma) el simbolo _ es la palabra vacia:</label>
                                     <input
                                         type="text"
                                         value={Array.isArray(element.writeSymbols) ? element.writeSymbols.join(',') : (element.writeSymbols || '')}
-                                        onChange={(e) => handleUpdate('writeSymbols', e.target.value.split(','))}
+                                        onChange={(e) => {
+                                            const cleanArray = e.target.value.split(',').map(s => s.trim());
+                                            handleUpdate('writeSymbols', cleanArray);
+                                        }}
                                         style={inputStyle}
                                         placeholder="ej: x,y"
                                     />
