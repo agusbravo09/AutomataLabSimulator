@@ -4,11 +4,7 @@ import type { StateNode, Transition, AutomataType, SimulationResult } from '../t
 import { simulateDFA, simulateNFA } from './engine/finiteAutomata';
 import { simulateMoore, simulateMealy } from './engine/transducers';
 import { simulatePDA } from './engine/pda';
-
-// Placeholder para Turing
-const simulateTM = (): SimulationResult => {
-    return { accepted: false, path: [], error: "Simulación de Máquina de Turing en desarrollo..." };
-};
+import { simulateTM } from './engine/turingMachine'
 
 // Enrutador
 export const runSimulation = (
@@ -25,7 +21,7 @@ export const runSimulation = (
         case 'MOORE': return simulateMoore(nodes, transitions, inputString);
         case 'MEALY': return simulateMealy(nodes, transitions, inputString);
         case 'PDA': return simulatePDA(nodes, transitions, inputString, initialStackSymbol, pdaAcceptance);
-        case 'TM':  return simulateTM();
+        case 'TM':  return simulateTM(nodes, transitions, inputString);
         default:    return { accepted: false, path: [], error: "Tipo de autómata desconocido." };
     }
 };
