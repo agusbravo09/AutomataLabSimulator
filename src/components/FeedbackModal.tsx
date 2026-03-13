@@ -12,11 +12,32 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, o
 
     if (!isOpen) return null;
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (message.trim() === '') return;
-        onSubmit(feedbackType, message);
-        setMessage(''); // Limpiamos después de enviar
-        onClose();
+
+
+        const formData = new FormData();
+        formData.append("access_key", "67ea9c45-b27e-4ecb-883b-84488a114d3a");
+        formData.append("subject", "Nuevo feedback de AutomataLab");
+        formData.append("from_name", "Usuario de AutomataLab");
+        formData.append("feedback_type", feedbackType);
+        formData.append("message", message);
+        formData.append("user_agent", navigator.userAgent);
+
+        const res = await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            console.log("Feedback enviado");
+            setMessage('');
+            onClose();
+        } else {
+            console.log("Error", data);
+        }
     };
 
     return (
