@@ -86,7 +86,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClo
                         {/* EL SÍMBOLO QUE LEE */}
                         <div style={fieldStyle}>
                             <label style={labelStyle}>
-                                {automataType === 'TM' ? 'Lee de la cinta (separado por coma):' : 'Lee (separado por coma):'}
+                                {automataType === 'TM' ? 'Lee de la cinta (separado por coma) el simbolo _ es la palabra vacia:' : 'Lee (separado por coma):'}
                             </label>
                             <input
                                 type="text"
@@ -128,25 +128,46 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ element, nodes, onClo
                         {automataType === 'TM' && (
                             <>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Escribe (separado por coma):</label>
+                                    <label style={labelStyle}>Escribe (separado por coma) el simbolo _ es la palabra vacia:</label>
                                     <input
                                         type="text"
                                         value={Array.isArray(element.writeSymbols) ? element.writeSymbols.join(',') : (element.writeSymbols || '')}
-                                        onChange={(e) => handleUpdate('writeSymbols', e.target.value)}
+                                        onChange={(e) => {
+                                            const cleanArray = e.target.value.split(',').map(s => s.trim());
+                                            handleUpdate('writeSymbols', cleanArray);
+                                        }}
                                         style={inputStyle}
                                         placeholder="ej: x,y"
                                     />
                                 </div>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Movimiento (L, R, S):</label>
+                                    <label style={labelStyle}>Movimiento (+, -, =):</label>
                                     <input
                                         type="text"
-                                        value={Array.isArray(element.moveDirections) ? element.moveDirections.join(',') : (element.moveDirections || '')}
-                                        onChange={(e) => handleUpdate('moveDirections', e.target.value)}
+                                        // Mapeamos R, L, S a +, -, = para mostrarlo en la UI
+                                        value={Array.isArray(element.moveDirections) ?
+                                            element.moveDirections.map(dir => dir === 'R' ? '+' : dir === 'L' ? '-' : dir === 'S' ? '=' : dir).join(',')
+                                            : (element.moveDirections || '')}
+                                        onChange={(e) => {
+                                            // Cuando el usuario escribe +, -, =, lo mapeamos de vuelta a R, L, S para el motor
+                                            const val = e.target.value.toUpperCase();
+                                            const mappedDirs = val.split(',').map(dir => {
+                                                const cleanDir = dir.trim();
+                                                if (cleanDir === '+') return 'R';
+                                                if (cleanDir === '-') return 'L';
+                                                if (cleanDir === '=') return 'S';
+                                                // Permitimos que escriban R, L, S también por si acaso
+                                                if (['R', 'L', 'S'].includes(cleanDir)) return cleanDir;
+                                                return cleanDir; // Si escribe fruta, lo dejamos para que se de cuenta
+                                            });
+                                            handleUpdate('moveDirections', mappedDirs);
+                                        }}
                                         style={inputStyle}
-                                        placeholder="ej: R,L,S"
+                                        placeholder="ej: +,-,="
                                     />
-                                    <span style={{ fontSize: '11px', color: '#868e96', marginTop: '-3px' }}>* L=Izquierda, R=Derecha, S=Quieto.</span>
+                                    <span style={{ fontSize: '11px', color: '#868e96', marginTop: '-3px' }}>
+                                        * <b>+</b> (Derecha), <b>-</b> (Izquierda), <b>=</b> (Quieto)
+                                    </span>
                                 </div>
                             </>
                         )}

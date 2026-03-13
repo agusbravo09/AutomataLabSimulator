@@ -29,9 +29,21 @@ export const TransitionArrowView = ({ transition, points, tension, type, onClick
             }
             // 2. Si es Máquina de Turing
             if (automataType === 'TM') {
-                const write = (transition.writeSymbols && transition.writeSymbols[i]) ? transition.writeSymbols[i] : '☐';
-                const move = (transition.moveDirections && transition.moveDirections[i]) ? transition.moveDirections[i] : 'S';
-                return `${sym} / ${write}, ${move}`;
+                // Formateamos los símbolos para mostrar la caja vacía si escriben '_'
+                const displaySym = sym === '_' ? '☐' : sym;
+
+                const rawWrite = (transition.writeSymbols && transition.writeSymbols[i]) ? transition.writeSymbols[i] : '☐';
+                const displayWrite = rawWrite === '_' ? '☐' : rawWrite;
+
+                const rawMove = (transition.moveDirections && transition.moveDirections[i]) ? transition.moveDirections[i] : 'S';
+
+                // Traducimos el movimiento interno a la notación de la cátedra para mostrarlo
+                let displayMove: string = rawMove;
+                if (rawMove === 'R') displayMove = '+';
+                if (rawMove === 'L') displayMove = '-';
+                if (rawMove === 'S') displayMove = '=';
+
+                return `${displaySym} / ${displayWrite}, ${displayMove}`;
             }
             // 3. Si es Mealy
             if (automataType === 'MEALY') {
@@ -46,7 +58,7 @@ export const TransitionArrowView = ({ transition, points, tension, type, onClick
             if (automataType === 'PDA') {
                 parts.push('λ, λ / λ');
             } else if (automataType === 'TM') {
-                parts.push('λ / ☐, S');
+                parts.push('λ / ☐, =');
             } else {
                 parts.push('λ');
             }

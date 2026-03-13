@@ -134,8 +134,6 @@ function InfinityCanvas() {
                 <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', textAlign: 'center', opacity: 0.5, userSelect: 'none', zIndex: 5 }}>
                     <h2 style={{ fontFamily: "'Inter', sans-serif", color: '#495057', margin: '0 0 10px 0', fontWeight: 700 }}>Lienzo Vacío</h2>
                     <p style={{ fontFamily: "'Inter', sans-serif", color: '#868e96', margin: 0, fontSize: '16px', lineHeight: '1.5' }}>Seleccioná "Crear Estado" en la barra superior</p>
-                    <p style={{ fontFamily: "'Inter', sans-serif", color: '#868e96', margin: 0, fontSize: '16px', lineHeight: '1.5' }}>AutomataLab actualmente está en desarrollo y se pueden encontrar errores o inconsistencias en los resultados esperados.</p>
-                    <p style={{ fontFamily: "'Inter', sans-serif", color: '#868e96', margin: 0, fontSize: '16px', lineHeight: '1.5' }}>Muchas gracias por entender y probar la herramienta :)</p>
                 </div>
             )}
 
@@ -176,7 +174,7 @@ function InfinityCanvas() {
                 onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement}
             />
 
-            <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} onSubmit={() => alert('¡Gracias por tu feedback!')} />
+            <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
             <SimulationPlayer simMode={simMode} setSimMode={setSimMode} simulationResult={simulationResult} />
 
