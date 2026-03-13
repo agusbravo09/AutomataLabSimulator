@@ -176,7 +176,7 @@ function InfinityCanvas() {
                 onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement}
             />
 
-            <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} onSubmit={() => alert('¡Gracias por tu feedback!')} />
+            <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
             <SimulationPlayer simMode={simMode} setSimMode={setSimMode} simulationResult={simulationResult} />
 
