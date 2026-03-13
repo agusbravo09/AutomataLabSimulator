@@ -141,18 +141,18 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
                         {/* Botonera de Limpieza en Grilla */}
                         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#495057', marginTop: '5px' }}>Fase de Limpieza:</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                            <button onClick={handleRemoveUnnecessary} disabled={!parsedData} style={btnStyle(parsedData, '#20c997')}>1. Innecesarias</button>
-                            <button onClick={handleRemoveUnreachable} disabled={!parsedData} style={btnStyle(parsedData, '#12b886')}>2. Inaccesibles</button>
-                            <button onClick={handleRemoveInactive} disabled={!parsedData} style={btnStyle(parsedData, '#228be6')}>3. Inactivos</button>
-                            <button onClick={handleRemoveLambda} disabled={!parsedData} style={btnStyle(parsedData, '#f06595')}>4. Lambdas</button>
-                            <button onClick={handleRemoveUnitary} disabled={!parsedData} style={{ ...btnStyle(parsedData, '#845ef7'), gridColumn: 'span 2' }}>5. Unitarias (Redenominación)</button>
+                            <button onClick={handleRemoveUnnecessary} disabled={!parsedData} style={btnStyle(parsedData, '#20c997')}>1. Reglas Innecesarias</button>
+                            <button onClick={handleRemoveUnreachable} disabled={!parsedData} style={btnStyle(parsedData, '#12b886')}>2. Simbolos Inaccesibles</button>
+                            <button onClick={handleRemoveInactive} disabled={!parsedData} style={btnStyle(parsedData, '#228be6')}>3. Simbolos Superfluos</button>
+                            <button onClick={handleRemoveLambda} disabled={!parsedData} style={btnStyle(parsedData, '#f06595')}>4. Reglas no Generativas</button>
+                            <button onClick={handleRemoveUnitary} disabled={!parsedData} style={{ ...btnStyle(parsedData, '#845ef7'), gridColumn: 'span 2' }}>5. Reglas de Redenominación</button>
                         </div>
 
                         {/* Botonera de Normalización en Grilla */}
                         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#495057', marginTop: '5px', borderTop: '1px solid #dee2e6', paddingTop: '8px' }}>Fase de Normalización:</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                            <button onClick={handleChomsky} disabled={!parsedData} style={btnStyle(parsedData, '#fd7e14')}>✦ Chomsky</button>
-                            <button onClick={handleGreibach} disabled={!parsedData} style={btnStyle(parsedData, '#e03131')}>☠️ Greibach</button>
+                            <button onClick={handleChomsky} disabled={!parsedData} style={btnStyle(parsedData, '#fd7e14')}>Forma Normal de Chomsky</button>
+                            <button onClick={handleGreibach} disabled={!parsedData} style={btnStyle(parsedData, '#e03131')}>Forma Normal de Greibach</button>
                         </div>
                     </div>
 
