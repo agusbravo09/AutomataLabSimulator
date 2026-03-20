@@ -16,6 +16,7 @@ import { useTransducerLogic } from '../hooks/useTransducerLogic';
 import { useUI } from '../hooks/useUI';
 
 // --- COMPONENTES UI ---
+import { TopBar } from './TopBar';
 import Toolbar, { type Tool } from './Toolbar';
 import SidePanel from './SidePanel';
 import ZoomControl from './ZoomControl';
@@ -83,119 +84,210 @@ function InfinityCanvas() {
 
     return (
         <div style={backgroundStyle}>
-            {/* UI FLOTANTE */}
-            <Toolbar
-                activeTool={activeTool as Tool}
-                setActiveTool={setActiveTool}
-                onToggleTools={() => setIsToolsPanelOpen(!isToolsPanelOpen)}
-            />
 
-            {/* botones importar-exportar (ESTO MAS ADELANTE VUELA XD)*/}
-            <button onClick={handleExportAutomaton} style={{ padding: '8px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #dee2e6' }}>Exportar</button>
+            {/* ==========================================
+                CAPA 0: EL LIENZO INFINITO (FONDO)
+            ========================================== */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
+                <Stage
+                    width={window.innerWidth} height={window.innerHeight} draggable={activeTool === 'CURSOR'}
+                    x={camera.x} y={camera.y} scaleX={camera.scale} scaleY={camera.scale} onWheel={handleWheel}
+                    onDragMove={(e) => { if (e.target === e.target.getStage()) setCamera((prev) => ({ ...prev, x: e.target.x(), y: e.target.y() })); }}
+                    onClick={handleStageClick} onMouseMove={handleMouseMoveStage} onMouseUp={handleMouseUpStage}
+                >
+                    <Layer>
+                        <TransitionsRenderer transitions={transitions} nodes={nodes} simMode={simMode} setSelectedElement={setSelectedElement} buildMode={buildMode} />
+                        <GhostArrow drawingTransition={drawingTransition} nodes={nodes} />
+                        <NodesRenderer nodes={nodes} simMode={simMode} selectedElement={selectedElement} activeTool={activeTool} updateNodePosition={updateNodePosition} handleMouseDownNode={handleMouseDownNode} handleMouseUpNode={handleMouseUpNode} setSelectedElement={setSelectedElement} buildMode={buildMode}/>
+                    </Layer>
+                </Stage>
 
-            <label style={{ padding: '8px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #dee2e6', backgroundColor: '#f8f9fa' }}>
-                Importar
-                <input type="file" accept=".al,.json" style={{ display: 'none' }} onChange={handleImportAutomaton} />
-            </label>
+                {/* ESTADO VACÍO (Fondo del lienzo) */}
+                {nodes.length === 0 && !buildMode.active && (
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', textAlign: 'center', opacity: 0.5, userSelect: 'none', zIndex: 1 }}>
+                        <h2 style={{ fontFamily: "'Inter', sans-serif", color: '#495057', margin: '0 0 10px 0', fontWeight: 700 }}>Lienzo Vacío</h2>
+                        <p style={{ fontFamily: "'Inter', sans-serif", color: '#868e96', margin: 0, fontSize: '16px', lineHeight: '1.5' }}>Usá la barra de herramientas para empezar</p>
+                    </div>
+                )}
+            </div>
 
-            {/*Boton para el modal de gramaticas (iria en el panel de herramientas)*/}
-            <button onClick={() => setIsGrammarModalOpen(true)}>
-                Limpieza de Gramáticas
-            </button>
+            {/* ==========================================
+                CAPA 1: UI FLOTANTE (ESTILO FIGMA)
+            ========================================== */}
+            {/* Este contenedor invisible deja pasar los clicks al lienzo, excepto en los elementos con pointerEvents: 'auto' */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
 
-            <ToolsPanel
-                isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)}
-                onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination}
-                onPlaySubset={handlePlaySubset}
-                onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization}
-                onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses}
-                onCompareMoore={handleCompareMoore}
-                onGenerateFromGrammar={handleGenerateFromGrammar}
-                onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar}
-                onConvertMooreToMealy={handleConvertMooreToMealy}
-                onConvertMealyToMoore={handleConvertMealyToMoore}
-                onPlayTransducerConversion={handlePlayTransducerConversion}
-                isVisorOpen={isVisorOpen}
-                onToggleVisor={() => setIsVisorOpen(!isVisorOpen)}
-            />
-
-            {/*Mini visor*/}
-            {savedAutomatonA && isVisorOpen && (
-                <MiniVisor
-                    nodes={savedAutomatonA.nodes}
-                    transitions={savedAutomatonA.transitions}
-                    title="Referencia: Autómata A"
-                    onClose={() => setIsVisorOpen(false)}
+                {/* HEADER SUPERIOR (TOPBAR) */}
+                <TopBar
+                    automataType={automataType}
+                    setAutomataType={setAutomataType}
+                    onExport={handleExportAutomaton}
+                    onImport={handleImportAutomaton}
+                    onOpenGrammar={() => setIsGrammarModalOpen(true)}
                 />
-            )}
 
-            {/* ESTADO VACÍO */}
-            {nodes.length === 0 && !buildMode.active && (
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', textAlign: 'center', opacity: 0.5, userSelect: 'none', zIndex: 5 }}>
-                    <h2 style={{ fontFamily: "'Inter', sans-serif", color: '#495057', margin: '0 0 10px 0', fontWeight: 700 }}>Lienzo Vacío</h2>
-                    <p style={{ fontFamily: "'Inter', sans-serif", color: '#868e96', margin: 0, fontSize: '16px', lineHeight: '1.5' }}>Seleccioná "Crear Estado" en la barra superior</p>
+                {/* BOTONES SUPERIORES DERECHOS */}
+                <div style={{
+                    pointerEvents: 'auto',
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    zIndex: 100,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: '12px',
+                    alignItems: 'center'
+                }}>
+
+                    {/* Isla 1: Panel de Control */}
+                    <div style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(0,0,0,0.08)',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        height: '42px',
+                        alignItems: 'center'
+                    }}>
+                        <button
+                            onClick={() => setIsPanelOpen(true)}
+                            style={{
+                                padding: '0 16px',
+                                border: 'none',
+                                backgroundColor: 'transparent',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                color: '#495057',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                transition: 'background-color 0.2s',
+                                height: '100%'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                            Panel de Control
+                        </button>
+                    </div>
+
+                    {/* Isla 2: Bug */}
+                    <div style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(0,0,0,0.08)',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                        transition: 'all 0.2s',
+                        width: '42px', // Cuadradita
+                        height: '42px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <button
+                            onClick={() => setIsFeedbackOpen(true)}
+                            style={{
+                                padding: 0,
+                                border: 'none',
+                                backgroundColor: 'transparent',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '100%',
+                                height: '100%',
+                                transition: 'background-color 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fff3cd'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            title="Reportar un bug"
+                        >
+                            <img
+                                src="/icons/bug.png"
+                                alt="Reportar Bug"
+                                style={{
+                                    width: '24px',
+                                    height: '24px',
+                                    opacity: 0.7,
+                                    transition: 'opacity 0.2s'
+                                }}
+                                // Fallback: Si no carga la imagen, muestra el emoji
+                                onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 20px;">!</span>';
+                                }}
+                                // Efecto de opacidad al pasar el mouse por arriba del botón padre
+                                onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+                                onMouseOut={(e) => e.currentTarget.style.opacity = '0.7'}
+                            />
+                        </button>
+                    </div>
                 </div>
-            )}
 
-            <StepPlayerOverlay buildMode={buildMode} setBuildMode={setBuildMode} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType} />
+                <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
 
-            <VersionOverlay onOpenFeedback={() => setIsFeedbackOpen(true)} />
+                    {/* BARRA DE HERRAMIENTAS */}
+                    <div style={{
+                        pointerEvents: 'auto',
+                        position: 'absolute',
+                        left: '20px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 100
+                    }}>
+                        <Toolbar
+                            activeTool={activeTool as Tool}
+                            setActiveTool={setActiveTool}
+                            onToggleTools={() => setIsToolsPanelOpen(!isToolsPanelOpen)}
+                        />
+                    </div>
 
-            <ZoomControl
-                scale={camera.scale} onZoomIn={() => handleManualZoom(0.2)}
-                onZoomOut={() => handleManualZoom(-0.2)} onReset={() => setCamera(prev => ({ ...prev, scale: 1 }))}
-            />
+                    {/* PANEL DE PROPIEDADES (Derecha flotante) */}
+                    <div style={{ pointerEvents: 'auto', position: 'absolute', right: '20px', top: '20px' }}>
+                        <PropertiesPanel
+                            element={selectedElement} nodes={nodes} isSidePanelOpen={isPanelOpen}
+                            onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)}
+                            onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement}
+                            automataType={automataType}
+                        />
+                    </div>
 
-            <button
-                onClick={() => setIsPanelOpen(true)}
-                style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 100, padding: '12px 20px', backgroundColor: 'white', color: '#495057', border: '1px solid #dee2e6', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', cursor: 'pointer', fontWeight: 600, display: 'flex', gap: '8px', transition: 'all 0.2s' }}
-            >
-                Panel de Control
-            </button>
+                    {/* CONTROLES DE ZOOM (Abajo Derecha) */}
+                    <div style={{ pointerEvents: 'auto', position: 'absolute', bottom: '20px', right: '20px', zIndex: 100 }}>
+                        <ZoomControl
+                            scale={camera.scale}
+                            onZoomIn={() => handleManualZoom(0.2)}
+                            onZoomOut={() => handleManualZoom(-0.2)}
+                            onReset={() => setCamera(prev => ({ ...prev, scale: 1 }))}
+                        />
+                    </div>
+                </div>
 
-            <SidePanel
-                isOpen={isPanelOpen}
-                onClose={() => setIsPanelOpen(false)}
-                onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)}
-                simulationResult={simulationResult}
-                onClearResult={() => setSimulationResult(null)}
-                onStepByStep={(input, initialStack, pdaAcceptance) => handleStartStepByStep(input, automataType, initialStack || 'S', pdaAcceptance || 'FINAL_STATE', () => setIsPanelOpen(false), () => setSelectedElement(null))}
-            />
+            </div>
 
-            <PropertiesPanel
-                element={selectedElement} nodes={nodes} isSidePanelOpen={isPanelOpen}
-                onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)}
-                onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement}
-                automataType={automataType}
-            />
+            {/* ==========================================
+                CAPA 2: MODALES Y OVERLAYS (Nivel superior)
+            ========================================== */}
+            <SidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)} simulationResult={simulationResult} onClearResult={() => setSimulationResult(null)} onStepByStep={(input, initialStack, pdaAcceptance) => handleStartStepByStep(input, automataType, initialStack || 'S', pdaAcceptance || 'FINAL_STATE', () => setIsPanelOpen(false), () => setSelectedElement(null))} />
 
-            <ConfirmationModal
-                isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones."
-                onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement}
-            />
+            <ToolsPanel isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)} onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination} onPlaySubset={handlePlaySubset} onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization} onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses} onCompareMoore={handleCompareMoore} onGenerateFromGrammar={handleGenerateFromGrammar} onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar} onConvertMooreToMealy={handleConvertMooreToMealy} onConvertMealyToMoore={handleConvertMealyToMoore} onPlayTransducerConversion={handlePlayTransducerConversion} isVisorOpen={isVisorOpen} onToggleVisor={() => setIsVisorOpen(!isVisorOpen)} />
 
+            <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
             <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+            <GrammarCleanerModal isOpen={isGrammarModalOpen} onClose={() => setIsGrammarModalOpen(false)} />
+
+            {savedAutomatonA && isVisorOpen && <MiniVisor nodes={savedAutomatonA.nodes} transitions={savedAutomatonA.transitions} title="Referencia: Autómata A" onClose={() => setIsVisorOpen(false)} />}
 
             <SimulationPlayer simMode={simMode} setSimMode={setSimMode} simulationResult={simulationResult} />
+            <StepPlayerOverlay buildMode={buildMode} setBuildMode={setBuildMode} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType} />
+            <VersionOverlay onOpenFeedback={() => setIsFeedbackOpen(true)} />
 
-            {/* LIENZO DE KONVA */}
-            <Stage
-                width={window.innerWidth} height={window.innerHeight} draggable={activeTool === 'CURSOR'}
-                x={camera.x} y={camera.y} scaleX={camera.scale} scaleY={camera.scale} onWheel={handleWheel}
-                onDragMove={(e) => { if (e.target === e.target.getStage()) setCamera((prev) => ({ ...prev, x: e.target.x(), y: e.target.y() })); }}
-                onClick={handleStageClick} onMouseMove={handleMouseMoveStage} onMouseUp={handleMouseUpStage}
-            >
-                <Layer>
-                    <TransitionsRenderer transitions={transitions} nodes={nodes} simMode={simMode} setSelectedElement={setSelectedElement} buildMode={buildMode} />
-                    <GhostArrow drawingTransition={drawingTransition} nodes={nodes} />
-                    <NodesRenderer nodes={nodes} simMode={simMode} selectedElement={selectedElement} activeTool={activeTool} updateNodePosition={updateNodePosition} handleMouseDownNode={handleMouseDownNode} handleMouseUpNode={handleMouseUpNode} setSelectedElement={setSelectedElement} buildMode={buildMode}/>
-                </Layer>
-            </Stage>
-
-            <GrammarCleanerModal
-                isOpen={isGrammarModalOpen}
-                onClose={() => setIsGrammarModalOpen(false)}
-            />
         </div>
     );
 }
