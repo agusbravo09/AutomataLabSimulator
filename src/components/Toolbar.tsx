@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAutomataStore } from '../store/useAutomataStore';
 
 // Definimos los tipos de herramientas
 export type Tool = 'CURSOR' | 'STATE' | 'TRANSITION';
@@ -8,11 +7,10 @@ interface ToolbarProps {
     activeTool: Tool;
     setActiveTool: (tool: Tool) => void;
     onToggleTools: () => void;
+    onClearWorkspace: () => void;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTools }) => {
-    // Ya no traemos automataType, solo clearWorkspace
-    const { clearWorkspace } = useAutomataStore();
+const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTools, onClearWorkspace}) => {
     const [hoveredTool, setHoveredTool] = useState<string | null>(null);
 
     const menuItems: { id: Tool; label: string; iconSrc: string, fallback: string }[] = [
@@ -21,7 +19,6 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
         { id: 'TRANSITION', label: 'Crear Transición', iconSrc: '/Toolbar/add-transition.svg', fallback: '↗️' },
     ];
 
-    // Tooltip rediseñado para que salga hacia la derecha
     const renderTooltip = (label: string, isHovered: boolean) => (
         <div style={{
             position: 'absolute', top: '50%', left: 'calc(100% + 14px)',
@@ -34,7 +31,6 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
             pointerEvents: 'none', zIndex: 300, boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         }}>
             {label}
-            {/* Flechita decorativa apuntando a la herramienta */}
             <div style={{
                 position: 'absolute', top: '50%', left: '-4px', transform: 'translateY(-50%)',
                 borderTop: '5px solid transparent', borderBottom: '5px solid transparent',
@@ -45,7 +41,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
 
     return (
         <div style={{
-            display: 'flex', flexDirection: 'column', // ¡Orientación vertical!
+            display: 'flex', flexDirection: 'column',
             alignItems: 'center', gap: '8px', backgroundColor: 'rgba(255, 255, 255, 0.9)',
             padding: '12px 10px', borderRadius: '14px', boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
             backdropFilter: 'blur(10px)', border: '1px solid rgba(0,0,0,0.05)',
@@ -100,11 +96,11 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
 
             <div style={{ width: '24px', height: '1px', backgroundColor: '#dee2e6', margin: '4px 0' }}></div>
 
-            {/* BOTÓN LIMPIAR (Ahora es un icono compacto) */}
+            {/* BOTÓN LIMPIAR */}
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}
                  onMouseEnter={() => setHoveredTool('CLEAR')} onMouseLeave={() => setHoveredTool(null)}>
                 <button
-                    onClick={clearWorkspace}
+                    onClick={onClearWorkspace}
                     style={{
                         width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         borderRadius: '10px', cursor: 'pointer', outline: 'none', transition: 'all 0.2s',
@@ -113,8 +109,15 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ffe3e3'}
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fff5f5'}
                 >
-                    {/* Usamos el emoji de papelera como fallback directo si no tenés un SVG de trash */}
-                    <span style={{ fontSize: '18px' }}>X️</span>
+                    <img
+                        src="/Toolbar/trash.svg"
+                        alt="Limpiar Lienzo"
+                        style={{ width: '20px', height: '20px', filter: 'invert(27%) sepia(82%) saturate(2200%) hue-rotate(345deg) brightness(95%) contrast(92%)' }}
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 18px; color: #e03131;">X️</span>';
+                        }}
+                    />
                 </button>
                 {renderTooltip('Limpiar Lienzo', hoveredTool === 'CLEAR')}
             </div>

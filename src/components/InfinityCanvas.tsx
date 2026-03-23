@@ -48,6 +48,8 @@ function InfinityCanvas() {
     //Modal de gramatica
     const [isGrammarModalOpen, setIsGrammarModalOpen] = useState(false);
 
+    const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+
     // 2. Cerebros (Custom Hooks)
     const { isPanelOpen, setIsPanelOpen, isToolsPanelOpen, setIsToolsPanelOpen, isConfirmOpen, setIsConfirmOpen, isFeedbackOpen, setIsFeedbackOpen } = useUI();
     const { nodes, setNodes, transitions, setTransitions, automataType, setAutomataType, updateNodePosition, clearWorkspace, savedAutomatonA } = useAutomataStore();    const { camera, setCamera, handleWheel, handleManualZoom } = useCamera();
@@ -209,7 +211,7 @@ function InfinityCanvas() {
                             title="Reportar un bug"
                         >
                             <img
-                                src="/icons/bug.png"
+                                src="/icons/bug.svg"
                                 alt="Reportar Bug"
                                 style={{
                                     width: '24px',
@@ -236,15 +238,17 @@ function InfinityCanvas() {
                     <div style={{
                         pointerEvents: 'auto',
                         position: 'absolute',
-                        left: '20px',
+                        left: isToolsPanelOpen ? '380px' : '20px',
                         top: '50%',
                         transform: 'translateY(-50%)',
-                        zIndex: 100
+                        zIndex: 100,
+                        transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}>
                         <Toolbar
                             activeTool={activeTool as Tool}
                             setActiveTool={setActiveTool}
                             onToggleTools={() => setIsToolsPanelOpen(!isToolsPanelOpen)}
+                            onClearWorkspace={() => setIsClearModalOpen(true)}
                         />
                     </div>
 
@@ -259,7 +263,14 @@ function InfinityCanvas() {
                     </div>
 
                     {/* CONTROLES DE ZOOM (Abajo Derecha) */}
-                    <div style={{ pointerEvents: 'auto', position: 'absolute', bottom: '20px', right: '20px', zIndex: 100 }}>
+                    <div style={{
+                        pointerEvents: 'auto',
+                        position: 'absolute',
+                        bottom: '20px',
+                        right: isPanelOpen ? '400px' : '20px',
+                        zIndex: 100,
+                        transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}>
                         <ZoomControl
                             scale={camera.scale}
                             onZoomIn={() => handleManualZoom(0.2)}
@@ -279,6 +290,16 @@ function InfinityCanvas() {
             <ToolsPanel isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)} onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination} onPlaySubset={handlePlaySubset} onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization} onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses} onCompareMoore={handleCompareMoore} onGenerateFromGrammar={handleGenerateFromGrammar} onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar} onConvertMooreToMealy={handleConvertMooreToMealy} onConvertMealyToMoore={handleConvertMealyToMoore} onPlayTransducerConversion={handlePlayTransducerConversion} isVisorOpen={isVisorOpen} onToggleVisor={() => setIsVisorOpen(!isVisorOpen)} />
 
             <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
+            <ConfirmationModal
+                isOpen={isClearModalOpen}
+                title="¿Limpiar todo el lienzo?"
+                message="Esta acción eliminará todos los estados y transiciones. Perderás el progreso que no hayas guardado."
+                onCancel={() => setIsClearModalOpen(false)}
+                onConfirm={() => {
+                    clearWorkspace();
+                    setIsClearModalOpen(false);
+                }}
+            />
             <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
             <GrammarCleanerModal isOpen={isGrammarModalOpen} onClose={() => setIsGrammarModalOpen(false)} />
 
