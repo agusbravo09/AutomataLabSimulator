@@ -88,7 +88,7 @@ function InfinityCanvas() {
         <div style={backgroundStyle}>
 
             {/* ==========================================
-                CAPA 0: EL LIENZO INFINITO (FONDO)
+                CAPA 0: LIENZO INFINITO
             ========================================== */}
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
                 <Stage
@@ -114,12 +114,12 @@ function InfinityCanvas() {
             </div>
 
             {/* ==========================================
-                CAPA 1: UI FLOTANTE (ESTILO FIGMA)
+                CAPA 1: UI FLOTANTE
             ========================================== */}
             {/* Este contenedor invisible deja pasar los clicks al lienzo, excepto en los elementos con pointerEvents: 'auto' */}
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
 
-                {/* HEADER SUPERIOR (TOPBAR) */}
+                {/* HEADER SUPERIOR */}
                 <TopBar
                     automataType={automataType}
                     setAutomataType={setAutomataType}
@@ -128,7 +128,7 @@ function InfinityCanvas() {
                     onOpenGrammar={() => setIsGrammarModalOpen(true)}
                 />
 
-                {/* BOTONES SUPERIORES DERECHOS */}
+                {/* BOTONES DERECHOS */}
                 <div style={{
                     pointerEvents: 'auto',
                     position: 'absolute',
@@ -177,7 +177,7 @@ function InfinityCanvas() {
                         </button>
                     </div>
 
-                    {/* Isla 2: Bug */}
+                    {/* Isla 2: Bug / Feedback */}
                     <div style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(10px)',
@@ -185,7 +185,7 @@ function InfinityCanvas() {
                         borderRadius: '12px',
                         boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
                         transition: 'all 0.2s',
-                        width: '42px', // Cuadradita
+                        width: '42px',
                         height: '42px',
                         display: 'flex',
                         alignItems: 'center',
@@ -283,7 +283,7 @@ function InfinityCanvas() {
             </div>
 
             {/* ==========================================
-                CAPA 2: MODALES Y OVERLAYS (Nivel superior)
+                CAPA 2: MODALES Y OVERLAYS
             ========================================== */}
             <SidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)} simulationResult={simulationResult} onClearResult={() => setSimulationResult(null)} onStepByStep={(input, initialStack, pdaAcceptance) => handleStartStepByStep(input, automataType, initialStack || 'S', pdaAcceptance || 'FINAL_STATE', () => setIsPanelOpen(false), () => setSelectedElement(null))} />
 

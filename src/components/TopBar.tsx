@@ -36,25 +36,37 @@ export const TopBar: React.FC<TopBarProps> = ({
 
             {/* --- LOGO COMPACTO --- */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '8px', borderRight: '1px solid #dee2e6' }}>
-                <div style={{
-                    backgroundColor: '#4c6ef5', color: 'white', width: '28px', height: '28px',
-                    borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    fontSize: '14px', fontWeight: 'bold'
-                }}>
-                    AL
-                </div>
+
+                <img
+                    src="icons/logo-final.png"
+                    alt="AutomataLab"
+                    style={{
+                        width: '30px',
+                        height: '30px',
+                        borderRadius: '6px',
+                        objectFit: 'contain'
+                    }}
+                    onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement!.insertAdjacentHTML(
+                            'afterbegin',
+                            '<div style="background-color: #4c6ef5; color: white; width: 28px; height: 28px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold;">AL</div>'
+                        );
+                    }}
+                />
+
                 <span style={{ fontSize: '15px', color: '#212529', fontFamily: "'Segoe UI', sans-serif", fontWeight: 700, letterSpacing: '-0.3px' }}>
                     AutomataLab
                 </span>
             </div>
 
-            {/* --- SELECTOR MÁS ESTÉTICO CON NOMBRES COMPLETOS --- */}
+            {/* --- SELECTOR ESTÉTICO CON NOMBRES COMPLETOS --- */}
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <select
                     value={automataType}
                     onChange={(e) => setAutomataType(e.target.value)}
                     style={{
-                        padding: '8px 32px 8px 12px', // Espacio extra a la derecha para nuestra flechita custom
+                        padding: '8px 32px 8px 12px',
                         borderRadius: '8px',
                         border: '1px solid transparent',
                         backgroundColor: 'transparent',
@@ -64,7 +76,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                         cursor: 'pointer',
                         outline: 'none',
                         transition: 'all 0.2s',
-                        appearance: 'none', // Saca la flechita por defecto del sistema
+                        appearance: 'none',
                     }}
                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'}
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -76,7 +88,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                     <option value="MEALY">Máquina de Mealy</option>
                     <option value="MOORE">Máquina de Moore</option>
                 </select>
-                {/* Flechita personalizada */}
                 <div style={{
                     position: 'absolute', right: '12px', pointerEvents: 'none',
                     color: '#adb5bd', fontSize: '10px'
@@ -85,20 +96,20 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </div>
             </div>
 
-            {/* --- BOTÓN SIMULAR (REUBICADO Y EN VERDE AMIGABLE) --- */}
+            {/* BOTÓN SIMULAR */}
             <button
                 onClick={onSimulateClick}
                 style={{
                     padding: '8px 16px', borderRadius: '8px', border: 'none',
-                    backgroundColor: '#40c057', // Verde amigable / esmeralda
+                    backgroundColor: '#40c057',
                     color: 'white', fontWeight: 600,
                     cursor: 'pointer', transition: 'all 0.2s', fontSize: '14px',
                     display: 'flex', alignItems: 'center', gap: '8px',
-                    boxShadow: '0 2px 8px rgba(64, 192, 87, 0.25)' // Sombra sutil en tono verde
+                    boxShadow: '0 2px 8px rgba(64, 192, 87, 0.25)'
                 }}
                 onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = '#2b8a3e'; // Verde más intenso en hover
-                    e.currentTarget.style.transform = 'translateY(-1px)'; // Efecto de levantarse
+                    e.currentTarget.style.backgroundColor = '#2b8a3e';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
                 }}
                 onMouseOut={(e) => {
                     e.currentTarget.style.backgroundColor = '#40c057';
@@ -110,7 +121,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
             <div style={{ width: '1px', height: '24px', backgroundColor: '#dee2e6', marginLeft: '4px' }}></div>
 
-            {/* --- ARCHIVO (IMPORTAR/EXPORTAR AL FINAL) --- */}
+            {/* --- ARCHIVO (IMPORTAR/EXPORTAR) --- */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <label style={{
                     padding: '8px 12px', borderRadius: '8px', cursor: 'pointer',
