@@ -47,7 +47,7 @@ function InfinityCanvas() {
 
     //Modal de gramatica
     const [isGrammarModalOpen, setIsGrammarModalOpen] = useState(false);
-
+    const [isSimulationConsoleOpen, setIsSimulationConsoleOpen] = useState(false);
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     // 2. Cerebros (Custom Hooks)
@@ -126,6 +126,7 @@ function InfinityCanvas() {
                     onExport={handleExportAutomaton}
                     onImport={handleImportAutomaton}
                     onOpenGrammar={() => setIsGrammarModalOpen(true)}
+                    onSimulateClick={() => setIsSimulationConsoleOpen(true)}
                 />
 
                 {/* BOTONES DERECHOS */}
@@ -285,8 +286,11 @@ function InfinityCanvas() {
             {/* ==========================================
                 CAPA 2: MODALES Y OVERLAYS
             ========================================== */}
-            <SidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)} simulationResult={simulationResult} onClearResult={() => setSimulationResult(null)} onStepByStep={(input, initialStack, pdaAcceptance) => handleStartStepByStep(input, automataType, initialStack || 'S', pdaAcceptance || 'FINAL_STATE', () => setIsPanelOpen(false), () => setSelectedElement(null))} />
-
+            <SidePanel
+                isOpen={isPanelOpen}
+                onClose={() => setIsPanelOpen(false)}
+                onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)}
+            />
             <ToolsPanel isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)} onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination} onPlaySubset={handlePlaySubset} onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization} onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses} onCompareMoore={handleCompareMoore} onGenerateFromGrammar={handleGenerateFromGrammar} onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar} onConvertMooreToMealy={handleConvertMooreToMealy} onConvertMealyToMoore={handleConvertMealyToMoore} onPlayTransducerConversion={handlePlayTransducerConversion} isVisorOpen={isVisorOpen} onToggleVisor={() => setIsVisorOpen(!isVisorOpen)} />
 
             <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
@@ -305,7 +309,21 @@ function InfinityCanvas() {
 
             {savedAutomatonA && isVisorOpen && <MiniVisor nodes={savedAutomatonA.nodes} transitions={savedAutomatonA.transitions} title="Referencia: Autómata A" onClose={() => setIsVisorOpen(false)} />}
 
-            <SimulationPlayer simMode={simMode} setSimMode={setSimMode} simulationResult={simulationResult} />
+            <SimulationPlayer
+                isOpen={isSimulationConsoleOpen}
+                onClose={() => setIsSimulationConsoleOpen(false)}
+                automataType={automataType}
+                simMode={simMode}
+                setSimMode={setSimMode}
+                simulationResult={simulationResult}
+                onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)}
+                onStepByStep={(input, initialStack, pdaAcceptance) => handleStartStepByStep(
+                    input, automataType, initialStack || 'S', pdaAcceptance || 'FINAL_STATE',
+                    () => {}, // Ya no necesitamos cerrar el side panel acá
+                    () => setSelectedElement(null) // Limpiamos la selección del lienzo
+                )}
+                onClearResult={() => setSimulationResult(null)}
+            />
             <StepPlayerOverlay buildMode={buildMode} setBuildMode={setBuildMode} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType} />
             <VersionOverlay onOpenFeedback={() => setIsFeedbackOpen(true)} />
 
