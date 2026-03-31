@@ -268,7 +268,7 @@ function InfinityCanvas() {
                         pointerEvents: 'auto',
                         position: 'absolute',
                         bottom: '20px',
-                        right: isPanelOpen ? '400px' : '20px',
+                        right: isPanelOpen ? '420px' : '20px',
                         zIndex: 100,
                         transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}>
@@ -289,8 +289,8 @@ function InfinityCanvas() {
             <SidePanel
                 isOpen={isPanelOpen}
                 onClose={() => setIsPanelOpen(false)}
-                onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)}
             />
+
             <ToolsPanel isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)} onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination} onPlaySubset={handlePlaySubset} onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization} onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses} onCompareMoore={handleCompareMoore} onGenerateFromGrammar={handleGenerateFromGrammar} onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar} onConvertMooreToMealy={handleConvertMooreToMealy} onConvertMealyToMoore={handleConvertMealyToMoore} onPlayTransducerConversion={handlePlayTransducerConversion} isVisorOpen={isVisorOpen} onToggleVisor={() => setIsVisorOpen(!isVisorOpen)} />
 
             <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
@@ -325,7 +325,7 @@ function InfinityCanvas() {
                 onClearResult={() => setSimulationResult(null)}
             />
             <StepPlayerOverlay buildMode={buildMode} setBuildMode={setBuildMode} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType} />
-            <VersionOverlay onOpenFeedback={() => setIsFeedbackOpen(true)} />
+            <VersionOverlay />
 
         </div>
     );

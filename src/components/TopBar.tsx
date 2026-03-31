@@ -1,11 +1,13 @@
 import React from 'react';
+import type {AutomataType} from '../types/types.ts';
 
 interface TopBarProps {
     automataType: string;
-    setAutomataType: (type: string) => void;
+    setAutomataType: (type: AutomataType) => void;
     onExport: () => void;
     onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSimulateClick: () => void;
+    onOpenGrammar: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -64,7 +66,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <select
                     value={automataType}
-                    onChange={(e) => setAutomataType(e.target.value)}
+                    onChange={(e) => setAutomataType(e.target.value as AutomataType)}
                     style={{
                         padding: '8px 32px 8px 12px',
                         borderRadius: '8px',

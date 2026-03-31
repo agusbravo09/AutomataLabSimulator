@@ -16,7 +16,7 @@ export const MatrixTab: React.FC = () => {
     alphabetSet.delete('λ');
     const alphabet = Array.from(alphabetSet).sort();
     if (hasLambda) alphabet.push('λ');
-    
+
     const renderCellGroup = (items: string[]) => {
         if (items.length === 0) return <span style={{ color: '#ced4da' }}>-</span>;
         if (items.length === 1) return <span style={{ color: '#212529', fontWeight: 600 }}>{items[0]}</span>;
@@ -251,8 +251,7 @@ export const MatrixTab: React.FC = () => {
                                         const relevantTransitions: { t: any, symIdx: number }[] = [];
                                         transitions.filter(t => t.from === node.id).forEach(t => {
                                             if (Array.isArray(t.symbols)) t.symbols.forEach((s, idx) => { if (s === sym) relevantTransitions.push({ t, symIdx: idx }); });
-                                            if (sym === 'λ' && t.hasLambda && !Array.isArray(t.symbols)?.includes('λ')) relevantTransitions.push({ t, symIdx: -1 });
-                                        });
+                                            if (sym === 'λ' && t.hasLambda && !(Array.isArray(t.symbols) && t.symbols.includes('λ'))) relevantTransitions.push({ t, symIdx: -1 });                                        });
 
                                         const destStrings = relevantTransitions.map(({ t, symIdx }) => {
                                             const destName = nodes.find(n => n.id === t.to)?.name || 'Ø';
