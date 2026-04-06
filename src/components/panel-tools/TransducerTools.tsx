@@ -1,6 +1,5 @@
 import React from 'react';
-import type { AutomataType } from '../../types/types';
-import type { StateNode, Transition } from '../../types/types';
+import type { AutomataType, StateNode, Transition } from '../../types/types';
 import { convertMooreToMealy, convertMealyToMoore } from '../../utils/converters/transducerConverter';
 
 interface TransducerToolsProps {
@@ -15,23 +14,23 @@ interface TransducerToolsProps {
 export const TransducerTools: React.FC<TransducerToolsProps> = ({
                                                                     automataType, nodes, transitions, onConvertMooreToMealy, onConvertMealyToMoore, onPlayTransducerConversion
                                                                 }) => {
-    // Si no es un transductor, no renderizamos nada
     if (automataType !== 'MOORE' && automataType !== 'MEALY') return null;
 
+    const btnSecondaryStyle = { flex: 1, padding: '10px', backgroundColor: '#f8f9fa', color: '#4c6ef5', border: '1px solid #d0ebff', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' };
+    const btnMutedStyle = { flex: 1, padding: '10px', backgroundColor: '#e9ecef', color: '#495057', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' };
+
     return (
-        <div style={{ backgroundColor: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '15px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-                <h3 style={{ margin: 0, fontSize: '14px', color: '#495057', fontWeight: 600 }}>
-                    Conversión de Transductores
-                </h3>
-            </div>
-            <p style={{ fontSize: '12px', color: '#868e96', margin: '0 0 15px 0' }}>
+        <div style={{ backgroundColor: '#fff', border: '1px solid #eee', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#212529', fontWeight: 800, fontFamily: "'Inter', sans-serif" }}>
+                Conversión de Transductores
+            </h3>
+            <p style={{ fontSize: '13px', color: '#868e96', margin: '0 0 16px 0', lineHeight: '1.4' }}>
                 {automataType === 'MOORE'
                     ? 'Convierte la Máquina de Moore actual en una Máquina de Mealy equivalente.'
                     : 'Convierte la Máquina de Mealy actual en una Máquina de Moore equivalente.'}
             </p>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                     onClick={() => {
                         if (automataType === 'MOORE' && onPlayTransducerConversion) {
@@ -42,22 +41,22 @@ export const TransducerTools: React.FC<TransducerToolsProps> = ({
                             onPlayTransducerConversion(steps, 'MOORE');
                         }
                     }}
-                    style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #4c6ef5', backgroundColor: 'white', color: '#4c6ef5', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                    style={btnSecondaryStyle}
                 >
                     Paso a Paso
                 </button>
                 <button
                     onClick={automataType === 'MOORE' ? onConvertMooreToMealy : onConvertMealyToMoore}
-                    style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: '#e9ecef', color: '#495057', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                    style={btnMutedStyle}
                 >
                     Instantáneo
                 </button>
             </div>
 
             {automataType === 'MEALY' && (
-                <div style={{ marginTop: '12px', padding: '8px', backgroundColor: '#fff3cd', border: '1px solid #ffe066', borderRadius: '6px' }}>
-                    <span style={{ fontSize: '11px', color: '#d9480f', display: 'block', lineHeight: '1.4' }}>
-                        <strong>* Nota:</strong> Si a un estado le llegan transiciones con salidas distintas, el algoritmo lo dividirá (clonará) automáticamente.
+                <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#fff5f5', border: '1px solid #ffc9c9', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '12px', color: '#c92a2a', display: 'flex', alignItems: 'flex-start', gap: '6px', lineHeight: '1.5' }}>
+                        <span><strong>Atención:</strong> Si a un estado le llegan transiciones con salidas distintas, el algoritmo lo dividirá automáticamente para preservar la equivalencia.</span>
                     </span>
                 </div>
             )}

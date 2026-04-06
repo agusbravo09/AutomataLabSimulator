@@ -29,6 +29,7 @@ import ToolsPanel from './ToolsPanel';
 import StepPlayerOverlay from './StepPlayerOverlay';
 import { MiniVisor } from './MiniVisor';
 import { GrammarCleanerModal } from "./GrammarCleanerModal";
+import { DonationModal } from './DonationsModal';
 
 // --- COMPONENTES CANVAS ---
 import { GhostArrow } from './canvas/GhostArrow';
@@ -44,6 +45,7 @@ function InfinityCanvas() {
     const [buildMode, setBuildMode] = useState<{
         active: boolean, steps: any[], currentIndex: number, backupNodes?: StateNode[], backupTransitions?: Transition[]
     }>({ active: false, steps: [], currentIndex: 0 });
+    const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
 
     //Modal de gramatica
     const [isGrammarModalOpen, setIsGrammarModalOpen] = useState(false);
@@ -142,6 +144,43 @@ function InfinityCanvas() {
                     alignItems: 'center'
                 }}>
 
+                    {/* Isla 0: Donación (Cafecito / Ko-fi / PayPal) */}
+                    <div style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(230, 73, 128, 0.2)', // Borde sutil rosado
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 32px rgba(230, 73, 128, 0.1)', // Sombra sutil rosada
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        height: '42px',
+                        alignItems: 'center'
+                    }}>
+                        <button
+                            onClick={() => setIsDonationModalOpen(true)}
+                            style={{
+                                padding: '0 16px',
+                                border: 'none',
+                                backgroundColor: 'transparent',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                color: '#e64980', // Color rosado fuerte
+                                fontSize: '14px',
+                                fontWeight: 700,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                transition: 'background-color 0.2s',
+                                height: '100%'
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fff0f6'; e.currentTarget.style.transform = 'scale(1.02)'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}
+                            title="Apoyar el mantenimiento de este proyecto"
+                        >
+                            <span style={{ fontSize: '16px' }}>☕</span>
+                        </button>
+                    </div>
+
                     {/* Isla 1: Panel de Control */}
                     <div style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -214,18 +253,8 @@ function InfinityCanvas() {
                             <img
                                 src="/icons/bug.svg"
                                 alt="Reportar Bug"
-                                style={{
-                                    width: '24px',
-                                    height: '24px',
-                                    opacity: 0.7,
-                                    transition: 'opacity 0.2s'
-                                }}
-                                // Fallback: Si no carga la imagen, muestra el emoji
-                                onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 20px;">!</span>';
-                                }}
-                                // Efecto de opacidad al pasar el mouse por arriba del botón padre
+                                style={{ width: '24px', height: '24px', opacity: 0.7, transition: 'opacity 0.2s' }}
+                                onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 20px;">!</span>'; }}
                                 onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
                                 onMouseOut={(e) => e.currentTarget.style.opacity = '0.7'}
                             />
@@ -239,7 +268,7 @@ function InfinityCanvas() {
                     <div style={{
                         pointerEvents: 'auto',
                         position: 'absolute',
-                        left: isToolsPanelOpen ? '380px' : '20px',
+                        left: isToolsPanelOpen ? '420px' : '20px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         zIndex: 100,
@@ -291,7 +320,7 @@ function InfinityCanvas() {
                 onClose={() => setIsPanelOpen(false)}
             />
 
-            <ToolsPanel isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)} onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination} onPlaySubset={handlePlaySubset} onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization} onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses} onCompareMoore={handleCompareMoore} onGenerateFromGrammar={handleGenerateFromGrammar} onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar} onConvertMooreToMealy={handleConvertMooreToMealy} onConvertMealyToMoore={handleConvertMealyToMoore} onPlayTransducerConversion={handlePlayTransducerConversion} isVisorOpen={isVisorOpen} onToggleVisor={() => setIsVisorOpen(!isVisorOpen)} />
+            <ToolsPanel isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)} onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination} onPlaySubset={handlePlaySubset} onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization} onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses} onCompareMoore={handleCompareMoore} onGenerateFromGrammar={handleGenerateFromGrammar} onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar} onConvertMooreToMealy={handleConvertMooreToMealy} onConvertMealyToMoore={handleConvertMealyToMoore} onPlayTransducerConversion={handlePlayTransducerConversion} isVisorOpen={isVisorOpen} onToggleVisor={() => setIsVisorOpen(!isVisorOpen)} onOpenGrammar={() => setIsGrammarModalOpen(true)} />
 
             <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
             <ConfirmationModal
@@ -306,6 +335,7 @@ function InfinityCanvas() {
             />
             <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
             <GrammarCleanerModal isOpen={isGrammarModalOpen} onClose={() => setIsGrammarModalOpen(false)} />
+            <DonationModal isOpen={isDonationModalOpen} onClose={() => setIsDonationModalOpen(false)} />
 
             {savedAutomatonA && isVisorOpen && <MiniVisor nodes={savedAutomatonA.nodes} transitions={savedAutomatonA.transitions} title="Referencia: Autómata A" onClose={() => setIsVisorOpen(false)} />}
 
@@ -319,8 +349,8 @@ function InfinityCanvas() {
                 onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)}
                 onStepByStep={(input, initialStack, pdaAcceptance) => handleStartStepByStep(
                     input, automataType, initialStack || 'S', pdaAcceptance || 'FINAL_STATE',
-                    () => {}, // Ya no necesitamos cerrar el side panel acá
-                    () => setSelectedElement(null) // Limpiamos la selección del lienzo
+                    () => {},
+                    () => setSelectedElement(null)
                 )}
                 onClearResult={() => setSimulationResult(null)}
             />
