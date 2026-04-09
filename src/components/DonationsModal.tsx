@@ -15,8 +15,7 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
     if (!isOpen || !mounted) return null;
 
     const handleCopyAlias = () => {
-        // ACÁ PONÉS TU ALIAS REAL DE MERCADO PAGO
-        navigator.clipboard.writeText('automata.lab.mp');
+        navigator.clipboard.writeText('bravo.agustin.mp');
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -37,7 +36,49 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
                     <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#adb5bd', transition: 'color 0.2s' }} onMouseOver={e=>e.currentTarget.style.color='#fa5252'} onMouseOut={e=>e.currentTarget.style.color='#adb5bd'}>✖</button>
                 </div>
 
-                
+                {/* BODY */}
+                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#495057', lineHeight: '1.6' }}>
+                        <strong>AutomataLab</strong> es un proyecto personal sin fines de lucro creado para ayudar a estudiantes. <br/><br/>
+                        Mantener el dominio y el hosting online tiene sus costos mensuales. Si la herramienta te sirvió y te facilitó la vida, podés darme una mano para que siga funcionando. ¡Cualquier aporte suma un montón! :)
+                    </p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                        {/* CAFECITO */}
+                        <a href="https://cafecito.app/automatalab" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '10px', transition: 'all 0.2s', color: '#212529' }} onMouseOver={e => { e.currentTarget.style.backgroundColor = '#e7f5ff'; e.currentTarget.style.borderColor = '#74c0fc'; }} onMouseOut={e => { e.currentTarget.style.backgroundColor = '#f8f9fa'; e.currentTarget.style.borderColor = '#dee2e6'; }}>
+                            <div style={{ fontSize: '24px' }}>☕</div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 800, fontSize: '14px' }}>Cafecito App</div>
+                            </div>
+                            <div style={{ color: '#4c6ef5', fontWeight: 800, fontSize: '18px' }}>↗</div>
+                        </a>
+
+                        {/* MERCADO PAGO */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '10px' }}>
+                            <div style={{ fontSize: '24px' }}>🤝</div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 800, fontSize: '14px' }}>Mercado Pago (Transferencias)</div>
+                                <div style={{ fontSize: '12px', color: '#868e96', fontFamily: "'Fira Code', monospace" }}>Alias: bravo.agustin.mp</div>
+                                <div style={{ fontSize: '12px', color: '#868e96', fontFamily: "'Fira Code', monospace" }}>A nombre de: Agustin Javier Bravo</div>
+                            </div>
+                            <button onClick={handleCopyAlias} style={{ padding: '8px 12px', backgroundColor: copied ? '#40c057' : '#e9ecef', color: copied ? 'white' : '#495057', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '12px', transition: 'all 0.2s' }}>
+                                {copied ? '¡Copiado!' : 'Copiar Alias'}
+                            </button>
+                        </div>
+
+                        {/* EXTERIOR*/}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '10px', opacity: 0.7 }}>
+                            <div style={{ fontSize: '24px' }}>🌎</div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 800, fontSize: '14px' }}>Si estas en otro país que no sea Argentina</div>
+                                <div style={{ fontSize: '12px', color: '#868e96' }}>Dejame un contacto enviandome un correo mediante el formulario de feedback</div>
+                            </div>
+                            <div style={{ color: '#adb5bd', fontSize: '11px', fontWeight: 800, backgroundColor: '#e9ecef', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>Pronto</div>
+                        </div>
+
+                    </div>
+                </div>
             </div>
             <style>{`@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
         </div>

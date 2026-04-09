@@ -30,6 +30,7 @@ import StepPlayerOverlay from './StepPlayerOverlay';
 import { MiniVisor } from './MiniVisor';
 import { GrammarCleanerModal } from "./GrammarCleanerModal";
 import { DonationModal } from './DonationsModal';
+import { ResultModal, type ResultModalType } from './ResultModal';
 
 // --- COMPONENTES CANVAS ---
 import { GhostArrow } from './canvas/GhostArrow';
@@ -51,6 +52,15 @@ function InfinityCanvas() {
     const [isGrammarModalOpen, setIsGrammarModalOpen] = useState(false);
     const [isSimulationConsoleOpen, setIsSimulationConsoleOpen] = useState(false);
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+    const [resultModalConfig, setResultModalConfig] = useState<{
+        isOpen: boolean; type: ResultModalType; title: string; message: string;
+        onConfirm?: () => void; onCancel?: () => void; confirmText?: string; cancelText?: string;
+    } | null>(null);
+
+   // Función helper para que los hooks llamen fácilmente al modal
+    const showResultModal = (config: any) => {
+        setResultModalConfig({ ...config, isOpen: true });
+    };
 
     // 2. Cerebros (Custom Hooks)
     const { isPanelOpen, setIsPanelOpen, isToolsPanelOpen, setIsToolsPanelOpen, isConfirmOpen, setIsConfirmOpen, isFeedbackOpen, setIsFeedbackOpen } = useUI();
@@ -68,11 +78,11 @@ function InfinityCanvas() {
     const { simMode, setSimMode, simulationResult, setSimulationResult, handleRunSimulation, handleStartStepByStep } = useSimulation();
 
     const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses, handleGenerateFromGrammar, handleGenerateFromLeftGrammar } = useToolsLogic(
-        nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera
+        nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera, showResultModal
     );
 
     const { handleExportAutomaton, handleImportAutomaton } = useFileManager(nodes, transitions, automataType, setNodes, setTransitions, setAutomataType, takeSnapshot);
-    const { handleCompareMoore } = useMooreLogic(nodes, transitions, setBuildMode);
+    const { handleCompareMoore } = useMooreLogic(nodes, transitions, setBuildMode, showResultModal);
 
     const { handleConvertMooreToMealy, handleConvertMealyToMoore, handlePlayTransducerConversion } = useTransducerLogic(
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, takeSnapshot
@@ -88,6 +98,45 @@ function InfinityCanvas() {
 
     return (
         <div style={backgroundStyle}>
+
+            {/* ESTILOS PARA TOOLTIPS FLOTANTES */}
+            <style>{`
+                .tooltip-container { position: relative; }
+                .custom-tooltip {
+                    position: absolute;
+                    top: calc(100% + 12px);
+                    left: 50%;
+                    transform: translateX(-50%) translateY(-5px);
+                    background-color: #212529;
+                    color: #fff;
+                    padding: 8px 12px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    white-space: nowrap;
+                    pointer-events: none;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+                    z-index: 1000;
+                }
+                .custom-tooltip::after {
+                    content: '';
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-width: 6px;
+                    border-style: solid;
+                    border-color: transparent transparent #212529 transparent;
+                }
+                .tooltip-container:hover .custom-tooltip {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateX(-50%) translateY(0);
+                }
+            `}</style>
 
             {/* ==========================================
                 CAPA 0: LIENZO INFINITO
@@ -144,13 +193,14 @@ function InfinityCanvas() {
                     alignItems: 'center'
                 }}>
 
-                    {/* Isla 0: Donación (Cafecito / Ko-fi / PayPal) */}
-                    <div style={{
+                    {/* Isla 0: Donación */}
+                    <div className="tooltip-container" style={{
+                        position: 'relative', /* Importante para que el tooltip se posicione bien */
                         backgroundColor: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(230, 73, 128, 0.2)', // Borde sutil rosado
+                        border: '1px solid rgba(230, 73, 128, 0.2)',
                         borderRadius: '12px',
-                        boxShadow: '0 8px 32px rgba(230, 73, 128, 0.1)', // Sombra sutil rosada
+                        boxShadow: '0 8px 32px rgba(230, 73, 128, 0.1)',
                         transition: 'all 0.2s',
                         display: 'flex',
                         height: '42px',
@@ -164,24 +214,28 @@ function InfinityCanvas() {
                                 backgroundColor: 'transparent',
                                 borderRadius: '12px',
                                 cursor: 'pointer',
-                                color: '#e64980', // Color rosado fuerte
-                                fontSize: '14px',
-                                fontWeight: 700,
+                                color: '#e64980',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '8px',
-                                transition: 'background-color 0.2s',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s',
                                 height: '100%'
                             }}
-                            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fff0f6'; e.currentTarget.style.transform = 'scale(1.02)'; }}
+                            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fff0f6'; e.currentTarget.style.transform = 'scale(1.05)'; }}
                             onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}
-                            title="Apoyar el mantenimiento de este proyecto"
                         >
-                            <span style={{ fontSize: '16px' }}>☕</span>
+                            <img
+                                src="public/icons/mug.svg"
+                                alt="Invitar un café"
+                                style={{ width: '22px', height: '22px' }}
+                                onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 16px;">Café</span>'; }}
+                            />
                         </button>
+                        {/* TOOLTIP CUSTOM */}
+                        <div className="custom-tooltip">Apoyar el proyecto</div>
                     </div>
 
-                    {/* Isla 1: Panel de Control */}
+                    {/* Isla 1: Panel de Control (No necesita tooltip porque ya tiene texto) */}
                     <div style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(10px)',
@@ -218,7 +272,8 @@ function InfinityCanvas() {
                     </div>
 
                     {/* Isla 2: Bug / Feedback */}
-                    <div style={{
+                    <div className="tooltip-container" style={{
+                        position: 'relative', /* Importante para que el tooltip se posicione bien */
                         backgroundColor: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(10px)',
                         border: '1px solid rgba(0,0,0,0.08)',
@@ -248,7 +303,6 @@ function InfinityCanvas() {
                             }}
                             onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fff3cd'}
                             onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                            title="Reportar un bug"
                         >
                             <img
                                 src="/icons/bug.svg"
@@ -259,6 +313,8 @@ function InfinityCanvas() {
                                 onMouseOut={(e) => e.currentTarget.style.opacity = '0.7'}
                             />
                         </button>
+                        {/* TOOLTIP CUSTOM */}
+                        <div className="custom-tooltip">Reportar un bug</div>
                     </div>
                 </div>
 
@@ -336,6 +392,20 @@ function InfinityCanvas() {
             <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
             <GrammarCleanerModal isOpen={isGrammarModalOpen} onClose={() => setIsGrammarModalOpen(false)} />
             <DonationModal isOpen={isDonationModalOpen} onClose={() => setIsDonationModalOpen(false)} />
+            {resultModalConfig && (
+                <ResultModal
+                    {...resultModalConfig}
+                    isOpen={resultModalConfig.isOpen}
+                    onConfirm={() => {
+                        if (resultModalConfig.onConfirm) resultModalConfig.onConfirm();
+                        setResultModalConfig(null);
+                    }}
+                    onCancel={resultModalConfig.onCancel ? () => {
+                        if (resultModalConfig.onCancel) resultModalConfig.onCancel();
+                        setResultModalConfig(null);
+                    } : undefined}
+                />
+            )}
 
             {savedAutomatonA && isVisorOpen && <MiniVisor nodes={savedAutomatonA.nodes} transitions={savedAutomatonA.transitions} title="Referencia: Autómata A" onClose={() => setIsVisorOpen(false)} />}
 

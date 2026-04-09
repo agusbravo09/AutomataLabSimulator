@@ -13,13 +13,14 @@ export const useToolsLogic = (
     setTransitions: (transitions: Transition[]) => void,
     setAutomataType: (type: any) => void,
     setBuildMode: (mode: any) => void,
-    camera: { x: number, y: number, scale: number }
+    camera: { x: number, y: number, scale: number },
+    showResultModal: (config: any) => void
 ) => {
 
     const handleGenerateRegex = (regexStr: string, isStepByStep: boolean) => {
         try {
             if (!regexStr || regexStr.trim() === '') {
-                alert("Por favor, ingresá una expresión regular.");
+                showResultModal({ type: 'warning', title: 'Campo Vacío', message: 'Por favor, ingresá una expresión regular.', onConfirm: () => {} });
                 return;
             }
             const postfix = toPostfix(regexStr);
@@ -45,49 +46,41 @@ export const useToolsLogic = (
             }
             setAutomataType('NFA');
         } catch (error: any) {
-            alert("Error al generar: " + error.message);
+            showResultModal({ type: 'error', title: 'Error de Sintaxis', message: error.message, onConfirm: () => {} });
         }
     };
 
     const handleGenerateFromGrammar = (grammarText: string, isStepByStep: boolean) => {
         try {
             if (!grammarText || grammarText.trim() === '') {
-                alert("Por favor, ingresá las producciones de la gramática.");
+                showResultModal({ type: 'warning', title: 'Campo Vacío', message: 'Por favor, ingresá las producciones de la gramática.', onConfirm: () => {} });
                 return;
             }
-
-            // Llamamos al nuevo motor
             const result = convertGrammarToAutomataStepByStep(grammarText);
-
-            // Centramos la película entera donde mira la cámara
             const { centeredNodes, centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
 
             if (isStepByStep && centeredSteps.length > 0) {
-                // MODO PELÍCULA
                 setBuildMode({ active: true, steps: centeredSteps, currentIndex: 0 });
                 setNodes(centeredSteps[0].nodes);
                 setTransitions(centeredSteps[0].transitions);
             } else {
-                // MODO INSTANTÁNEO
                 setNodes(centeredNodes);
                 setTransitions(result.transitions);
                 setBuildMode({ active: false, steps: [], currentIndex: 0 });
             }
-
             setAutomataType('NFA');
 
         } catch (error: any) {
-            alert("Error al parsear la gramática: " + error.message);
+            showResultModal({ type: 'error', title: 'Error al parsear', message: error.message, onConfirm: () => {} });
         }
     };
 
     const handleGenerateFromLeftGrammar = (grammarText: string, isStepByStep: boolean) => {
         try {
             if (!grammarText || grammarText.trim() === '') {
-                alert("Por favor, ingresá las producciones de la gramática.");
+                showResultModal({ type: 'warning', title: 'Campo Vacío', message: 'Por favor, ingresá las producciones de la gramática.', onConfirm: () => {} });
                 return;
             }
-
             const result = convertLeftGrammarToAutomataStepByStep(grammarText);
             const { centeredNodes, centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
 
@@ -102,7 +95,7 @@ export const useToolsLogic = (
             }
             setAutomataType('NFA');
         } catch (error: any) {
-            alert("Error al parsear la gramática: " + error.message);
+            showResultModal({ type: 'error', title: 'Error al parsear', message: error.message, onConfirm: () => {} });
         }
     };
 
@@ -118,10 +111,8 @@ export const useToolsLogic = (
 
     const handlePlaySubset = (steps: any[]) => {
         if (!steps || steps.length === 0) return;
-
         const finalNodes = steps[steps.length - 1].nodes;
         const { centeredSteps } = centerAutomatonInCamera(finalNodes, steps, camera);
-
         setBuildMode({
             active: true, steps: centeredSteps, currentIndex: 0,
             backupNodes: [...nodes], backupTransitions: [...transitions]
@@ -133,25 +124,30 @@ export const useToolsLogic = (
     const handleInstantMinimization = () => {
         try {
             const result = minimizeDfaStepByStep(nodes, transitions);
-
             const { centeredNodes } = centerAutomatonInCamera(result.nodes, [], camera);
 
-            if (window.confirm(`Autómata minimizado calculado.\nPasamos de ${nodes.length} a ${centeredNodes.length} estados.\n\n¿Querés aplicarlo en el lienzo?`)) {
-                setNodes(centeredNodes);
-                setTransitions(result.transitions);
-                setBuildMode({ active: false, steps: [], currentIndex: 0 });
-            }
+            showResultModal({
+                type: 'info',
+                title: 'Minimización Calculada',
+                message: `El algoritmo terminó exitosamente.\nPasamos de ${nodes.length} a ${centeredNodes.length} estados.\n\n¿Querés aplicarlo y reemplazar el lienzo actual?`,
+                confirmText: 'Aplicar Minimizado',
+                cancelText: 'Cancelar',
+                onConfirm: () => {
+                    setNodes(centeredNodes);
+                    setTransitions(result.transitions);
+                    setBuildMode({ active: false, steps: [], currentIndex: 0 });
+                },
+                onCancel: () => {}
+            });
         } catch (err: any) {
-            alert("Error al minimizar: " + err.message);
+            showResultModal({ type: 'error', title: 'No se pudo minimizar', message: err.message, onConfirm: () => {} });
         }
     };
 
     const handlePlayMinimization = () => {
         try {
             const result = minimizeDfaStepByStep(nodes, transitions);
-
             const { centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
-
             setBuildMode({
                 active: true, steps: centeredSteps, currentIndex: 0,
                 backupNodes: [...nodes], backupTransitions: [...transitions]
@@ -159,32 +155,37 @@ export const useToolsLogic = (
             setNodes(centeredSteps[0].nodes);
             setTransitions(centeredSteps[0].transitions);
         } catch (err: any) {
-            alert("Error al minimizar: " + err.message);
+            showResultModal({ type: 'error', title: 'No se pudo minimizar', message: err.message, onConfirm: () => {} });
         }
     };
 
     const handleInstantClasses = () => {
         try {
             const result = minimizeDfaClassesStepByStep(nodes, transitions);
-
             const { centeredNodes } = centerAutomatonInCamera(result.nodes, [], camera);
 
-            if (window.confirm(`Autómata minimizado (Método Clases).\nPasamos de ${nodes.length} a ${centeredNodes.length} estados.\n\n¿Querés aplicarlo en el lienzo?`)) {
-                setNodes(centeredNodes);
-                setTransitions(result.transitions);
-                setBuildMode({ active: false, steps: [], currentIndex: 0 });
-            }
+            showResultModal({
+                type: 'info',
+                title: 'Minimización Calculada',
+                message: `El algoritmo (Método Clases) terminó exitosamente.\nPasamos de ${nodes.length} a ${centeredNodes.length} estados.\n\n¿Querés aplicarlo y reemplazar el lienzo actual?`,
+                confirmText: 'Aplicar Minimizado',
+                cancelText: 'Cancelar',
+                onConfirm: () => {
+                    setNodes(centeredNodes);
+                    setTransitions(result.transitions);
+                    setBuildMode({ active: false, steps: [], currentIndex: 0 });
+                },
+                onCancel: () => {}
+            });
         } catch (err: any) {
-            alert("Error al minimizar: " + err.message);
+            showResultModal({ type: 'error', title: 'No se pudo minimizar', message: err.message, onConfirm: () => {} });
         }
     };
 
     const handlePlayClasses = () => {
         try {
             const result = minimizeDfaClassesStepByStep(nodes, transitions);
-
             const { centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
-
             setBuildMode({
                 active: true, steps: centeredSteps, currentIndex: 0,
                 backupNodes: [...nodes], backupTransitions: [...transitions]
@@ -192,7 +193,7 @@ export const useToolsLogic = (
             setNodes(centeredSteps[0].nodes);
             setTransitions(centeredSteps[0].transitions);
         } catch (err: any) {
-            alert("Error al minimizar: " + err.message);
+            showResultModal({ type: 'error', title: 'No se pudo minimizar', message: err.message, onConfirm: () => {} });
         }
     };
 
