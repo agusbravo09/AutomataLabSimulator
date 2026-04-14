@@ -13,12 +13,9 @@ interface GrammarCleanerModalProps {
 }
 
 export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen, onClose }) => {
-    const [mounted, setMounted] = useState(false);
 
     // REFERENCIA PARA EL AUTO-SCROLL DE LA CONSOLA
     const logsEndRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => setMounted(true), []);
 
     const [rawGrammar, setRawGrammar] = useState("S -> a A | B\nA -> lambda\nB -> b");
     const [customAxiom, setCustomAxiom] = useState("");
@@ -33,7 +30,7 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
         }
     }, [logs]);
 
-    if (!isOpen || !mounted) return null;
+    if (!isOpen) return null;
 
     const handleParse = () => {
         try {

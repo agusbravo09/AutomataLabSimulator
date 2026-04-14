@@ -2,7 +2,7 @@ import type { StateNode, Transition } from '../../types/types';
 
 export const convertLeftGrammarToAutomataStepByStep = (grammarText: string) => {
     const lines = grammarText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    let rules: { left: string, rights: string[] }[] = [];
+    const rules: { left: string, rights: string[] }[] = [];
     let axiom = '';
 
     // Parseo inicial

@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
 export type ResultModalType = 'success' | 'error' | 'warning' | 'info';
@@ -18,27 +17,30 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                                                             isOpen, type, title, message, onConfirm, onCancel,
                                                             confirmText = 'Aceptar', cancelText = 'Cancelar'
                                                         }) => {
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
 
-    if (!isOpen || !mounted) return null;
+    if (!isOpen) return null;
 
     let themeColor = '#4c6ef5'; // Info (Azul) por defecto
+    let bgColor = '#e7f5ff';
+    let icon = 'ⓘ';
 
     if (type === 'success') {
-        themeColor = '#40c057'; // Verde
+        themeColor = '#40c057'; bgColor = '#ebfbee'; icon = '☑';
     } else if (type === 'error') {
-        themeColor = '#fa5252'; // Rojo
+        themeColor = '#fa5252'; bgColor = '#fff5f5'; icon = 'ⓧ';
     } else if (type === 'warning') {
-        themeColor = '#fd7e14'; // Naranja
+        themeColor = '#fd7e14'; bgColor = '#fff4e6'; icon = '⚠︎';
     }
 
     const modalContent = (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', zIndex: 10000, display: 'flex', justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.2s ease' }}>
-            <div style={{ backgroundColor: '#fff', width: '400px', maxWidth: '90vw', borderRadius: '16px', boxShadow: `0 20px 50px rgba(0,0,0,0.15), 0 0 0 1px ${themeColor}22`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="modal-overlay">
+            <div className="modal-box" style={{ boxShadow: `0 20px 50px rgba(0,0,0,0.15), 0 0 0 1px ${themeColor}22` }}>
 
                 {/* ICONO Y TÍTULO */}
                 <div style={{ padding: '24px 24px 12px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: bgColor, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '32px', boxShadow: `0 4px 15px ${themeColor}33` }}>
+                        {icon}
+                    </div>
                     <h3 style={{ margin: 0, fontSize: '18px', color: '#212529', fontWeight: 800, fontFamily: "'Inter', sans-serif" }}>
                         {title}
                     </h3>
@@ -46,7 +48,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
 
                 {/* MENSAJE */}
                 <div style={{ padding: '0 24px 24px 24px', textAlign: 'center' }}>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#495057', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#495057', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
                         {message}
                     </p>
                 </div>
@@ -74,7 +76,27 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                 </div>
 
             </div>
-            <style>{`@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
+            <style>{`
+                .modal-overlay {
+                    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                    background-color: rgba(0,0,0,0.5); backdrop-filter: blur(6px);
+                    z-index: 10000; display: flex; justify-content: center; align-items: center;
+                    animation: overlayFade 0.2s ease-out forwards;
+                }
+                .modal-box {
+                    background-color: #fff; width: 400px; max-width: 90vw; border-radius: 16px;
+                    display: flex; flex-direction: column; overflow: hidden;
+                    animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                @keyframes overlayFade {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes modalPop {
+                    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+            `}</style>
         </div>
     );
 

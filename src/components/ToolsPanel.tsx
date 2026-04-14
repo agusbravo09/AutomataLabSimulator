@@ -17,10 +17,12 @@ interface ToolsPanelProps {
     onGenerateFromLeftGrammar: (text: string, isStepByStep: boolean) => void;
 
     onPlaySubset: (steps: any[]) => void;
+    onInstantDeterminization: () => void;
     onPlayMinimization: () => void;
     onInstantMinimization: () => void;
     onInstantClasses: () => void;
     onPlayClasses: () => void;
+    showResultModal: (config: any) => void;
     onCompareMoore: (isInstant: boolean) => void;
 
     onConvertMooreToMealy?: () => void;
@@ -75,6 +77,8 @@ const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
                             onGenerateFromGrammar={props.onGenerateFromGrammar} onGenerateFromLeftGrammar={props.onGenerateFromLeftGrammar}
                         />
                         <FiniteAutomataTools
+                            onInstantDeterminization={props.onInstantDeterminization}
+                            showResultModal={props.showResultModal}
                             automataType={automataType} nodes={nodes} transitions={transitions}
                             setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType}
                             onPlaySubset={props.onPlaySubset} onPlayMinimization={props.onPlayMinimization}

@@ -31,7 +31,7 @@ export const useFileManager = (
                     if (data.automataType) setAutomataType(data.automataType);
                     event.target.value = '';
                 } else { alert("Formato inválido."); }
-            } catch (err) { alert("Error al leer el archivo."); }
+            } catch (err: any) { console.error(err); }
         };
         reader.readAsText(file);
     }, [setNodes, setTransitions, setAutomataType, takeSnapshot]);

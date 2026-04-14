@@ -128,7 +128,7 @@ export const generateLeftLinearGrammar = (nodes: StateNode[], transitions: Trans
 
         // El Axioma de una GLI son los estados finales.
         // Si hay varios estados finales, creamos un súper-axioma 'S'
-        let axiomName = finals.length === 1 ? finals[0].name : 'S_Axioma';
+        const axiomName = finals.length === 1 ? finals[0].name : 'S_Axioma';
 
         if (finals.length > 1) {
             productionsText += `${axiomName} -> ${finals.map(f => f.name).join(' | ')}\n`;

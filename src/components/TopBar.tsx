@@ -83,12 +83,12 @@ export const TopBar: React.FC<TopBarProps> = ({
                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'}
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
+                    <option value="MEALY">Máquina de Mealy</option>
+                    <option value="MOORE">Máquina de Moore</option>
                     <option value="DFA">Autómata Finito Determinista (AFD)</option>
                     <option value="NFA">Autómata Finito No Determinista (AFND)</option>
                     <option value="PDA">Autómata a Pila (AP)</option>
                     <option value="TM">Máquina de Turing (MT)</option>
-                    <option value="MEALY">Máquina de Mealy</option>
-                    <option value="MOORE">Máquina de Moore</option>
                 </select>
                 <div style={{
                     position: 'absolute', right: '12px', pointerEvents: 'none',

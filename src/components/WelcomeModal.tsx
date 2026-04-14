@@ -1,16 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const MODAL_VERSION = 'v1';
 
 export const WelcomeModal: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    useEffect(() => {
-        const hasSeenModal = localStorage.getItem(`automatalab_welcome_${MODAL_VERSION}`);
-        if (!hasSeenModal) {
-            setIsOpen(true);
-        }
-    }, []);
+    const [isOpen, setIsOpen] = useState(() => {
+        return !localStorage.getItem(`automatalab_welcome_${MODAL_VERSION}`);
+    });
 
     const handleClose = () => {
         localStorage.setItem(`automatalab_welcome_${MODAL_VERSION}`, 'true');

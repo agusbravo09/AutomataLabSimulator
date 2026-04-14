@@ -10,6 +10,7 @@ interface FiniteAutomataToolsProps {
     setTransitions: (transitions: Transition[]) => void;
     setAutomataType: (type: AutomataType) => void;
     onPlaySubset: (steps: any[]) => void;
+    onInstantDeterminization: () => void;
     onPlayMinimization: () => void;
     onInstantMinimization: () => void;
     onInstantClasses: () => void;
@@ -20,12 +21,13 @@ interface FiniteAutomataToolsProps {
     onCompareMoore: (isInstant: boolean) => void;
     isVisorOpen: boolean;
     onToggleVisor: () => void;
+    showResultModal: (config: any) => void;
 }
 
 export const FiniteAutomataTools: React.FC<FiniteAutomataToolsProps> = ({
-                                                                            automataType, nodes, transitions, setNodes, setTransitions, setAutomataType,
-                                                                            onPlaySubset, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses,
-                                                                            savedAutomatonA, onSaveAutomatonA, onCompareMoore, onClearAutomatonA, isVisorOpen, onToggleVisor
+                                                                            automataType, nodes, transitions,
+                                                                            onPlaySubset, onInstantDeterminization, onPlayMinimization, onInstantMinimization, onInstantClasses, onPlayClasses,
+                                                                            savedAutomatonA, onSaveAutomatonA, onCompareMoore, onClearAutomatonA, onToggleVisor, showResultModal
                                                                         }) => {
 
     const cardStyle = { backgroundColor: '#fff', border: '1px solid #eee', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' };
@@ -42,15 +44,24 @@ export const FiniteAutomataTools: React.FC<FiniteAutomataToolsProps> = ({
                 <h3 style={titleStyle}>Determinización</h3>
                 <p style={descStyle}>Convierte el AFND actual en un AFD determinista usando el método de subconjuntos.</p>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={() => { try { onPlaySubset(convertNfaToDfa(nodes, transitions).steps); } catch (err: any) { alert("Error: " + err.message); } }} style={btnSecondaryStyle}>Paso a Paso</button>
-                    <button onClick={() => {
-                        try {
-                            const { nodes: dfaN, transitions: dfaT } = convertNfaToDfa(nodes, transitions);
-                            if (window.confirm("Esto reemplazará el autómata actual en el lienzo. ¿Continuar?")) {
-                                setNodes(dfaN); setTransitions(dfaT); setAutomataType('DFA');
+                    <button
+                        onClick={() => {
+                            try {
+                                onPlaySubset(convertNfaToDfa(nodes, transitions).steps);
+                            } catch (err: any) {
+                                showResultModal({ type: 'error', title: 'Error al determinizar', message: err.message, onConfirm: () => {} });
                             }
-                        } catch (err: any) { alert("Error: " + err.message); }
-                    }} style={btnMutedStyle}>Instantáneo</button>
+                        }}
+                        style={btnSecondaryStyle}
+                    >
+                        Paso a Paso
+                    </button>
+                    <button
+                        onClick={onInstantDeterminization}
+                        style={btnMutedStyle}
+                    >
+                        Instantáneo
+                    </button>
                 </div>
             </div>
 

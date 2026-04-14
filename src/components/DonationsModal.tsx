@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 
 interface DonationModalProps {
@@ -7,12 +7,10 @@ interface DonationModalProps {
 }
 
 export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose }) => {
-    const [mounted, setMounted] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    useEffect(() => setMounted(true), []);
 
-    if (!isOpen || !mounted) return null;
+    if (!isOpen) return null;
 
     const handleCopyAlias = () => {
         navigator.clipboard.writeText('bravo.agustin.mp');
@@ -21,8 +19,8 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
     };
 
     const modalContent = (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.2s ease' }}>
-            <div style={{ backgroundColor: '#fff', width: '500px', maxWidth: '95vw', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid #dee2e6' }}>
+        <div className="modal-overlay">
+            <div className="modal-box">
 
                 {/* HEADER */}
                 <div style={{ padding: '20px 24px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8f9fa' }}>
@@ -80,7 +78,21 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
                     </div>
                 </div>
             </div>
-            <style>{`@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
+            <style>{`
+                .modal-overlay {
+                    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                    background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+                    z-index: 9999; display: flex; justify-content: center; align-items: center;
+                    animation: overlayFade 0.2s ease-out forwards;
+                }
+                .modal-box {
+                    background-color: #fff; width: 500px; max-width: 95vw; border-radius: 16px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden;
+                    border: 1px solid #dee2e6; animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                @keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes modalPop { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+            `}</style>
         </div>
     );
 
