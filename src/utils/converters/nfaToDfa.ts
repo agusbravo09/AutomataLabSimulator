@@ -29,9 +29,16 @@ export const convertNfaToDfa = (originalNodes: StateNode[], originalTransitions:
         const stack = [...stateIds];
         while (stack.length > 0) {
             const curr = stack.pop()!;
-            const targets = originalTransitions.filter(t => t.from === curr && t.hasLambda).map(t => t.to);
+
+            const targets = originalTransitions.filter(t =>
+                t.from === curr && (t.hasLambda || t.symbols.includes('λ'))
+            ).map(t => t.to);
+
             for (const target of targets) {
-                if (!closure.has(target)) { closure.add(target); stack.push(target); }
+                if (!closure.has(target)) {
+                    closure.add(target);
+                    stack.push(target);
+                }
             }
         }
         return Array.from(closure).sort();

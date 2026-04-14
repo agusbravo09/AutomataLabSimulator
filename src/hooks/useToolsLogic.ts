@@ -5,6 +5,7 @@ import { minimizeDfaStepByStep, minimizeDfaClassesStepByStep } from '../utils/co
 import { centerAutomatonInCamera } from '../utils/centerAutomaton';
 import { convertGrammarToAutomataStepByStep } from '../utils/converters/grammarToAutomata';
 import { convertLeftGrammarToAutomataStepByStep } from '../utils/converters/leftGrammarToAutomata';
+import { convertNfaToDfa } from '../utils/converters/nfaToDfa';
 
 export const useToolsLogic = (
     nodes: StateNode[],
@@ -197,5 +198,39 @@ export const useToolsLogic = (
         }
     };
 
-    return { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handleInstantClasses, handlePlayClasses, handleGenerateFromGrammar, handleGenerateFromLeftGrammar };
+    const handleInstantDeterminization = () => {
+        try {
+            // 1. Llamamos al motor que hace la magia matemática
+            const result = convertNfaToDfa(nodes, transitions);
+
+            // 2. Centramos el resultado para que no aparezca flotando por cualquier lado
+            const { centeredNodes } = centerAutomatonInCamera(result.nodes, [], camera);
+
+            // 3. Tiramos el modal de confirmación
+            showResultModal({
+                type: 'info',
+                title: 'Determinización Calculada',
+                message: `El AFND fue convertido a un AFD equivalente con ${centeredNodes.length} estados.\n\n¿Querés aplicarlo y reemplazar el lienzo actual?`,
+                confirmText: 'Aplicar AFD',
+                cancelText: 'Cancelar',
+                onConfirm: () => {
+                    setNodes(centeredNodes);
+                    setTransitions(result.transitions);
+                    setAutomataType('DFA'); // Lo pasamos a DFA automáticamente
+                    setBuildMode({ active: false, steps: [], currentIndex: 0 });
+                },
+                onCancel: () => {}
+            });
+        } catch (err: any) {
+            // Si el autómata no tenía estado inicial u otro error, lo mostramos
+            showResultModal({
+                type: 'error',
+                title: 'No se pudo determinizar',
+                message: err.message,
+                onConfirm: () => {}
+            });
+        }
+    };
+
+    return { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handleInstantClasses, handlePlayClasses, handleGenerateFromGrammar, handleGenerateFromLeftGrammar, handleInstantDeterminization };
 };

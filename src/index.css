@@ -1,7 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600&display=swap');
-
-
-
 /*RESET CSS*/
 :root {
   margin: 0;
@@ -14,7 +11,7 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
-  display: block; /* Vite a veces pone flex aquí, lo quitamos */
+  display: block;
 }
 
 #root {
