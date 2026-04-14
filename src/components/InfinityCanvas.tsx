@@ -225,7 +225,7 @@ function InfinityCanvas() {
                             onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}
                         >
                             <img
-                                src="public/icons/mug.svg"
+                                src="icons/mug.svg"
                                 alt="Invitar un café"
                                 style={{ width: '22px', height: '22px' }}
                                 onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 16px;">Café</span>'; }}
