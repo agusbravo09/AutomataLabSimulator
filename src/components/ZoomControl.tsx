@@ -8,52 +8,62 @@ interface ZoomControlProps {
 }
 
 const ZoomControl: React.FC<ZoomControlProps> = ({ scale, onZoomIn, onZoomOut, onReset }) => {
-    // Convertir el factor de escala a porcentaje
-    const percentage = Math.round(scale * 100);
+    // Estilo base para los botoncitos
+    const btnStyle: React.CSSProperties = {
+        width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: 'none', backgroundColor: 'transparent', borderRadius: '8px', cursor: 'pointer',
+        fontSize: '18px', color: '#495057', transition: 'background-color 0.2s', fontWeight: 500
+    };
 
     return (
-        <div style={containerStyle}>
-            <button onClick={onZoomOut} style={buttonStyle}>−</button>
-            <span onClick={onReset} style={textStyle}>{percentage}%</span>
-            <button onClick={onZoomIn} style={buttonStyle}>+</button>
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2px',
+            padding: '4px',
+            // Estética hermana de la TopBar
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(0,0,0,0.08)',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+            pointerEvents: 'auto'
+        }}>
+            <button
+                onClick={onZoomOut}
+                style={btnStyle}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                title="Alejar"
+            >
+                -
+            </button>
+
+            <div style={{ width: '1px', height: '16px', backgroundColor: '#dee2e6', margin: '0 4px' }}></div>
+
+            <button
+                onClick={onReset}
+                style={{ ...btnStyle, width: 'auto', padding: '0 12px', fontSize: '13px', fontWeight: 600 }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                title="Restablecer zoom"
+            >
+                {Math.round(scale * 100)}%
+            </button>
+
+            <div style={{ width: '1px', height: '16px', backgroundColor: '#dee2e6', margin: '0 4px' }}></div>
+
+            <button
+                onClick={onZoomIn}
+                style={btnStyle}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                title="Acercar"
+            >
+                +
+            </button>
         </div>
     );
-};
-
-const containerStyle: React.CSSProperties = {
-    position: 'absolute',
-    bottom: '20px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    padding: '4px 8px',
-    borderRadius: '10px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    zIndex: 100,
-    border: '1px solid #dee2e6',
-};
-
-const buttonStyle: React.CSSProperties = {
-    background: 'none',
-    border: 'none',
-    padding: '8px 12px',
-    cursor: 'pointer',
-    fontSize: '18px',
-    color: '#495057',
-    fontWeight: 'bold',
-};
-
-const textStyle: React.CSSProperties = {
-    padding: '0 10px',
-    fontSize: '14px',
-    color: '#495057',
-    fontWeight: 600,
-    cursor: 'pointer',
-    minWidth: '50px',
-    textAlign: 'center',
-    userSelect: 'none',
 };
 
 export default ZoomControl;

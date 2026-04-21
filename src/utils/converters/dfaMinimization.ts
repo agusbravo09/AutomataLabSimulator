@@ -187,7 +187,8 @@ export const minimizeDfaStepByStep = (originalNodes: StateNode[], originalTransi
             id: safeId, name: visualName,
             isInitial: group.some(s => validNodes.find(n => n.id === s)?.isInitial),
             isFinal: group.some(s => isFinal(s)),
-            x: 150 + (idx % 3) * 200, y: 300 + Math.floor(idx / 3) * 150,
+            x: 150 + (idx % 3) * 300,
+            y: 300 + Math.floor(idx / 3) * 250,
             type: 'STATE'
         });
     });
@@ -391,7 +392,8 @@ export const minimizeDfaClassesStepByStep = (originalNodes: StateNode[], origina
             id: safeId, name: visualName,
             isInitial: group.some(s => validNodes.find(n => n.id === s)?.isInitial),
             isFinal: group.some(s => isFinal(s)),
-            x: 150 + (idx % 3) * 200, y: 300 + Math.floor(idx / 3) * 150,
+            x: 150 + (idx % 3) * 300,
+            y: 300 + Math.floor(idx / 3) * 250,
             type: 'STATE'
         });
     });

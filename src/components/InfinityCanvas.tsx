@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Stage, Layer } from 'react-konva';
 import type { StateNode, Transition, AutomataElement } from '../types/types';
 import { useAutomataStore } from '../store/useAutomataStore';
@@ -16,6 +16,7 @@ import { useTransducerLogic } from '../hooks/useTransducerLogic';
 import { useUI } from '../hooks/useUI';
 
 // --- COMPONENTES UI ---
+import { TopBar } from './TopBar';
 import Toolbar, { type Tool } from './Toolbar';
 import SidePanel from './SidePanel';
 import ZoomControl from './ZoomControl';
@@ -28,6 +29,9 @@ import ToolsPanel from './ToolsPanel';
 import StepPlayerOverlay from './StepPlayerOverlay';
 import { MiniVisor } from './MiniVisor';
 import { GrammarCleanerModal } from "./GrammarCleanerModal";
+// import { DonationModal } from './DonationsModal';
+import { ResultModal, type ResultModalType } from './ResultModal';
+import bug from '../img/Icons/bug.svg';
 
 // --- COMPONENTES CANVAS ---
 import { GhostArrow } from './canvas/GhostArrow';
@@ -43,18 +47,30 @@ function InfinityCanvas() {
     const [buildMode, setBuildMode] = useState<{
         active: boolean, steps: any[], currentIndex: number, backupNodes?: StateNode[], backupTransitions?: Transition[]
     }>({ active: false, steps: [], currentIndex: 0 });
+    // const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
 
-    //Modal de gramatica
+    // Modales
     const [isGrammarModalOpen, setIsGrammarModalOpen] = useState(false);
+    const [isSimulationConsoleOpen, setIsSimulationConsoleOpen] = useState(false);
+    const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+    const [resultModalConfig, setResultModalConfig] = useState<{
+        isOpen: boolean; type: ResultModalType; title: string; message: string;
+        onConfirm?: () => void; onCancel?: () => void; confirmText?: string; cancelText?: string;
+    } | null>(null);
+
+    const showResultModal = useCallback((config: any) => {
+        setResultModalConfig({ ...config, isOpen: true });
+    }, []);
 
     // 2. Cerebros (Custom Hooks)
     const { isPanelOpen, setIsPanelOpen, isToolsPanelOpen, setIsToolsPanelOpen, isConfirmOpen, setIsConfirmOpen, isFeedbackOpen, setIsFeedbackOpen } = useUI();
-    const { nodes, setNodes, transitions, setTransitions, automataType, setAutomataType, updateNodePosition, clearWorkspace, savedAutomatonA } = useAutomataStore();    const { camera, setCamera, handleWheel, handleManualZoom } = useCamera();
+    const { nodes, setNodes, transitions, setTransitions, automataType, setAutomataType, updateNodePosition, clearWorkspace, savedAutomatonA } = useAutomataStore();
+    const { camera, setCamera, handleWheel, handleManualZoom, handleResetZoom } = useCamera();
     const { takeSnapshot } = useHistory();
 
     const { drawingTransition, handleStageClick, handleMouseDownNode, handleMouseMoveStage, handleMouseUpNode, handleMouseUpStage } = useCanvasInteractions({
         camera, activeTool, setSelectedElement, takeSnapshot
-    })
+    });
 
     const { handleSaveElement, handleDeleteElement } = useElementEditor({
         selectedElement, setSelectedElement, setNodes, setTransitions, setIsConfirmOpen, clearWorkspace, takeSnapshot
@@ -62,16 +78,22 @@ function InfinityCanvas() {
 
     const { simMode, setSimMode, simulationResult, setSimulationResult, handleRunSimulation, handleStartStepByStep } = useSimulation();
 
-    const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses, handleGenerateFromGrammar, handleGenerateFromLeftGrammar } = useToolsLogic(
-        nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera
+    const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses, handleGenerateFromGrammar, handleGenerateFromLeftGrammar, handleInstantDeterminization } = useToolsLogic(
+        nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera, showResultModal, takeSnapshot
     );
 
     const { handleExportAutomaton, handleImportAutomaton } = useFileManager(nodes, transitions, automataType, setNodes, setTransitions, setAutomataType, takeSnapshot);
-    const { handleCompareMoore } = useMooreLogic(nodes, transitions, setBuildMode);
+    const { handleCompareMoore } = useMooreLogic(nodes, transitions, setBuildMode, showResultModal);
 
     const { handleConvertMooreToMealy, handleConvertMealyToMoore, handlePlayTransducerConversion } = useTransducerLogic(
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, takeSnapshot
     );
+
+    const handleStageDragMove = useCallback((e: any) => {
+        if (e.target === e.target.getStage()) {
+            setCamera((prev) => ({ ...prev, x: e.target.x(), y: e.target.y() }));
+        }
+    }, [setCamera]);
 
     const backgroundStyle: React.CSSProperties = {
         width: '100vw', height: '100vh', backgroundColor: '#f8f9fa',
@@ -83,119 +105,108 @@ function InfinityCanvas() {
 
     return (
         <div style={backgroundStyle}>
-            {/* UI FLOTANTE */}
-            <Toolbar
-                activeTool={activeTool as Tool}
-                setActiveTool={setActiveTool}
-                onToggleTools={() => setIsToolsPanelOpen(!isToolsPanelOpen)}
-            />
+            {/* ESTILOS PARA TOOLTIPS FLOTANTES */}
+            <style>{`
+                .tooltip-container { position: relative; }
+                .custom-tooltip { position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(-5px); background-color: #212529; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 1000; }
+                .custom-tooltip::after { content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); border-width: 6px; border-style: solid; border-color: transparent transparent #212529 transparent; }
+                .tooltip-container:hover .custom-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+            `}</style>
 
-            {/* botones importar-exportar (ESTO MAS ADELANTE VUELA XD)*/}
-            <button onClick={handleExportAutomaton} style={{ padding: '8px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #dee2e6' }}>Exportar</button>
+            {/* ==========================================
+                CAPA 0: LIENZO INFINITO
+            ========================================== */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
+                <Stage
+                    width={window.innerWidth} height={window.innerHeight} draggable={activeTool === 'CURSOR'}
+                    x={camera.x} y={camera.y} scaleX={camera.scale} scaleY={camera.scale} onWheel={handleWheel}
+                    onDragMove={handleStageDragMove} /* <--- USAMOS LA VERSIÓN OPTIMIZADA */
+                    onClick={handleStageClick} onMouseMove={handleMouseMoveStage} onMouseUp={handleMouseUpStage}
+                >
+                    <Layer>
+                        <TransitionsRenderer transitions={transitions} nodes={nodes} simMode={simMode} setSelectedElement={setSelectedElement} buildMode={buildMode} />
+                        <GhostArrow drawingTransition={drawingTransition} nodes={nodes} />
+                        <NodesRenderer nodes={nodes} simMode={simMode} selectedElement={selectedElement} activeTool={activeTool} updateNodePosition={updateNodePosition} handleMouseDownNode={handleMouseDownNode} handleMouseUpNode={handleMouseUpNode} setSelectedElement={setSelectedElement} buildMode={buildMode}/>
+                    </Layer>
+                </Stage>
 
-            <label style={{ padding: '8px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #dee2e6', backgroundColor: '#f8f9fa' }}>
-                Importar
-                <input type="file" accept=".al,.json" style={{ display: 'none' }} onChange={handleImportAutomaton} />
-            </label>
+                {nodes.length === 0 && !buildMode.active && (
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', textAlign: 'center', opacity: 0.5, userSelect: 'none', zIndex: 1 }}>
+                        <h2 style={{ fontFamily: "'Inter', sans-serif", color: '#495057', margin: '0 0 10px 0', fontWeight: 700 }}>Lienzo Vacío</h2>
+                        <p style={{ fontFamily: "'Inter', sans-serif", color: '#868e96', margin: 0, fontSize: '16px', lineHeight: '1.5' }}>Usá la barra de herramientas para empezar</p>
+                    </div>
+                )}
+            </div>
 
-            {/*Boton para el modal de gramaticas (iria en el panel de herramientas)*/}
-            <button onClick={() => setIsGrammarModalOpen(true)}>
-                Limpieza de Gramáticas
-            </button>
+            {/* ==========================================
+                CAPA 1: UI FLOTANTE
+            ========================================== */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
+                <TopBar automataType={automataType} setAutomataType={setAutomataType} onExport={handleExportAutomaton} onImport={handleImportAutomaton} onOpenGrammar={() => setIsGrammarModalOpen(true)} onSimulateClick={() => setIsSimulationConsoleOpen(true)} />
 
-            <ToolsPanel
-                isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)}
-                onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination}
-                onPlaySubset={handlePlaySubset}
-                onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization}
-                onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses}
-                onCompareMoore={handleCompareMoore}
-                onGenerateFromGrammar={handleGenerateFromGrammar}
-                onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar}
-                onConvertMooreToMealy={handleConvertMooreToMealy}
-                onConvertMealyToMoore={handleConvertMealyToMoore}
-                onPlayTransducerConversion={handlePlayTransducerConversion}
-                isVisorOpen={isVisorOpen}
-                onToggleVisor={() => setIsVisorOpen(!isVisorOpen)}
-            />
+                 <div style={{ pointerEvents: 'auto', position: 'absolute', top: '20px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center' }}>
+                     {/* <div className="tooltip-container" style={{ position: 'relative', backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(230, 73, 128, 0.2)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(230, 73, 128, 0.1)', transition: 'all 0.2s', display: 'flex', height: '42px', alignItems: 'center' }}>
+                        <button onClick={() => setIsDonationModalOpen(true)} style={{ padding: '0 16px', border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', color: '#e64980', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', height: '100%' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fff0f6'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}>
+                            <img src="icons/mug.svg" alt="Invitar un café" style={{ width: '22px', height: '22px' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 16px;">Café</span>'; }} />
+                        </button>
+                        <div className="custom-tooltip">Apoyar el proyecto</div>
+                    </div>  */}
 
-            {/*Mini visor*/}
-            {savedAutomatonA && isVisorOpen && (
-                <MiniVisor
-                    nodes={savedAutomatonA.nodes}
-                    transitions={savedAutomatonA.transitions}
-                    title="Referencia: Autómata A"
-                    onClose={() => setIsVisorOpen(false)}
-                />
-            )}
 
-            {/* ESTADO VACÍO */}
-            {nodes.length === 0 && !buildMode.active && (
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', textAlign: 'center', opacity: 0.5, userSelect: 'none', zIndex: 5 }}>
-                    <h2 style={{ fontFamily: "'Inter', sans-serif", color: '#495057', margin: '0 0 10px 0', fontWeight: 700 }}>Lienzo Vacío</h2>
-                    <p style={{ fontFamily: "'Inter', sans-serif", color: '#868e96', margin: 0, fontSize: '16px', lineHeight: '1.5' }}>Seleccioná "Crear Estado" en la barra superior</p>
+                    <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', transition: 'all 0.2s', display: 'flex', height: '42px', alignItems: 'center' }}>
+                        <button onClick={() => setIsPanelOpen(true)} style={{ padding: '0 16px', border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', color: '#495057', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', transition: 'background-color 0.2s', height: '100%' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                            Panel de Control
+                        </button>
+                    </div>
+
+                    <div className="tooltip-container" style={{ position: 'relative', backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', transition: 'all 0.2s', width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button onClick={() => setIsFeedbackOpen(true)} style={{ padding: 0, border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fff3cd'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                            <img src={bug} alt="Reportar Bug" style={{ width: '24px', height: '24px', opacity: 0.7, transition: 'opacity 0.2s' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 20px;">!</span>'; }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.7'} />
+                        </button>
+                        <div className="custom-tooltip">Reportar un bug</div>
+                    </div>
                 </div>
+
+                <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+                    <div style={{ pointerEvents: 'auto', position: 'absolute', left: isToolsPanelOpen ? '420px' : '20px', top: '50%', transform: 'translateY(-50%)', zIndex: 100, transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                        <Toolbar activeTool={activeTool as Tool} setActiveTool={setActiveTool} onToggleTools={() => setIsToolsPanelOpen(!isToolsPanelOpen)} onClearWorkspace={() => setIsClearModalOpen(true)} />
+                    </div>
+
+                    <div style={{ pointerEvents: 'auto', position: 'absolute', right: '20px', top: '20px' }}>
+                        <PropertiesPanel element={selectedElement} nodes={nodes} isSidePanelOpen={isPanelOpen} onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)} onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement} automataType={automataType} />
+                    </div>
+
+                    <div style={{ pointerEvents: 'auto', position: 'absolute', bottom: '20px', right: isPanelOpen ? '420px' : '20px', zIndex: 100, transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                        <ZoomControl scale={camera.scale} onZoomIn={() => handleManualZoom(0.2)} onZoomOut={() => handleManualZoom(-0.2)}  onReset={handleResetZoom}  />
+                    </div>
+                </div>
+            </div>
+
+            {/* ==========================================
+                CAPA 2: MODALES Y OVERLAYS
+            ========================================== */}
+            <SidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />
+
+            <ToolsPanel isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)} onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination} onPlaySubset={handlePlaySubset} onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization} onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses} onCompareMoore={handleCompareMoore} onGenerateFromGrammar={handleGenerateFromGrammar} onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar} onConvertMooreToMealy={handleConvertMooreToMealy} onConvertMealyToMoore={handleConvertMealyToMoore} onPlayTransducerConversion={handlePlayTransducerConversion} isVisorOpen={isVisorOpen} onToggleVisor={() => setIsVisorOpen(!isVisorOpen)} onOpenGrammar={() => setIsGrammarModalOpen(true)} onInstantDeterminization={handleInstantDeterminization} showResultModal={showResultModal} />
+
+            <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
+            <ConfirmationModal isOpen={isClearModalOpen} title="¿Limpiar todo el lienzo?" message="Esta acción eliminará todos los estados y transiciones. Perderás el progreso que no hayas guardado." onCancel={() => setIsClearModalOpen(false)} onConfirm={() => { takeSnapshot(); clearWorkspace(); setIsClearModalOpen(false); }} />
+
+            <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+            <GrammarCleanerModal isOpen={isGrammarModalOpen} onClose={() => setIsGrammarModalOpen(false)} />
+            {/*<DonationModal isOpen={isDonationModalOpen} onClose={() => setIsDonationModalOpen(false)} />*/}
+
+            {resultModalConfig && (
+                <ResultModal {...resultModalConfig} isOpen={resultModalConfig.isOpen} onConfirm={() => { if (resultModalConfig.onConfirm) resultModalConfig.onConfirm(); setResultModalConfig(null); }} onCancel={resultModalConfig.onCancel ? () => { if (resultModalConfig.onCancel) resultModalConfig.onCancel(); setResultModalConfig(null); } : undefined} />
             )}
+
+            {savedAutomatonA && isVisorOpen && <MiniVisor nodes={savedAutomatonA.nodes} transitions={savedAutomatonA.transitions} title="Referencia: Autómata A" onClose={() => setIsVisorOpen(false)} />}
+
+            <SimulationPlayer isOpen={isSimulationConsoleOpen} onClose={() => setIsSimulationConsoleOpen(false)} automataType={automataType} simMode={simMode} setSimMode={setSimMode} simulationResult={simulationResult} onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)} onStepByStep={(input, initialStack, pdaAcceptance) => handleStartStepByStep( input, automataType, initialStack || 'S', pdaAcceptance || 'FINAL_STATE', () => {}, () => setSelectedElement(null) )} onClearResult={() => setSimulationResult(null)} />
 
             <StepPlayerOverlay buildMode={buildMode} setBuildMode={setBuildMode} setNodes={setNodes} setTransitions={setTransitions} setAutomataType={setAutomataType} />
 
-            <VersionOverlay onOpenFeedback={() => setIsFeedbackOpen(true)} />
-
-            <ZoomControl
-                scale={camera.scale} onZoomIn={() => handleManualZoom(0.2)}
-                onZoomOut={() => handleManualZoom(-0.2)} onReset={() => setCamera(prev => ({ ...prev, scale: 1 }))}
-            />
-
-            <button
-                onClick={() => setIsPanelOpen(true)}
-                style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 100, padding: '12px 20px', backgroundColor: 'white', color: '#495057', border: '1px solid #dee2e6', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', cursor: 'pointer', fontWeight: 600, display: 'flex', gap: '8px', transition: 'all 0.2s' }}
-            >
-                Panel de Control
-            </button>
-
-            <SidePanel
-                isOpen={isPanelOpen}
-                onClose={() => setIsPanelOpen(false)}
-                onSimulate={(input, initialStack, pdaAcceptance) => handleRunSimulation(input, automataType, initialStack, pdaAcceptance)}
-                simulationResult={simulationResult}
-                onClearResult={() => setSimulationResult(null)}
-                onStepByStep={(input, initialStack, pdaAcceptance) => handleStartStepByStep(input, automataType, initialStack || 'S', pdaAcceptance || 'FINAL_STATE', () => setIsPanelOpen(false), () => setSelectedElement(null))}
-            />
-
-            <PropertiesPanel
-                element={selectedElement} nodes={nodes} isSidePanelOpen={isPanelOpen}
-                onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)}
-                onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement}
-                automataType={automataType}
-            />
-
-            <ConfirmationModal
-                isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones."
-                onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement}
-            />
-
-            <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
-
-            <SimulationPlayer simMode={simMode} setSimMode={setSimMode} simulationResult={simulationResult} />
-
-            {/* LIENZO DE KONVA */}
-            <Stage
-                width={window.innerWidth} height={window.innerHeight} draggable={activeTool === 'CURSOR'}
-                x={camera.x} y={camera.y} scaleX={camera.scale} scaleY={camera.scale} onWheel={handleWheel}
-                onDragMove={(e) => { if (e.target === e.target.getStage()) setCamera((prev) => ({ ...prev, x: e.target.x(), y: e.target.y() })); }}
-                onClick={handleStageClick} onMouseMove={handleMouseMoveStage} onMouseUp={handleMouseUpStage}
-            >
-                <Layer>
-                    <TransitionsRenderer transitions={transitions} nodes={nodes} simMode={simMode} setSelectedElement={setSelectedElement} buildMode={buildMode} />
-                    <GhostArrow drawingTransition={drawingTransition} nodes={nodes} />
-                    <NodesRenderer nodes={nodes} simMode={simMode} selectedElement={selectedElement} activeTool={activeTool} updateNodePosition={updateNodePosition} handleMouseDownNode={handleMouseDownNode} handleMouseUpNode={handleMouseUpNode} setSelectedElement={setSelectedElement} buildMode={buildMode}/>
-                </Layer>
-            </Stage>
-
-            <GrammarCleanerModal
-                isOpen={isGrammarModalOpen}
-                onClose={() => setIsGrammarModalOpen(false)}
-            />
+            <VersionOverlay />
         </div>
     );
 }

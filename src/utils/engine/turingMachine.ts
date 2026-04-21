@@ -20,7 +20,7 @@ export const simulateTM = (
     const INITIAL_PADDING = 5; // Colchón de blancos iniciales
 
     // Inyectamos los blancos reales directamente en el estado inicial de la cinta
-    let tape = [
+    const tape = [
         ...Array(INITIAL_PADDING).fill(BLANK_SYMBOL),
         ...(input === "" ? [BLANK_SYMBOL] : input.split("")),
         ...Array(INITIAL_PADDING).fill(BLANK_SYMBOL)

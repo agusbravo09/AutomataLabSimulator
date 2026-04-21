@@ -29,9 +29,16 @@ export const convertNfaToDfa = (originalNodes: StateNode[], originalTransitions:
         const stack = [...stateIds];
         while (stack.length > 0) {
             const curr = stack.pop()!;
-            const targets = originalTransitions.filter(t => t.from === curr && t.hasLambda).map(t => t.to);
+
+            const targets = originalTransitions.filter(t =>
+                t.from === curr && (t.hasLambda || t.symbols.includes('λ'))
+            ).map(t => t.to);
+
             for (const target of targets) {
-                if (!closure.has(target)) { closure.add(target); stack.push(target); }
+                if (!closure.has(target)) {
+                    closure.add(target);
+                    stack.push(target);
+                }
             }
         }
         return Array.from(closure).sort();
@@ -134,8 +141,8 @@ export const convertNfaToDfa = (originalNodes: StateNode[], originalTransitions:
         dfaNodes.push({
             id: row.name, name: row.name,
             isInitial: row.isInitial, isFinal: row.isFinal,
-            x: 150 + (index % 3) * 200, // Layout básico en grilla
-            y: 300 + Math.floor(index / 3) * 150,
+            x: 150 + (index % 3) * 300,
+            y: 300 + Math.floor(index / 3) * 250,
             type: 'STATE'
         });
 

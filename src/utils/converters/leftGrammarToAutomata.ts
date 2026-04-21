@@ -2,7 +2,7 @@ import type { StateNode, Transition } from '../../types/types';
 
 export const convertLeftGrammarToAutomataStepByStep = (grammarText: string) => {
     const lines = grammarText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    let rules: { left: string, rights: string[] }[] = [];
+    const rules: { left: string, rights: string[] }[] = [];
     let axiom = '';
 
     // Parseo inicial
@@ -172,10 +172,71 @@ export const convertLeftGrammarToAutomataStepByStep = (grammarText: string) => {
     steps.push({
         nodes: nodes2,
         transitions: transitions2,
-        description: `PASO 5: ¡Autómata finalizado!\nA partir de este último autómata podés ver la GLD equivalente en el Panel de Control.`,
+        description: `PASO 5: ¡Autómata finalizado!\nA partir de este último autómata podés ver la GLD equivalente en el apartado "Generar desde gramática".`,
         activeNodes: [],
         activeTransitions: []
     });
 
-    return { nodes: nodes2, transitions: transitions2, steps };
+    // GENERACIÓN DE LA GLD RESULTANTE
+    // A partir del autómata final (nodes2, transitions2), construimos la GLD equivalente.
+    const gldMap = new Map<string, Set<string>>();
+    nodes2.forEach(n => {
+        // No creamos una entrada en la gramática para el nodo lambda (es solo un sumidero)
+        if (n.name !== 'λ') gldMap.set(n.name, new Set<string>());
+    });
+
+    transitions2.forEach(t => {
+        const fromNode = nodes2.find(n => n.id === t.from);
+        const toNode = nodes2.find(n => n.id === t.to);
+
+        // Ignoramos si la transición sale de 'λ' (no debería, pero por seguridad)
+        if (fromNode && toNode && fromNode.name !== 'λ') {
+            const sym = t.hasLambda ? '' : (t.symbols[0] || '');
+
+            if (sym) {
+                // Si el destino es exactamente el nodo 'λ', SOLO generamos la terminal (Ej: A -> 1)
+                if (toNode.name === 'λ') {
+                    gldMap.get(fromNode.name)!.add(sym);
+                } else {
+                    // Si es otro estado, generamos la normal (Ej: A -> 1B)
+                    gldMap.get(fromNode.name)!.add(`${sym}${toNode.name}`);
+
+                    // Si además ese estado B es final, también agregamos la terminal (Ej: A -> 1)
+                    if (toNode.isFinal) {
+                        gldMap.get(fromNode.name)!.add(sym);
+                    }
+                }
+            } else {
+                // Manejo de transiciones vacías (λ) internas
+                if (toNode.name === 'λ') {
+                    gldMap.get(fromNode.name)!.add('λ'); // Llegar a lambda sin consumir nada es aceptar cadena vacía
+                } else {
+                    gldMap.get(fromNode.name)!.add(toNode.name);
+                }
+            }
+        }
+    });
+
+    // Formateamos el texto resultante
+    let resultingGLD = "";
+    const initialNode2 = nodes2.find(n => n.isInitial);
+
+    // Priorizamos el axioma inicial para que quede arriba de todo
+    if (initialNode2 && initialNode2.name !== 'λ') {
+        const rights = Array.from(gldMap.get(initialNode2.name) || []);
+        if (rights.length > 0) {
+            resultingGLD += `${initialNode2.name} -> ${rights.join(' | ')}\n`;
+        }
+        gldMap.delete(initialNode2.name);
+    }
+
+    // Agregamos el resto
+    gldMap.forEach((rightsSet, left) => {
+        const rights = Array.from(rightsSet);
+        if (rights.length > 0) {
+            resultingGLD += `${left} -> ${rights.join(' | ')}\n`;
+        }
+    });
+
+    return { nodes: nodes2, transitions: transitions2, steps, resultingGLD };
 };

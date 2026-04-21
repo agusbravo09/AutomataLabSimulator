@@ -69,5 +69,26 @@ export const useCamera = () => {
         });
     }, []);
 
-    return { camera, setCamera, handleWheel, handleManualZoom };
+    const handleResetZoom = useCallback(() => {
+        setCamera(prev => {
+            if (prev.scale === 1) return prev;
+
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            const pointTo = {
+                x: (centerX - prev.x) / prev.scale,
+                y: (centerY - prev.y) / prev.scale,
+            };
+
+            const newPos = {
+                x: centerX - pointTo.x * 1,
+                y: centerY - pointTo.y * 1,
+            };
+
+            return { x: newPos.x, y: newPos.y, scale: 1 };
+        });
+    }, []);
+
+    return { camera, setCamera, handleWheel, handleManualZoom, handleResetZoom };
 };

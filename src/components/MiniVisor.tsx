@@ -63,6 +63,7 @@ export const MiniVisor: React.FC<MiniVisorProps> = ({ nodes, transitions, title,
         });
     };
 
+// eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { centerCamera(); }, [centerCamera]);
 
     return (

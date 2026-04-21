@@ -8,83 +8,94 @@ interface GeneratorToolsProps {
     onGenerateRegex: (regex: string, isStepByStep: boolean) => void;
     onPlayElimination: (steps: any[]) => void;
     onGenerateFromGrammar: (text: string, isStepByStep: boolean) => void;
-    onGenerateFromLeftGrammar: (text: string, isStepByStep: boolean) => void;
+    onGenerateFromLeftGrammar: (text: string, isStepByStep: boolean) => any;
 }
 
-export const GeneratorTools: React.FC<GeneratorToolsProps> = ({
-                                                                  nodes, transitions, onGenerateRegex, onPlayElimination, onGenerateFromGrammar, onGenerateFromLeftGrammar
-                                                              }) => {
-
+export const GeneratorTools: React.FC<GeneratorToolsProps> = ({ nodes, transitions, onGenerateRegex, onPlayElimination, onGenerateFromGrammar, onGenerateFromLeftGrammar }) => {
     const [regexInput, setRegexInput] = useState('');
     const [generatedRegexResult, setGeneratedRegexResult] = useState<string | null>(null);
     const [grammarInput, setGrammarInput] = useState('S -> aS | bA | λ\nA -> a');
     const [grammarType, setGrammarType] = useState<'right' | 'left'>('right');
 
+    const cardStyle = { backgroundColor: '#fff', border: '1px solid #eee', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' };
+    const titleStyle = { margin: '0 0 16px 0', fontSize: '15px', color: '#212529', fontWeight: 800, fontFamily: "'Inter', sans-serif" };
+    const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #dee2e6', fontFamily: "'Fira Code', monospace", fontSize: '13px', boxSizing: 'border-box' as const, backgroundColor: '#f8f9fa', outline: 'none' };
+    const btnSecondaryStyle = { flex: 1, padding: '10px', backgroundColor: '#f8f9fa', color: '#4c6ef5', border: '1px solid #d0ebff', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' };
+    const btnPrimaryStyle = { flex: 1, padding: '10px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' };
+
+    const executeLeftGrammar = async (isStepByStep: boolean) => {
+        const resultGLD = await onGenerateFromLeftGrammar(grammarInput, isStepByStep);
+
+        if (resultGLD && typeof resultGLD === 'string') {
+            setGrammarInput(resultGLD.trim());
+            setGrammarType('right');
+        }
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* HERRAMIENTA: GENERAR DESDE GRAMÁTICA */}
-            <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #dee2e6' }}>
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#212529' }}>Generar desde Gramática</h3>
 
-                <div style={{ display: 'flex', gap: '15px', marginBottom: '12px', padding: '8px', backgroundColor: '#e9ecef', borderRadius: '6px' }}>
-                    <label style={{ fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', color: '#495057', fontWeight: grammarType === 'right' ? 'bold' : 'normal' }}>
-                        <input type="radio" checked={grammarType === 'right'} onChange={() => setGrammarType('right')} style={{ margin: 0 }} /> GLD (Derecha)
-                    </label>
-                    <label style={{ fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', color: '#495057', fontWeight: grammarType === 'left' ? 'bold' : 'normal' }}>
-                        <input type="radio" checked={grammarType === 'left'} onChange={() => setGrammarType('left')} style={{ margin: 0 }} /> GLI (Izquierda)
-                    </label>
+            {/* GENERAR DESDE GRAMÁTICA */}
+            <div style={cardStyle}>
+                <h3 style={titleStyle}>Generar desde Gramática</h3>
+
+                {/* Segmented Control para GLD / GLI */}
+                <div style={{ display: 'flex', backgroundColor: '#f1f3f5', padding: '4px', borderRadius: '8px', marginBottom: '16px' }}>
+                    <button onClick={() => setGrammarType('right')} style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '12px', transition: 'all 0.2s', backgroundColor: grammarType === 'right' ? '#fff' : 'transparent', color: grammarType === 'right' ? '#4c6ef5' : '#868e96', boxShadow: grammarType === 'right' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }}>
+                        GLD (Derecha)
+                    </button>
+                    <button onClick={() => setGrammarType('left')} style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '12px', transition: 'all 0.2s', backgroundColor: grammarType === 'left' ? '#fff' : 'transparent', color: grammarType === 'left' ? '#a61e4d' : '#868e96', boxShadow: grammarType === 'left' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }}>
+                        GLI (Izquierda)
+                    </button>
                 </div>
 
                 <textarea
-                    value={grammarInput}
-                    onChange={(e) => setGrammarInput(e.target.value)}
+                    value={grammarInput} onChange={(e) => setGrammarInput(e.target.value)}
                     placeholder={grammarType === 'right' ? "S -> aS | bA\nA -> a | λ" : "S -> Sa | Ab\nA -> a | λ"}
-                    style={{ width: '100%', height: '100px', padding: '10px', borderRadius: '6px', border: '1px solid #ced4da', fontFamily: "'Fira Code', monospace", fontSize: '13px', marginBottom: '12px', resize: 'vertical', boxSizing: 'border-box', backgroundColor: '#ffffff', outline: 'none' }}
+                    style={{ ...inputStyle, height: '100px', resize: 'vertical', marginBottom: '16px' }}
+                    onFocus={e => { e.target.style.borderColor = grammarType === 'right' ? '#4c6ef5' : '#a61e4d'; e.target.style.backgroundColor = '#fff'; }}
+                    onBlur={e => { e.target.style.borderColor = '#dee2e6'; e.target.style.backgroundColor = '#f8f9fa'; }}
                 />
 
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={() => grammarType === 'right' ? onGenerateFromGrammar(grammarInput, true) : onGenerateFromLeftGrammar(grammarInput, true)} style={{ flex: 1, padding: '8px', backgroundColor: '#ffffff', color: '#495057', border: '1px solid #ced4da', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
-                        Paso a Paso
-                    </button>
-                    <button onClick={() => grammarType === 'right' ? onGenerateFromGrammar(grammarInput, false) : onGenerateFromLeftGrammar(grammarInput, false)} style={{ flex: 1, padding: '8px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
-                        Generar AFND
+                    <button onClick={() => grammarType === 'right' ? onGenerateFromGrammar(grammarInput, true) : executeLeftGrammar(true)} style={btnSecondaryStyle}>Paso a Paso</button>
+                    <button onClick={() => grammarType === 'right' ? onGenerateFromGrammar(grammarInput, false) : executeLeftGrammar(false)} style={btnPrimaryStyle}>
+                        {grammarType === 'right' ? 'Generar AFND' : 'Convertir a GLD'}
                     </button>
                 </div>
             </div>
 
             {/* REGEX A AUTÓMATA */}
-            <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <h3 style={{ margin: 0, fontSize: '14px', color: '#495057', fontWeight: 600 }}>Expresión Regular → Autómata</h3>
-                </div>
+            <div style={cardStyle}>
+                <h3 style={titleStyle}>Expresión Regular → AF</h3>
                 <input
-                    type="text" placeholder="Ej: (a+b)*abb" value={regexInput}
-                    onChange={(e) => setRegexInput(e.target.value)}
-                    style={{ width: '100%', padding: '10px', marginBottom: '10px', borderRadius: '6px', border: '1px solid #ced4da', boxSizing: 'border-box', fontFamily: "'Fira Code', monospace", fontSize: '14px', outline: 'none' }}
+                    type="text" placeholder="Ej: (a+b)*abb" value={regexInput} onChange={(e) => setRegexInput(e.target.value)}
+                    style={{ ...inputStyle, marginBottom: '16px' }}
+                    onFocus={e => { e.target.style.borderColor = '#4c6ef5'; e.target.style.backgroundColor = '#fff'; }}
+                    onBlur={e => { e.target.style.borderColor = '#dee2e6'; e.target.style.backgroundColor = '#f8f9fa'; }}
                 />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => { if (regexInput.trim() !== '') onGenerateRegex(regexInput, true); }} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #4c6ef5', backgroundColor: 'white', color: '#4c6ef5', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Paso a Paso</button>
-                    <button onClick={() => { if (regexInput.trim() !== '') onGenerateRegex(regexInput, false); }} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: '#4c6ef5', color: 'white', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Generar</button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={() => { if (regexInput.trim() !== '') onGenerateRegex(regexInput, true); }} style={btnSecondaryStyle}>Paso a Paso</button>
+                    <button onClick={() => { if (regexInput.trim() !== '') onGenerateRegex(regexInput, false); }} style={btnPrimaryStyle}>Generar</button>
                 </div>
             </div>
 
             {/* AUTÓMATA A REGEX */}
-            <div style={{ backgroundColor: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-                    <h3 style={{ margin: 0, fontSize: '14px', color: '#495057', fontWeight: 600 }}>Autómata → Expresión Regular</h3>
-                </div>
-                <p style={{ fontSize: '12px', color: '#868e96', margin: '0 0 10px 0' }}>Obtiene la ER equivalente mediante eliminación de estados.</p>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => { const { result, steps } = convertAutomataToRegex(nodes, transitions); setGeneratedRegexResult(result); onPlayElimination(steps); }} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #4c6ef5', backgroundColor: 'white', color: '#4c6ef5', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Paso a Paso</button>
-                    <button onClick={() => { const { result } = convertAutomataToRegex(nodes, transitions); setGeneratedRegexResult(result); }} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: '#e9ecef', color: '#495057', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Instantáneo</button>
+            <div style={cardStyle}>
+                <h3 style={titleStyle}>Autómata → Regex</h3>
+                <p style={{ fontSize: '13px', color: '#868e96', margin: '0 0 16px 0', lineHeight: '1.4' }}>Obtiene la ER equivalente mediante el método de eliminación de estados.</p>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={() => { const { result, steps } = convertAutomataToRegex(nodes, transitions); setGeneratedRegexResult(result); onPlayElimination(steps); }} style={btnSecondaryStyle}>Paso a Paso</button>
+                    <button onClick={() => { const { result } = convertAutomataToRegex(nodes, transitions); setGeneratedRegexResult(result); }} style={{ ...btnSecondaryStyle, border: 'none', backgroundColor: '#e9ecef', color: '#495057' }}>Instantáneo</button>
                 </div>
                 {generatedRegexResult && (
-                    <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#f8f9fa', border: '1px dashed #ced4da', borderRadius: '6px', wordBreak: 'break-all' }}>
-                        <span style={{ fontSize: '11px', color: '#868e96', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>RESULTADO:</span>
-                        <span style={{ fontFamily: "'Fira Code', monospace", fontSize: '13px', color: '#4c6ef5', fontWeight: 'bold' }}>{generatedRegexResult}</span>
+                    <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#e7f5ff', border: '1px dashed #74c0fc', borderRadius: '8px', wordBreak: 'break-all', textAlign: 'center', animation: 'fadeIn 0.3s ease' }}>
+                        <span style={{ fontSize: '11px', color: '#1864ab', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '8px' }}>Resultado</span>
+                        <span style={{ fontFamily: "'Fira Code', monospace", fontSize: '16px', color: '#4c6ef5', fontWeight: 800 }}>{generatedRegexResult}</span>
                     </div>
                 )}
             </div>
+            <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }`}</style>
         </div>
     );
 };

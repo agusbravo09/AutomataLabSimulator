@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Group, Circle, Text, Arrow, Line } from 'react-konva';
 import type { StateNode } from '../../types/types';
 
@@ -12,9 +13,9 @@ interface Props {
     isHighlighted: boolean;
 }
 
-export const StateNodeView = ({
-                                  node, isSelected, isDraggable, onDragMove, onClick, onMouseDown, onMouseUp, isHighlighted
-                              }: Props) => {
+const StateNodeViewComponent = ({
+                                    node, isSelected, isDraggable, onDragMove, onClick, onMouseDown, onMouseUp, isHighlighted
+                                }: Props) => {
 
     // Chequeamos si el nodo tiene una salida guardada (Modo Moore)
     const isMooreNode = node.output !== undefined && node.output !== '';
@@ -62,3 +63,18 @@ export const StateNodeView = ({
         </Group>
     );
 };
+
+export const StateNodeView = memo(StateNodeViewComponent, (prevProps, nextProps) => {
+    return (
+        prevProps.node.id === nextProps.node.id &&
+        prevProps.node.x === nextProps.node.x &&
+        prevProps.node.y === nextProps.node.y &&
+        prevProps.node.name === nextProps.node.name &&
+        prevProps.node.isInitial === nextProps.node.isInitial &&
+        prevProps.node.isFinal === nextProps.node.isFinal &&
+        prevProps.node.output === nextProps.node.output &&
+        prevProps.isSelected === nextProps.isSelected &&
+        prevProps.isHighlighted === nextProps.isHighlighted &&
+        prevProps.isDraggable === nextProps.isDraggable
+    );
+});

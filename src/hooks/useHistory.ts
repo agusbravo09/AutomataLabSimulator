@@ -53,13 +53,18 @@ export const useHistory = () => {
         setTransitions(next.t);
     }, [future, setNodes, setTransitions]);
 
-    // Atajos de teclado
+// Atajos de teclado
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
             if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
                 e.preventDefault();
-                e.shiftKey ? redo() : undo();
+                if (e.shiftKey) {
+                    redo();
+                } else {
+                    undo();
+                }
             } else if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) {
                 e.preventDefault();
                 redo();

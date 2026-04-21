@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import { Arrow, Group, Text } from 'react-konva';
-import type { Transition } from '../../types/types.ts';
-import { getTextPosition } from '../../utils/geometry.ts';
+import type { Transition } from '../../types/types';
+import { getTextPosition } from '../../utils/geometry';
 import { useAutomataStore } from '../../store/useAutomataStore';
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
     isHighlighted?: boolean;
 }
 
-export const TransitionArrowView = ({ transition, points, tension, type, onClick, isHighlighted }: Props) => {
+const TransitionArrowViewComponent = ({ transition, points, tension, type, onClick, isHighlighted }: Props) => {
     const textPos = getTextPosition(points, type);
 
     // Traemos el tipo de autómata actual directamente del store
@@ -105,3 +106,28 @@ export const TransitionArrowView = ({ transition, points, tension, type, onClick
         </Group>
     );
 };
+
+// --- EL ESCUDO ANTI RE-RENDERS ---
+export const TransitionArrowView = memo(TransitionArrowViewComponent, (prevProps, nextProps) => {
+    // 1. Chequeos rápidos de primitivos
+    if (prevProps.isHighlighted !== nextProps.isHighlighted) return false;
+    if (prevProps.tension !== nextProps.tension) return false;
+    if (prevProps.type !== nextProps.type) return false;
+
+    // 2. Chequeo profundo del arreglo de puntos (Evita el bug del congelamiento)
+    if (prevProps.points.length !== nextProps.points.length) return false;
+    for (let i = 0; i < prevProps.points.length; i++) {
+        if (prevProps.points[i] !== nextProps.points[i]) return false;
+    }
+
+    // 3. Chequeo profundo del objeto Transition (Por si cambian las letras, pops, push, etc)
+    if (prevProps.transition !== nextProps.transition) {
+        if (JSON.stringify(prevProps.transition) !== JSON.stringify(nextProps.transition)) {
+            return false;
+        }
+    }
+
+    // Si llegó hasta acá, es la misma flecha en la misma posición, con el mismo texto.
+    // React no va a redibujar absolutamente nada.
+    return true;
+});
