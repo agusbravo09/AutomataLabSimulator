@@ -3,6 +3,7 @@ import cursor from '../img/Toolbar/cursor.svg';
 import createState from '../img/Toolbar/add-state.svg';
 import createTransition from '../img/Toolbar/add-transition.svg';
 import tools from '../img/Toolbar/tools.svg';
+import trash from '../img/Toolbar/trash.svg'
 
 
 // Definimos los tipos de herramientas
@@ -115,7 +116,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fff5f5'}
                 >
                     <img
-                        src="/src/img/Toolbar/trash.svg"
+                        src={trash}
                         alt="Limpiar Lienzo"
                         style={{ width: '20px', height: '20px', filter: 'invert(27%) sepia(82%) saturate(2200%) hue-rotate(345deg) brightness(95%) contrast(92%)' }}
                         onError={(e) => {

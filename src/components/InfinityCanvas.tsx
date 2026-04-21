@@ -31,6 +31,7 @@ import { MiniVisor } from './MiniVisor';
 import { GrammarCleanerModal } from "./GrammarCleanerModal";
 // import { DonationModal } from './DonationsModal';
 import { ResultModal, type ResultModalType } from './ResultModal';
+import bug from '../img/Icons/bug.svg';
 
 // --- COMPONENTES CANVAS ---
 import { GhostArrow } from './canvas/GhostArrow';
@@ -160,7 +161,7 @@ function InfinityCanvas() {
 
                     <div className="tooltip-container" style={{ position: 'relative', backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', transition: 'all 0.2s', width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <button onClick={() => setIsFeedbackOpen(true)} style={{ padding: 0, border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fff3cd'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                            <img src="/src/img/Icons/bug.svg" alt="Reportar Bug" style={{ width: '24px', height: '24px', opacity: 0.7, transition: 'opacity 0.2s' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 20px;">!</span>'; }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.7'} />
+                            <img src={bug} alt="Reportar Bug" style={{ width: '24px', height: '24px', opacity: 0.7, transition: 'opacity 0.2s' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 20px;">!</span>'; }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.7'} />
                         </button>
                         <div className="custom-tooltip">Reportar un bug</div>
                     </div>

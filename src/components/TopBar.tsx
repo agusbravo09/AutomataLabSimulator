@@ -1,6 +1,6 @@
 import React from 'react';
 import type {AutomataType} from '../types/types.ts';
-import logoImg from '../img/Icons/logo-final.png';
+import logoImg from '../img/Icons/logo-final.svg';
 
 
 interface TopBarProps {

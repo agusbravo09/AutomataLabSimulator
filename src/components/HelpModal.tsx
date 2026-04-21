@@ -14,7 +14,7 @@ export const HelpModal: React.FC = () => {
                     position: 'fixed', top: '24px', left: '24px',
                     width: '36px', height: '36px', borderRadius: '18px',
                     backgroundColor: '#0f172a', color: '#ffffff',
-                    border: 'none', cursor: 'pointer', zIndex: 9998,
+                    border: 'none', cursor: 'pointer', zIndex: 2,
                     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                     fontSize: '16px', fontWeight: 800, fontFamily: "'Inter', sans-serif",
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',

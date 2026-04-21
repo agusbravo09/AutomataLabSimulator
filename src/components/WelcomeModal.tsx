@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-
-interface WelcomeModalProps {
-    onClose: () => void;
-}
+import logoImg from '../img/Icons/logo-final.svg'
 
 const MODAL_VERSION = 'v2';
 
 
-export const WelcomeModal: React.FC<WelcomeModalProps> = ({onClose}) => {
+export const WelcomeModal: React.FC = () => {
     const [isOpen, setIsOpen] = useState(() => {
         return !localStorage.getItem(`automatalab_welcome_${MODAL_VERSION}`);
     });
@@ -15,7 +12,6 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({onClose}) => {
     const handleClose = () => {
         localStorage.setItem(`automatalab_welcome_${MODAL_VERSION}`, 'true');
         setIsOpen(false);
-        onClose();
     };
 
     if (!isOpen) return null;
@@ -42,6 +38,19 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({onClose}) => {
                     }}>
                         Proyecto Personal
                     </span>
+
+                    <img
+                        src={logoImg}
+                        alt="Logo AutomataLab"
+                        style={{
+                            width: '150px',
+                            height: '150px',
+                            margin: '0 auto 20px auto',
+                            display: 'block',
+                            objectFit: 'contain'
+                        }}
+                    />
+
                     <h2 style={{
                         margin: 0, color: '#0f172a', fontSize: '32px',
                         fontWeight: 900, fontFamily: "'Inter', sans-serif",

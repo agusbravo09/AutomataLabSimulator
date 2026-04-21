@@ -1,4 +1,5 @@
 import React from 'react';
+import warning from '../img/Icons/warning.svg';
 
 interface ConfirmationModalProps {
     isOpen: boolean;
@@ -45,7 +46,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onConfirm
                         fontSize: '20px'
                     }}>
                         <img
-                            src="/src/img/Icons/warning.svg"
+                            src={warning}
                             alt="Advertencia"
                             style={{
                                 width: '24px',
