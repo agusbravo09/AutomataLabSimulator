@@ -30,11 +30,10 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
     const progressPercentage = ((buildMode.currentIndex + 1) / buildMode.steps.length) * 100;
 
     let title = "Ejecutando Algoritmo";
-    let icon = "⚙️";
-    if (isDeterminization) { title = "Determinización (Subconjuntos)"; icon = "🎯"; }
-    else if (isMinimization) { title = "Minimización (Tabla de Estados)"; icon = "📉"; }
-    else if (isClassesMinimization) { title = "Minimización (Clases de Equivalencia)"; icon = "🧩"; }
-    else if (isMooreTree) { title = "Equivalencia (Teorema de Moore)"; icon = "⚖️"; }
+    if (isDeterminization) { title = "Determinización (Subconjuntos)"; }
+    else if (isMinimization) { title = "Minimización (Tabla de Estados)"; }
+    else if (isClassesMinimization) { title = "Minimización (Clases de Equivalencia)"; }
+    else if (isMooreTree) { title = "Equivalencia (Teorema de Moore)"; }
 
     // Función para CANCELAR y REVERTIR en cualquier momento
     const handleCancel = () => {
@@ -132,7 +131,6 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
             {/* HEADER CON BOTÓN CERRAR */}
             <div style={{ padding: '16px 24px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8f9fa' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '20px' }}>{icon}</span>
                     <h3 style={{ margin: 0, fontSize: '15px', color: '#212529', fontWeight: 800, fontFamily: "'Inter', sans-serif" }}>{title}</h3>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -234,7 +232,7 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
                         {currentStep.newMarks && currentStep.newMarks.length > 0 && (
                             <div style={{ width: '100%', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '10px', padding: '16px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
                                 <strong style={{ fontSize: '12px', color: '#495057', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                    <span>🔍</span> Análisis de este paso:
+                                    Análisis de este paso:
                                 </strong>
                                 <ul style={{ margin: 0, paddingLeft: '24px', fontSize: '13px', color: '#4c6ef5', lineHeight: '1.6', fontFamily: "'Fira Code', monospace" }}>
                                     {currentStep.newMarks.map((mark: any, idx: number) => (
@@ -340,7 +338,7 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
                 ) : (
                     <div style={{ display: 'flex', gap: '12px', flex: 2 }}>
                         <button
-                            onClick={handleCancel} // <-- Usa la nueva función de cancelación
+                            onClick={handleCancel}
                             onMouseEnter={() => setHoveredBtn('restore')} onMouseLeave={() => setHoveredBtn(null)}
                             style={{
                                 flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #fa5252',
