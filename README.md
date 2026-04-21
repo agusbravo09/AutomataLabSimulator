@@ -1,101 +1,47 @@
 # 🤖 AutomataLab
 
-> Laboratorio interactivo para el estudio y experimentación con Autómatas y Lenguajes Formales.
+> Laboratorio visual e interactivo para el diseño, simulación y estudio de Autómatas y Lenguajes Formales.
 
 ---
 
 ## 📌 Descripción
 
-**AutomataLab** es una aplicación diseñada para facilitar el aprendizaje práctico de conceptos fundamentales de la materia *Autómatas y Lenguajes Formales*.  
-El objetivo del proyecto es permitir modelar, analizar y simular distintos tipos de autómatas, brindando una herramienta didáctica tanto para estudiantes como para docentes.
+**AutomataLab** es una aplicación web diseñada para llevar la teoría de  Autómatas y Lenguajes Formales a la práctica. Más que una simple herramienta de dibujo, es un motor de simulación que permite modelar estructuras formales, analizar el procesamiento de datos y entender el comportamiento de los autómatas de forma gráfica. 
+
+Está pensado como un entorno didáctico y de experimentación tanto para estudiantes como para docentes de ciencias de la computación.
 
 ---
 
-## 🎯 Objetivos del proyecto
+## ✨ Características Principales
 
-- Implementar estructuras formales como:
-  - Autómatas Finitos Deterministas (AFD)
-  - Autómatas Finitos No Deterministas (AFND)
-  - (A futuro) Expresiones Regulares y conversión entre modelos
-- Permitir la validación de cadenas
-- Simular el recorrido paso a paso de los estados
-- Aplicar buenas prácticas de diseño y arquitectura
+La aplicación permite interactuar directamente con los conceptos teóricos mediante las siguientes herramientas:
 
----
-
-## 🗺️ Roadmap 2026
-
-El desarrollo del proyecto seguirá una evolución progresiva alineada con los principales bloques de la Teoría de Lenguajes Formales.
-
-### 📅 Febrero 2026 — Lenguajes Regulares (Fundamentos)
-
-Implementación de los modelos básicos:
-
-- Autómatas Finitos Deterministas (AFD)
-- Autómatas Finitos No Deterministas (AFND)
-- Gramáticas Regulares
-- Expresiones Regulares
-
-Objetivo: consolidar un núcleo funcional sólido para el modelado y simulación de lenguajes regulares.
+* **Modelado Visual de Grafos:** Creá, editá y organizá estados y transiciones en un lienzo interactivo y fluido.
+* **Soporte Multimodelo:** Diseñá y analizá cómo funcionan desde los Autómatas Finitos Deterministas hasta las Máquinas de Turing.
+* **Simulación Paso a Paso:** Observá en tiempo real cómo el autómata evalúa una cadena de entrada. El simulador resalta visualmente los estados activos y los caminos recorridos en cada paso.
+* **Validación de Cadenas:** Ingresá secuencias de texto y obtené un diagnóstico instantáneo sobre si son aceptadas o rechazadas por el autómata que diseñes.
 
 ---
 
-### 📅 Marzo 2026 — Lenguajes Regulares (Transformaciones y Análisis)
+## 🛠️ Stack Tecnológico
 
-Conversión y análisis formal entre modelos:
-
-- AFND → AFD
-- AFD → AFD Mínimo
-- AFND ↔ Expresión Regular
-- AFND ↔ Gramática Regular
-- Experimentos con el Lema del Bombeo
-
-Objetivo: explorar equivalencias formales y propiedades estructurales de los lenguajes regulares.
+* **React:** Para una interfaz de usuario reactiva, modular y eficiente.
+* **TypeScript:** Tipado estricto para asegurar la solidez en la implementación de la lógica formal.
+* **Konva.js:** Renderizado de alto rendimiento para la manipulación interactiva del lienzo 2D.
+* **Zustand:** Para la gestión eficiente del estado global y el manejo de la memoria de la aplicación durante las simulaciones.
 
 ---
 
-### 📅 Abril 2026 — Lenguajes Independientes del Contexto
+## 👏 Agradecimientos
 
-Implementación de modelos más expresivos:
-
-- Autómatas a Pila (AP)
-- Gramáticas Libres de Contexto (GLC)
-- Conversión AP ↔ GLC
-- Experimentos con el Lema del Bombeo para lenguajes independientes del contexto
-
-Objetivo: ampliar el alcance del simulador hacia lenguajes no regulares.
-
----
-
-### 📅 Resto de 2026 — Lenguajes Recursivamente Enumerables
-
-Exploración de los modelos más generales de computación:
-
-- Máquinas de Turing
-- Gramáticas Recursivamente Enumerables
-- Simulación de cómputos paso a paso
-- Análisis de decidibilidad y reconocibilidad
-
-Objetivo: extender el laboratorio hacia los fundamentos de la teoría de la computabilidad.
-
----
-
-## 📚 Enciclopedia Dinámica (Feature Paralelo)
-
-Una vez consolidado el MVP con los modelos iniciales, se desarrollará una sección educativa integrada al proyecto que incluirá:
-
-- Explicaciones teóricas estructuradas
-- Ejemplos formales
-- Simulaciones interactivas utilizando el propio motor del sistema
-- Comparaciones entre modelos equivalentes
-
-El propósito es transformar AutomataLab en una herramienta tanto de simulación como de estudio conceptual.
+Un agradecimiento especial a todos los que me ayudaron probando versiones tempranas de este proyecto. Su feedback fue clave para darle forma a la herramienta.
+¡Muchas gracias!
 
 ---
 
 ## ✍️ Autor
 
-**Agustín Bravo**  
+**Agustín Bravo**
 
 ---
 
@@ -103,8 +49,8 @@ El propósito es transformar AutomataLab en una herramienta tanto de simulación
 
 Este proyecto es desarrollado con el apoyo de herramientas de Inteligencia Artificial para asistencia técnica, revisión de diseño y mejora estructural:
 
-- ChatGPT  
-- Gemini  
-- DeepSeek  
+* ChatGPT
+* Gemini
+* DeepSeek
 
 Las decisiones de diseño, implementación y modelado formal son realizadas de manera consciente y crítica, utilizando estas herramientas como soporte y aceleradores de productividad.
