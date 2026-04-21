@@ -7,7 +7,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Separa las librerías de node_modules en un archivo aparte
           if (id.includes('node_modules')) {
             return 'vendor';
           }

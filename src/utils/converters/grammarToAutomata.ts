@@ -62,7 +62,7 @@ export const convertGrammarToAutomataStepByStep = (grammarText: string) => {
                 description = `REGLA: ${left} -> λ\nComo deriva en lambda, el estado '${left}' se convierte en estado de aceptación.`;
             }
             else {
-                const ntMatch = prod.match(/([A-Z][A-Za-z0-9_]*)$/);
+                const ntMatch = prod.match(/([A-Z]\w*'*)$/);
                 let terminal = '';
                 let nonTerminal = '';
 
@@ -112,7 +112,7 @@ export const convertGrammarToAutomataStepByStep = (grammarText: string) => {
     steps.push({
         nodes: JSON.parse(JSON.stringify(nodes)),
         transitions: JSON.parse(JSON.stringify(transitions)),
-        description: `¡Conversión completada!\nEl Autómata Finito No Determinista (AFND) equivalente ha sido generado.`,
+        description: `¡Conversión completada!\nEl Autómata Finito No Determinista equivalente ha sido generado.`,
         activeNodes: [],
         activeTransitions: []
     });

@@ -8,7 +8,7 @@ interface GeneratorToolsProps {
     onGenerateRegex: (regex: string, isStepByStep: boolean) => void;
     onPlayElimination: (steps: any[]) => void;
     onGenerateFromGrammar: (text: string, isStepByStep: boolean) => void;
-    onGenerateFromLeftGrammar: (text: string, isStepByStep: boolean) => void;
+    onGenerateFromLeftGrammar: (text: string, isStepByStep: boolean) => any;
 }
 
 export const GeneratorTools: React.FC<GeneratorToolsProps> = ({ nodes, transitions, onGenerateRegex, onPlayElimination, onGenerateFromGrammar, onGenerateFromLeftGrammar }) => {
@@ -22,6 +22,15 @@ export const GeneratorTools: React.FC<GeneratorToolsProps> = ({ nodes, transitio
     const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #dee2e6', fontFamily: "'Fira Code', monospace", fontSize: '13px', boxSizing: 'border-box' as const, backgroundColor: '#f8f9fa', outline: 'none' };
     const btnSecondaryStyle = { flex: 1, padding: '10px', backgroundColor: '#f8f9fa', color: '#4c6ef5', border: '1px solid #d0ebff', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' };
     const btnPrimaryStyle = { flex: 1, padding: '10px', backgroundColor: '#4c6ef5', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' };
+
+    const executeLeftGrammar = async (isStepByStep: boolean) => {
+        const resultGLD = await onGenerateFromLeftGrammar(grammarInput, isStepByStep);
+
+        if (resultGLD && typeof resultGLD === 'string') {
+            setGrammarInput(resultGLD.trim());
+            setGrammarType('right');
+        }
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -49,8 +58,10 @@ export const GeneratorTools: React.FC<GeneratorToolsProps> = ({ nodes, transitio
                 />
 
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={() => grammarType === 'right' ? onGenerateFromGrammar(grammarInput, true) : onGenerateFromLeftGrammar(grammarInput, true)} style={btnSecondaryStyle}>Paso a Paso</button>
-                    <button onClick={() => grammarType === 'right' ? onGenerateFromGrammar(grammarInput, false) : onGenerateFromLeftGrammar(grammarInput, false)} style={btnPrimaryStyle}>Generar AFND</button>
+                    <button onClick={() => grammarType === 'right' ? onGenerateFromGrammar(grammarInput, true) : executeLeftGrammar(true)} style={btnSecondaryStyle}>Paso a Paso</button>
+                    <button onClick={() => grammarType === 'right' ? onGenerateFromGrammar(grammarInput, false) : executeLeftGrammar(false)} style={btnPrimaryStyle}>
+                        {grammarType === 'right' ? 'Generar AFND' : 'Convertir a GLD'}
+                    </button>
                 </div>
             </div>
 

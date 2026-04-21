@@ -15,7 +15,8 @@ export const useToolsLogic = (
     setAutomataType: (type: any) => void,
     setBuildMode: (mode: any) => void,
     camera: { x: number, y: number, scale: number },
-    showResultModal: (config: any) => void
+    showResultModal: (config: any) => void,
+    takeSnapshot: () => void
 ) => {
 
     const handleGenerateRegex = (regexStr: string, isStepByStep: boolean) => {
@@ -29,6 +30,8 @@ export const useToolsLogic = (
 
             const { centeredNodes, centeredSteps } = centerAutomatonInCamera(result.nodes, result.buildSteps || [], camera);
 
+            takeSnapshot();
+
             if (!result.buildSteps || result.buildSteps.length === 0) {
                 setNodes(centeredNodes);
                 setTransitions(result.transitions);
@@ -37,7 +40,7 @@ export const useToolsLogic = (
             }
 
             if (isStepByStep) {
-                setBuildMode({ active: true, steps: centeredSteps, currentIndex: 0 });
+                setBuildMode({ active: true, steps: centeredSteps, currentIndex: 0, backupNodes: [...nodes], backupTransitions: [...transitions] });
                 setNodes(centeredSteps[0].nodes);
                 setTransitions(centeredSteps[0].transitions);
             } else {
@@ -60,8 +63,10 @@ export const useToolsLogic = (
             const result = convertGrammarToAutomataStepByStep(grammarText);
             const { centeredNodes, centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
 
+            takeSnapshot();
+
             if (isStepByStep && centeredSteps.length > 0) {
-                setBuildMode({ active: true, steps: centeredSteps, currentIndex: 0 });
+                setBuildMode({ active: true, steps: centeredSteps, currentIndex: 0, backupNodes: [...nodes], backupTransitions: [...transitions] });
                 setNodes(centeredSteps[0].nodes);
                 setTransitions(centeredSteps[0].transitions);
             } else {
@@ -77,31 +82,48 @@ export const useToolsLogic = (
     };
 
     const handleGenerateFromLeftGrammar = (grammarText: string, isStepByStep: boolean) => {
-        try {
-            if (!grammarText || grammarText.trim() === '') {
-                showResultModal({ type: 'warning', title: 'Campo Vacío', message: 'Por favor, ingresá las producciones de la gramática.', onConfirm: () => {} });
-                return;
-            }
-            const result = convertLeftGrammarToAutomataStepByStep(grammarText);
-            const { centeredNodes, centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
+        return new Promise((resolve) => {
+            try {
+                if (!grammarText || grammarText.trim() === '') {
+                    showResultModal({ type: 'warning', title: 'Campo Vacío', message: 'Por favor, ingresá las producciones.', onConfirm: () => {} });
+                    resolve(null);
+                    return;
+                }
 
-            if (isStepByStep && centeredSteps.length > 0) {
-                setBuildMode({ active: true, steps: centeredSteps, currentIndex: 0 });
-                setNodes(centeredSteps[0].nodes);
-                setTransitions(centeredSteps[0].transitions);
-            } else {
-                setNodes(centeredNodes);
-                setTransitions(result.transitions);
-                setBuildMode({ active: false, steps: [], currentIndex: 0 });
+                const result = convertLeftGrammarToAutomataStepByStep(grammarText);
+                const { centeredNodes, centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
+
+                takeSnapshot();
+
+                if (isStepByStep && centeredSteps.length > 0) {
+                    setBuildMode({
+                        active: true,
+                        steps: centeredSteps,
+                        currentIndex: 0,
+                        backupNodes: [...nodes],
+                        backupTransitions: [...transitions],
+                        onKeepResult: () => resolve(result.resultingGLD),
+                        onCancelResult: () => resolve(null)
+                    });
+                    setNodes(centeredSteps[0].nodes);
+                    setTransitions(centeredSteps[0].transitions);
+                } else {
+                    setNodes(centeredNodes);
+                    setTransitions(result.transitions);
+                    setBuildMode({ active: false, steps: [], currentIndex: 0 });
+                    resolve(result.resultingGLD);
+                }
+                setAutomataType('NFA');
+            } catch (error: any) {
+                showResultModal({ type: 'error', title: 'Error', message: error.message, onConfirm: () => {} });
+                resolve(null);
             }
-            setAutomataType('NFA');
-        } catch (error: any) {
-            showResultModal({ type: 'error', title: 'Error al parsear', message: error.message, onConfirm: () => {} });
-        }
+        });
     };
 
     const handlePlayElimination = (steps: any[]) => {
         if (!steps || steps.length === 0) return;
+        takeSnapshot();
         setBuildMode({
             active: true, steps, currentIndex: 0,
             backupNodes: [...nodes], backupTransitions: [...transitions]
@@ -114,6 +136,9 @@ export const useToolsLogic = (
         if (!steps || steps.length === 0) return;
         const finalNodes = steps[steps.length - 1].nodes;
         const { centeredSteps } = centerAutomatonInCamera(finalNodes, steps, camera);
+
+        takeSnapshot();
+
         setBuildMode({
             active: true, steps: centeredSteps, currentIndex: 0,
             backupNodes: [...nodes], backupTransitions: [...transitions]
@@ -134,6 +159,7 @@ export const useToolsLogic = (
                 confirmText: 'Aplicar Minimizado',
                 cancelText: 'Cancelar',
                 onConfirm: () => {
+                    takeSnapshot();
                     setNodes(centeredNodes);
                     setTransitions(result.transitions);
                     setBuildMode({ active: false, steps: [], currentIndex: 0 });
@@ -149,6 +175,9 @@ export const useToolsLogic = (
         try {
             const result = minimizeDfaStepByStep(nodes, transitions);
             const { centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
+
+            takeSnapshot();
+
             setBuildMode({
                 active: true, steps: centeredSteps, currentIndex: 0,
                 backupNodes: [...nodes], backupTransitions: [...transitions]
@@ -172,6 +201,7 @@ export const useToolsLogic = (
                 confirmText: 'Aplicar Minimizado',
                 cancelText: 'Cancelar',
                 onConfirm: () => {
+                    takeSnapshot();
                     setNodes(centeredNodes);
                     setTransitions(result.transitions);
                     setBuildMode({ active: false, steps: [], currentIndex: 0 });
@@ -187,6 +217,9 @@ export const useToolsLogic = (
         try {
             const result = minimizeDfaClassesStepByStep(nodes, transitions);
             const { centeredSteps } = centerAutomatonInCamera(result.nodes, result.steps, camera);
+
+            takeSnapshot();
+
             setBuildMode({
                 active: true, steps: centeredSteps, currentIndex: 0,
                 backupNodes: [...nodes], backupTransitions: [...transitions]
@@ -200,7 +233,7 @@ export const useToolsLogic = (
 
     const handleInstantDeterminization = () => {
         try {
-            // 1. Llamamos al motor que hace la magia matemática
+            // 1. Llamamos al motor que hace la matemática
             const result = convertNfaToDfa(nodes, transitions);
 
             // 2. Centramos el resultado para que no aparezca flotando por cualquier lado
@@ -214,6 +247,7 @@ export const useToolsLogic = (
                 confirmText: 'Aplicar AFD',
                 cancelText: 'Cancelar',
                 onConfirm: () => {
+                    takeSnapshot();
                     setNodes(centeredNodes);
                     setTransitions(result.transitions);
                     setAutomataType('DFA'); // Lo pasamos a DFA automáticamente

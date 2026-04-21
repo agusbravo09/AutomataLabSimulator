@@ -28,10 +28,13 @@ export const SimulationPlayer: React.FC<SimulationConsoleProps> = ({
     const [inputValue, setInputValue] = useState('');
     const [initialStackSymbol, setInitialStackSymbol] = useState('S');
     const [pdaAcceptance, setPdaAcceptance] = useState<'FINAL_STATE' | 'EMPTY_STACK'>('FINAL_STATE');
-    
+
     useEffect(() => {
-        if (simulationResult && !simMode.active) onClearResult();
-    }, [inputValue, pdaAcceptance, initialStackSymbol, simulationResult, simMode.active, onClearResult]);
+        if (simulationResult) {
+            onClearResult();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [inputValue, pdaAcceptance, initialStackSymbol]);
 
     if (!isOpen && !simMode.active) return null;
 

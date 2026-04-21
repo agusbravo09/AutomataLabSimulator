@@ -141,8 +141,8 @@ export const convertNfaToDfa = (originalNodes: StateNode[], originalTransitions:
         dfaNodes.push({
             id: row.name, name: row.name,
             isInitial: row.isInitial, isFinal: row.isFinal,
-            x: 150 + (index % 3) * 200, // Layout básico en grilla
-            y: 300 + Math.floor(index / 3) * 150,
+            x: 150 + (index % 3) * 300,
+            y: 300 + Math.floor(index / 3) * 250,
             type: 'STATE'
         });
 

@@ -29,7 +29,7 @@ import ToolsPanel from './ToolsPanel';
 import StepPlayerOverlay from './StepPlayerOverlay';
 import { MiniVisor } from './MiniVisor';
 import { GrammarCleanerModal } from "./GrammarCleanerModal";
-import { DonationModal } from './DonationsModal';
+// import { DonationModal } from './DonationsModal';
 import { ResultModal, type ResultModalType } from './ResultModal';
 
 // --- COMPONENTES CANVAS ---
@@ -46,7 +46,7 @@ function InfinityCanvas() {
     const [buildMode, setBuildMode] = useState<{
         active: boolean, steps: any[], currentIndex: number, backupNodes?: StateNode[], backupTransitions?: Transition[]
     }>({ active: false, steps: [], currentIndex: 0 });
-    const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
+    // const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
 
     // Modales
     const [isGrammarModalOpen, setIsGrammarModalOpen] = useState(false);
@@ -78,7 +78,7 @@ function InfinityCanvas() {
     const { simMode, setSimMode, simulationResult, setSimulationResult, handleRunSimulation, handleStartStepByStep } = useSimulation();
 
     const { handleGenerateRegex, handlePlayElimination, handlePlaySubset, handlePlayMinimization, handleInstantMinimization, handlePlayClasses, handleInstantClasses, handleGenerateFromGrammar, handleGenerateFromLeftGrammar, handleInstantDeterminization } = useToolsLogic(
-        nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera, showResultModal
+        nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, camera, showResultModal, takeSnapshot
     );
 
     const { handleExportAutomaton, handleImportAutomaton } = useFileManager(nodes, transitions, automataType, setNodes, setTransitions, setAutomataType, takeSnapshot);
@@ -143,13 +143,14 @@ function InfinityCanvas() {
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
                 <TopBar automataType={automataType} setAutomataType={setAutomataType} onExport={handleExportAutomaton} onImport={handleImportAutomaton} onOpenGrammar={() => setIsGrammarModalOpen(true)} onSimulateClick={() => setIsSimulationConsoleOpen(true)} />
 
-                <div style={{ pointerEvents: 'auto', position: 'absolute', top: '20px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center' }}>
-                    <div className="tooltip-container" style={{ position: 'relative', backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(230, 73, 128, 0.2)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(230, 73, 128, 0.1)', transition: 'all 0.2s', display: 'flex', height: '42px', alignItems: 'center' }}>
+                 <div style={{ pointerEvents: 'auto', position: 'absolute', top: '20px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center' }}>
+                     {/* <div className="tooltip-container" style={{ position: 'relative', backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(230, 73, 128, 0.2)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(230, 73, 128, 0.1)', transition: 'all 0.2s', display: 'flex', height: '42px', alignItems: 'center' }}>
                         <button onClick={() => setIsDonationModalOpen(true)} style={{ padding: '0 16px', border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', color: '#e64980', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', height: '100%' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fff0f6'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}>
                             <img src="icons/mug.svg" alt="Invitar un café" style={{ width: '22px', height: '22px' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 16px;">Café</span>'; }} />
                         </button>
                         <div className="custom-tooltip">Apoyar el proyecto</div>
-                    </div>
+                    </div>  */}
+
 
                     <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', transition: 'all 0.2s', display: 'flex', height: '42px', alignItems: 'center' }}>
                         <button onClick={() => setIsPanelOpen(true)} style={{ padding: '0 16px', border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', color: '#495057', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', transition: 'background-color 0.2s', height: '100%' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
@@ -188,11 +189,11 @@ function InfinityCanvas() {
             <ToolsPanel isOpen={isToolsPanelOpen} onClose={() => setIsToolsPanelOpen(false)} onGenerateRegex={handleGenerateRegex} onPlayElimination={handlePlayElimination} onPlaySubset={handlePlaySubset} onPlayMinimization={handlePlayMinimization} onInstantMinimization={handleInstantMinimization} onPlayClasses={handlePlayClasses} onInstantClasses={handleInstantClasses} onCompareMoore={handleCompareMoore} onGenerateFromGrammar={handleGenerateFromGrammar} onGenerateFromLeftGrammar={handleGenerateFromLeftGrammar} onConvertMooreToMealy={handleConvertMooreToMealy} onConvertMealyToMoore={handleConvertMealyToMoore} onPlayTransducerConversion={handlePlayTransducerConversion} isVisorOpen={isVisorOpen} onToggleVisor={() => setIsVisorOpen(!isVisorOpen)} onOpenGrammar={() => setIsGrammarModalOpen(true)} onInstantDeterminization={handleInstantDeterminization} showResultModal={showResultModal} />
 
             <ConfirmationModal isOpen={isConfirmOpen} title="¿Eliminar elemento?" message="Esta acción no se puede deshacer. Si es un estado, se borrarán todas sus transiciones." onCancel={() => setIsConfirmOpen(false)} onConfirm={handleDeleteElement} />
-            <ConfirmationModal isOpen={isClearModalOpen} title="¿Limpiar todo el lienzo?" message="Esta acción eliminará todos los estados y transiciones. Perderás el progreso que no hayas guardado." onCancel={() => setIsClearModalOpen(false)} onConfirm={() => { clearWorkspace(); setIsClearModalOpen(false); }} />
+            <ConfirmationModal isOpen={isClearModalOpen} title="¿Limpiar todo el lienzo?" message="Esta acción eliminará todos los estados y transiciones. Perderás el progreso que no hayas guardado." onCancel={() => setIsClearModalOpen(false)} onConfirm={() => { takeSnapshot(); clearWorkspace(); setIsClearModalOpen(false); }} />
 
             <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
             <GrammarCleanerModal isOpen={isGrammarModalOpen} onClose={() => setIsGrammarModalOpen(false)} />
-            <DonationModal isOpen={isDonationModalOpen} onClose={() => setIsDonationModalOpen(false)} />
+            {/*<DonationModal isOpen={isDonationModalOpen} onClose={() => setIsDonationModalOpen(false)} />*/}
 
             {resultModalConfig && (
                 <ResultModal {...resultModalConfig} isOpen={resultModalConfig.isOpen} onConfirm={() => { if (resultModalConfig.onConfirm) resultModalConfig.onConfirm(); setResultModalConfig(null); }} onCancel={resultModalConfig.onCancel ? () => { if (resultModalConfig.onCancel) resultModalConfig.onCancel(); setResultModalConfig(null); } : undefined} />

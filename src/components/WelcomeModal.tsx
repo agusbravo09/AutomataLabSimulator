@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const MODAL_VERSION = 'v1';
+const MODAL_VERSION = 'v2';
 
 export const WelcomeModal: React.FC = () => {
     const [isOpen, setIsOpen] = useState(() => {
@@ -17,92 +17,101 @@ export const WelcomeModal: React.FC = () => {
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(33, 37, 41, 0.75)', backdropFilter: 'blur(4px)',
+            backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(12px)',
             zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center',
             padding: '20px'
         }}>
             <div style={{
-                backgroundColor: 'white', borderRadius: '16px', padding: '30px',
-                maxWidth: '620px', width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                display: 'flex', flexDirection: 'column', gap: '22px',
-                animation: 'fadeIn 0.3s ease-out'
+                backgroundColor: '#ffffff', borderRadius: '28px', padding: '48px',
+                maxWidth: '640px', width: '100%', boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.3)',
+                display: 'flex', flexDirection: 'column', gap: '32px',
+                animation: 'modalEntrance 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #dee2e6', paddingBottom: '15px' }}>
-                    <h2 style={{ margin: 0, color: '#212529', fontSize: '22px', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                        ¡Bienvenidos al simulador de AutomataLab!
+                {/* Cabecera Profesional */}
+                <div style={{ textAlign: 'center' }}>
+                    <span style={{
+                        fontSize: '12px', fontWeight: 800, color: '#6366f1',
+                        textTransform: 'uppercase', letterSpacing: '2px',
+                        marginBottom: '12px', display: 'block'
+                    }}>
+                        Proyecto Personal
+                    </span>
+                    <h2 style={{
+                        margin: 0, color: '#0f172a', fontSize: '32px',
+                        fontWeight: 900, fontFamily: "'Inter', sans-serif",
+                        lineHeight: 1.1
+                    }}>
+                        ¡Bienvenido a AutomataLab!
                     </h2>
                 </div>
 
-                <div style={{ color: '#495057', fontSize: '15px', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                    <p style={{ margin: 0 }}>
-                        Me llamo Agustín y armé este simulador para darles una mano. Como alguien que ya pasó por la materia y se dió varios golpes en el proceso, sé que a veces probar los ejercicios a mano, ver el funcionamiento de los autómatas o usar otras herramientas puede ser un dolor de cabeza.
+                {/* Mensaje Personalizado */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <p style={{ margin: 0, color: '#334155', fontSize: '16px', lineHeight: '1.6' }}>
+                        Hola, soy Agustín, un simple estudiante de sistemas. Desarrollé este espacio con el objetivo de que ustedes no tengan que sufrir las mismas complicaciones que me encontré yo al estudiar estos temas.
                     </p>
-                    <p style={{ margin: 0 }}>
-                        <strong>Aviso:</strong> Esta plataforma está en pleno desarrollo. Funciona para la mayoría de las cosas, pero puede que se crucen con algún resultado raro o un comportamiento inesperado.
+                    <p style={{ margin: 0, color: '#334155', fontSize: '16px', lineHeight: '1.6' }}>
+                        En esta plataforma pueden simular Máquinas de Turing, Autómatas a Pila, Mealy, Moore, AFD y AFND, además de aplicar distintos algoritmos de conversión y minimización.
                     </p>
 
-                    <div style={{ display: 'flex', gap: '15px' }}>
-
-                        {/* Recuadro 1: Qué se puede hacer */}
-                        <div style={{ flex: 1, backgroundColor: '#fafafa', padding: '16px', borderRadius: '10px', border: '1px solid #dee2e6' }}>
-                            <h3 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#343a40', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                ¿Qué se puede hacer hoy?
-                            </h3>
-                            <ul style={{ margin: 0, paddingLeft: '22px', color: '#495057', fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <li>Simular todos los tipos: Maquinas de Mealy, Moore (aunque digan TEST), AFD, AFND, Pila y Máquinas de Turing.</li>
-                                <li>Importar y exportar ejercicios.</li>
-                                <li>Ver las simulaciones paso a paso.</li>
-                            </ul>
-                        </div>
-
-                        {/* Recuadro 2: Próximamente */}
-                        <div style={{ flex: 1, backgroundColor: '#fafafa', padding: '16px', borderRadius: '10px', border: '1px solid #dee2e6' }}>
-                            <h3 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#343a40', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                ¿Qué esperar a futuro?
-                            </h3>
-                            <ul style={{ margin: 0, paddingLeft: '22px', color: '#495057', fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <li>Un rework visual completo.</li>
-                                <li>Optimización de rendimiento.</li>
-                                <li>Temas faltantes y ajustes en algoritmos ya implementados.</li>
-                                <li>Explicaciones paso a paso mejoradas.</li>
-                                <li>Una plataforma tipo blog donde voy a subir mis apuntes y explicaciones de cada tema.</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '10px', border: '1px dashed #ced4da', textAlign: 'center' }}>
-                        <p style={{ margin: 0, color: '#495057' }}>
-                            <strong>¡Tu feedback es clave!</strong><br/>
-                            Para que AutomataLab cumpla al 100% con lo que se hace en la materia, necesito que la usen, la rompan y me avisen qué falta o qué falla. ¡Entre todos podemos armar una buena herramienta para los que vienen despues de nosotros!
+                    {/* Aviso de Errores Estilizado */}
+                    <div style={{
+                        backgroundColor: '#fffbeb', borderLeft: '4px solid #f59e0b',
+                        padding: '16px', borderRadius: '8px'
+                    }}>
+                        <span style={{
+                            fontSize: '13px', fontWeight: 700, color: '#92400e',
+                            display: 'block', marginBottom: '4px', textTransform: 'uppercase'
+                        }}>
+                            Aviso importante
+                        </span>
+                        <p style={{ margin: 0, color: '#b45309', fontSize: '14px' }}>
+                            Como todo proyecto en desarrollo, los resultados pueden contener errores. Recomiendo verificar los pasos lógicos durante las simulaciones.
                         </p>
                     </div>
+                </div>
 
-                    <p style={{ margin: 0, textAlign: 'center', fontStyle: 'italic', color: '#868e96', fontSize: '14px', marginTop: '-5px' }}>
-                        ¡Muchas gracias por leerme y probar el simulador, espero que te sirva!
+                {/* Sección de Agradecimientos */}
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '24px' }}>
+                    <h3 style={{
+                        margin: '0 0 12px 0', fontSize: '14px', color: '#1e293b',
+                        fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px'
+                    }}>
+                        Lo prometido es deuda
+                    </h3>
+                    <p style={{ margin: 0, color: '#64748b', fontSize: '14px', lineHeight: '1.6' }}>
+                        Quiero agradecer profundamente a quienes colaboraron probando las versiones iniciales, toda esa ayuda fue fundamental para pulir esta versión final.
                     </p>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '5px' }}>
+                {/* Botón de Acción */}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <button
                         onClick={handleClose}
                         style={{
-                            backgroundColor: '#212529', color: 'white', border: 'none',
-                            padding: '12px 24px', borderRadius: '8px', fontSize: '15px',
-                            fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s',
-                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                            backgroundColor: '#0f172a', color: '#ffffff', border: 'none',
+                            padding: '16px 40px', borderRadius: '14px', fontSize: '15px',
+                            fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                            width: '100%'
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#343a40'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#212529'}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.backgroundColor = '#1e293b';
+                            e.currentTarget.style.transform = 'scale(1.02)';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.backgroundColor = '#0f172a';
+                            e.currentTarget.style.transform = 'scale(1)';
+                        }}
                     >
-                        ¡A simular!
+                        Empezar a Simular
                     </button>
                 </div>
             </div>
 
             <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
+                @keyframes modalEntrance {
+                    from { opacity: 0; transform: scale(0.9) translateY(30px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
                 }
             `}</style>
         </div>

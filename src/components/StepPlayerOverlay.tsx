@@ -8,6 +8,8 @@ interface StepPlayerOverlayProps {
         currentIndex: number;
         backupNodes?: StateNode[];
         backupTransitions?: Transition[];
+        onKeepResult?: () => void;
+        onCancelResult?: () => void;
     };
     setBuildMode: React.Dispatch<React.SetStateAction<any>>;
     setNodes: (nodes: StateNode[]) => void;
@@ -35,12 +37,16 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
     else if (isClassesMinimization) { title = "Minimización (Clases de Equivalencia)"; }
     else if (isMooreTree) { title = "Equivalencia (Teorema de Moore)"; }
 
-    // Función para CANCELAR y REVERTIR en cualquier momento
     const handleCancel = () => {
+        if (buildMode.onCancelResult) {
+            buildMode.onCancelResult();
+        }
+
         if (buildMode.backupNodes && buildMode.backupTransitions) {
             setNodes(buildMode.backupNodes);
             setTransitions(buildMode.backupTransitions);
         }
+
         setBuildMode({ active: false, steps: [], currentIndex: 0 });
     };
 
@@ -54,7 +60,12 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
     };
 
     const handleKeepResult = () => {
+        if (buildMode.onKeepResult) {
+            buildMode.onKeepResult();
+        }
+
         setBuildMode({ active: false, steps: [], currentIndex: 0 });
+
         if (setAutomataType && isDeterminization) {
             setAutomataType('DFA');
         }
@@ -336,34 +347,52 @@ const StepPlayerOverlay: React.FC<StepPlayerOverlayProps> = ({ buildMode, setBui
                         Siguiente Paso
                     </button>
                 ) : (
-                    <div style={{ display: 'flex', gap: '12px', flex: 2 }}>
-                        <button
-                            onClick={handleCancel}
-                            onMouseEnter={() => setHoveredBtn('restore')} onMouseLeave={() => setHoveredBtn(null)}
-                            style={{
-                                flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #fa5252',
-                                backgroundColor: hoveredBtn === 'restore' ? '#fa5252' : '#fff5f5',
-                                color: hoveredBtn === 'restore' ? 'white' : '#e03131',
-                                cursor: 'pointer', fontWeight: 700, fontSize: '14px', transition: 'all 0.2s'
-                            }}
-                            title="Descartar resultado y volver al dibujo original"
-                        >
-                            Descartar
-                        </button>
+                    /* SI ES EL ÚLTIMO PASO */
+                    isMooreTree ? (
+                        /* CASO MOORE: Botón único y amigable */
                         <button
                             onClick={handleKeepResult}
-                            onMouseEnter={() => setHoveredBtn('keep')} onMouseLeave={() => setHoveredBtn(null)}
+                            onMouseEnter={() => setHoveredBtn('finish')} onMouseLeave={() => setHoveredBtn(null)}
                             style={{
                                 flex: 2, padding: '12px 16px', borderRadius: '8px', border: 'none',
-                                backgroundColor: hoveredBtn === 'keep' ? '#2b8a3e' : '#40c057', color: 'white',
+                                backgroundColor: hoveredBtn === 'finish' ? '#1c7ed6' : '#228be6', color: 'white',
                                 cursor: 'pointer', fontWeight: 800, fontSize: '14px', transition: 'all 0.2s',
-                                boxShadow: '0 4px 12px rgba(64, 192, 87, 0.2)'
+                                boxShadow: '0 4px 12px rgba(34, 139, 230, 0.2)'
                             }}
-                            title="Sobrescribir el lienzo con este nuevo autómata"
                         >
-                            ✓ Conservar Resultado
+                            Finalizar Comprobación
                         </button>
-                    </div>
+                    ) : (
+                        /* OTROS ALGORITMOS: Mantienen Conservar/Descartar */
+                        <div style={{ display: 'flex', gap: '12px', flex: 2 }}>
+                            <button
+                                onClick={handleCancel}
+                                onMouseEnter={() => setHoveredBtn('restore')} onMouseLeave={() => setHoveredBtn(null)}
+                                style={{
+                                    flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #fa5252',
+                                    backgroundColor: hoveredBtn === 'restore' ? '#fa5252' : '#fff5f5',
+                                    color: hoveredBtn === 'restore' ? 'white' : '#e03131',
+                                    cursor: 'pointer', fontWeight: 700, fontSize: '14px', transition: 'all 0.2s'
+                                }}
+                                title="Descartar resultado y volver al dibujo original"
+                            >
+                                Descartar
+                            </button>
+                            <button
+                                onClick={handleKeepResult}
+                                onMouseEnter={() => setHoveredBtn('keep')} onMouseLeave={() => setHoveredBtn(null)}
+                                style={{
+                                    flex: 2, padding: '12px 16px', borderRadius: '8px', border: 'none',
+                                    backgroundColor: hoveredBtn === 'keep' ? '#2b8a3e' : '#40c057', color: 'white',
+                                    cursor: 'pointer', fontWeight: 800, fontSize: '14px', transition: 'all 0.2s',
+                                    boxShadow: '0 4px 12px rgba(64, 192, 87, 0.2)'
+                                }}
+                                title="Sobrescribir el lienzo con este nuevo autómata"
+                            >
+                                Conservar Resultado
+                            </button>
+                        </div>
+                    )
                 )}
             </div>
             <style>{`@keyframes fadeIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }`}</style>
