@@ -45,7 +45,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onConfirm
                         fontSize: '20px'
                     }}>
                         <img
-                            src="/icons/warning.svg"
+                            src="/src/img/Icons/warning.svg"
                             alt="Advertencia"
                             style={{
                                 width: '24px',

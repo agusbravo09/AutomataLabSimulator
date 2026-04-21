@@ -1,4 +1,9 @@
 import React, { useState } from 'react';
+import cursor from '../img/Toolbar/cursor.svg';
+import createState from '../img/Toolbar/add-state.svg';
+import createTransition from '../img/Toolbar/add-transition.svg';
+import tools from '../img/Toolbar/tools.svg';
+
 
 // Definimos los tipos de herramientas
 export type Tool = 'CURSOR' | 'STATE' | 'TRANSITION';
@@ -14,9 +19,9 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
     const [hoveredTool, setHoveredTool] = useState<string | null>(null);
 
     const menuItems: { id: Tool; label: string; iconSrc: string, fallback: string }[] = [
-        { id: 'CURSOR', label: 'Seleccionar', iconSrc: '/Toolbar/cursor.svg', fallback: '👆' },
-        { id: 'STATE', label: 'Crear Estado', iconSrc: '/Toolbar/add-state.svg', fallback: '🔵' },
-        { id: 'TRANSITION', label: 'Crear Transición', iconSrc: '/Toolbar/add-transition.svg', fallback: '↗️' },
+        { id: 'CURSOR', label: 'Seleccionar', iconSrc: cursor, fallback: '👆' },
+        { id: 'STATE', label: 'Crear Estado', iconSrc: createState, fallback: '🔵' },
+        { id: 'TRANSITION', label: 'Crear Transición', iconSrc: createTransition, fallback: '↗️' },
     ];
 
     const renderTooltip = (label: string, isHovered: boolean) => (
@@ -85,7 +90,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
                     }}
                 >
                     <img
-                        src={'/Toolbar/tools.svg'}
+                        src={tools}
                         alt="Herramientas"
                         style={{ width: '20px', height: '20px', opacity: 0.7, filter: 'invert(30%) sepia(10%) saturate(500%) hue-rotate(180deg) brightness(80%) contrast(90%)' }}
                         onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '⚙️'; }}
@@ -110,7 +115,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, onToggleTo
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fff5f5'}
                 >
                     <img
-                        src="/Toolbar/trash.svg"
+                        src="/src/img/Toolbar/trash.svg"
                         alt="Limpiar Lienzo"
                         style={{ width: '20px', height: '20px', filter: 'invert(27%) sepia(82%) saturate(2200%) hue-rotate(345deg) brightness(95%) contrast(92%)' }}
                         onError={(e) => {

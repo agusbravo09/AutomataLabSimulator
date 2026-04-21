@@ -185,7 +185,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                             transition: 'all 0.2s'
                         }}>
                             <img
-                                src="/icons/happy.svg"
+                                src="/src/img/Icons/happy.svg"
                                 alt="Éxito"
                                 style={{
                                     width: '32px',
@@ -196,7 +196,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                                 onError={(e) => {
                                     e.currentTarget.style.display = 'none';
                                     e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 30px; color: #38a169;">✅</span>';
-                                    e.currentTarget.parentElement!.style.border = '2px solid #38a169'; // Agregamos el borde si falla
+                                    e.currentTarget.parentElement!.style.border = '2px solid #38a169';
                                 }}
                             />
                         </div>

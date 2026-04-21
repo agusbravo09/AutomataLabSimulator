@@ -1,5 +1,7 @@
 import React from 'react';
 import type {AutomataType} from '../types/types.ts';
+import logoImg from '../img/Icons/logo-final.png';
+
 
 interface TopBarProps {
     automataType: string;
@@ -40,7 +42,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '8px', borderRight: '1px solid #dee2e6' }}>
 
                 <img
-                    src="icons/logo-final.png"
+                    src={logoImg}
                     alt="AutomataLab"
                     style={{
                         width: '30px',

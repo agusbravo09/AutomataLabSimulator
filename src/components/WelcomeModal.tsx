@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 
+interface WelcomeModalProps {
+    onClose: () => void;
+}
+
 const MODAL_VERSION = 'v2';
 
-export const WelcomeModal: React.FC = () => {
+
+export const WelcomeModal: React.FC<WelcomeModalProps> = ({onClose}) => {
     const [isOpen, setIsOpen] = useState(() => {
         return !localStorage.getItem(`automatalab_welcome_${MODAL_VERSION}`);
     });
@@ -10,6 +15,7 @@ export const WelcomeModal: React.FC = () => {
     const handleClose = () => {
         localStorage.setItem(`automatalab_welcome_${MODAL_VERSION}`, 'true');
         setIsOpen(false);
+        onClose();
     };
 
     if (!isOpen) return null;
@@ -77,10 +83,10 @@ export const WelcomeModal: React.FC = () => {
                         margin: '0 0 12px 0', fontSize: '14px', color: '#1e293b',
                         fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px'
                     }}>
-                        Lo prometido es deuda
+                        Gracias a todos los que apoyaron
                     </h3>
                     <p style={{ margin: 0, color: '#64748b', fontSize: '14px', lineHeight: '1.6' }}>
-                        Quiero agradecer profundamente a quienes colaboraron probando las versiones iniciales, toda esa ayuda fue fundamental para pulir esta versión final.
+                        Quiero agradecer profundamente a quienes colaboraron probando las versiones iniciales, toda esa ayuda fue fundamental para pulir esta versión final. ¡Muchas Gracias!
                     </p>
                 </div>
 
