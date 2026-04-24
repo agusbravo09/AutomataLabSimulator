@@ -65,7 +65,7 @@ function InfinityCanvas() {
     // 2. Cerebros (Custom Hooks)
     const { isPanelOpen, setIsPanelOpen, isToolsPanelOpen, setIsToolsPanelOpen, isConfirmOpen, setIsConfirmOpen, isFeedbackOpen, setIsFeedbackOpen } = useUI();
     const { nodes, setNodes, transitions, setTransitions, automataType, setAutomataType, updateNodePosition, clearWorkspace, savedAutomatonA } = useAutomataStore();
-    const { camera, setCamera, handleWheel, handleManualZoom, handleResetZoom } = useCamera();
+    const { camera, setCamera, handleWheel, handleManualZoom, handleResetZoom, isSpacePressed } = useCamera();
     const { takeSnapshot } = useHistory();
 
     const { drawingTransition, handleStageClick, handleMouseDownNode, handleMouseMoveStage, handleMouseUpNode, handleMouseUpStage } = useCanvasInteractions({
@@ -100,7 +100,7 @@ function InfinityCanvas() {
         backgroundImage: `radial-gradient(#ced4da 1.5px, transparent 1.5px)`,
         backgroundSize: `40px 40px`, backgroundPosition: `${camera.x}px ${camera.y}px`,
         position: 'relative', overflow: 'hidden',
-        cursor: activeTool === 'STATE' ? 'crosshair' : (activeTool === 'TRANSITION' ? 'alias' : 'default')
+        cursor: isSpacePressed ? 'grab' : (activeTool === 'STATE' ? 'crosshair' : (activeTool === 'TRANSITION' ? 'alias' : 'default'))
     };
 
     return (
@@ -118,10 +118,12 @@ function InfinityCanvas() {
             ========================================== */}
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
                 <Stage
-                    width={window.innerWidth} height={window.innerHeight} draggable={activeTool === 'CURSOR'}
+                    width={window.innerWidth} height={window.innerHeight} draggable={activeTool === 'CURSOR' || isSpacePressed}
                     x={camera.x} y={camera.y} scaleX={camera.scale} scaleY={camera.scale} onWheel={handleWheel}
-                    onDragMove={handleStageDragMove} /* <--- USAMOS LA VERSIÓN OPTIMIZADA */
-                    onClick={handleStageClick} onMouseMove={handleMouseMoveStage} onMouseUp={handleMouseUpStage}
+                    onDragMove={handleStageDragMove}
+                    onClick={(e) => { if (!isSpacePressed) handleStageClick(e); }}
+                    onMouseMove={(e) => { if (!isSpacePressed) handleMouseMoveStage(e); }}
+                    onMouseUp={() => { if (!isSpacePressed) handleMouseUpStage(); }}
                 >
                     <Layer>
                         <TransitionsRenderer transitions={transitions} nodes={nodes} simMode={simMode} setSelectedElement={setSelectedElement} buildMode={buildMode} />

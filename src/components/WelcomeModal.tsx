@@ -21,13 +21,14 @@ export const WelcomeModal: React.FC = () => {
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(12px)',
             zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center',
-            padding: '20px'
+            overflowY: 'auto', padding: '24px'
         }}>
             <div style={{
                 backgroundColor: '#ffffff', borderRadius: '28px', padding: '48px',
                 maxWidth: '640px', width: '100%', boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.3)',
                 display: 'flex', flexDirection: 'column', gap: '32px',
-                animation: 'modalEntrance 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)'
+                animation: 'modalEntrance 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                margin: 'auto'
             }}>
                 {/* Cabecera Profesional */}
                 <div style={{ textAlign: 'center' }}>
@@ -63,7 +64,7 @@ export const WelcomeModal: React.FC = () => {
                 {/* Mensaje Personalizado */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <p style={{ margin: 0, color: '#334155', fontSize: '16px', lineHeight: '1.6' }}>
-                        Hola, soy Agustín, un simple estudiante de sistemas. Desarrollé este espacio con el objetivo de que ustedes no tengan que sufrir las mismas complicaciones que me encontré yo al estudiar estos temas.
+                        Hola, soy Agustín, un simple estudiante de sistemas. Desarrollé este espacio con el objetivo de que ustedes no tengan que pasar por las mismas complicaciones que me encontré yo al estudiar estos temas.
                     </p>
                     <p style={{ margin: 0, color: '#334155', fontSize: '16px', lineHeight: '1.6' }}>
                         En esta plataforma pueden simular Máquinas de Turing, Autómatas a Pila, Mealy, Moore, AFD y AFND, además de aplicar distintos algoritmos de conversión y minimización.

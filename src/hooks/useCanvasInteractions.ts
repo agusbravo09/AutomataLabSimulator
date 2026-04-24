@@ -4,7 +4,6 @@ import type { StateNode, Transition } from '../types/types';
 import type { Tool } from '../components/Toolbar';
 
 interface UseCanvasInteractionsProps {
-    // ¡Chau nodes y transitions!
     camera: { x: number; y: number; scale: number };
     activeTool: Tool;
     setSelectedElement: React.Dispatch<React.SetStateAction<any>>;

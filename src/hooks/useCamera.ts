@@ -1,15 +1,43 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 export const useCamera = () => {
     const [camera, setCamera] = useState({ x: 0, y: 0, scale: 1 });
 
+    const [isSpacePressed, setIsSpacePressed] = useState(false);
+
     const scrollAccumulator = useRef<number>(0);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement;
+            // Evitamos que se active si estás escribiendo en un input o textarea
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                return;
+            }
+            if (e.code === 'Space' && !e.repeat) {
+                e.preventDefault(); // Evita que la web haga scroll hacia abajo
+                setIsSpacePressed(true);
+            }
+        };
+
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.code === 'Space') {
+                setIsSpacePressed(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
 
     const handleWheel = useCallback((e: any) => {
         e.evt.preventDefault();
-
         scrollAccumulator.current += e.evt.deltaY;
-
         const threshold = 80;
 
         if (Math.abs(scrollAccumulator.current) < threshold) {
@@ -17,7 +45,6 @@ export const useCamera = () => {
         }
 
         const direction = scrollAccumulator.current > 0 ? -1 : 1;
-
         scrollAccumulator.current = 0;
 
         setCamera(prev => {
@@ -90,5 +117,5 @@ export const useCamera = () => {
         });
     }, []);
 
-    return { camera, setCamera, handleWheel, handleManualZoom, handleResetZoom };
+    return { camera, setCamera, handleWheel, handleManualZoom, handleResetZoom, isSpacePressed };
 };

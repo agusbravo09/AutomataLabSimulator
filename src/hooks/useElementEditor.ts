@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { StateNode, Transition } from '../types/types';
 
 interface UseElementEditorProps {
@@ -93,7 +94,8 @@ export const useElementEditor = ({
     const handleDeleteElement = () => {
         if (!selectedElement) return;
 
-        takeSnapshot();
+        takeSnapshot(); // ¡Acá está el famoso guardado para el Ctrl+Z!
+
         if (selectedElement.type === 'STATE') {
             // 1. Borramos el estado
             setNodes(prevNodes => prevNodes.filter(n => n.id !== selectedElement.id));
@@ -109,9 +111,33 @@ export const useElementEditor = ({
             ));
         }
 
-        setIsConfirmOpen(false);
+        setIsConfirmOpen(false); // Por si se llamó desde el modal
         setSelectedElement(null);
     };
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Solo actuamos si hay algo seleccionado y presionan Suprimir o Backspace
+            if ((e.key === 'Delete') && selectedElement) {
+
+                // Protección: si el usuario está escribiendo en un input, ignoramos
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                    return;
+                }
+
+                e.preventDefault(); // Evitamos que el Backspace navegue hacia atrás en el navegador
+                handleDeleteElement();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        // Limpieza del evento cuando se desmonta o cambia la selección
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [selectedElement]);
 
     return { handleSaveElement, handleDeleteElement };
 };

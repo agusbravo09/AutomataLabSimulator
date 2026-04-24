@@ -39,13 +39,14 @@ export const HelpModal: React.FC = () => {
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(6px)',
                     zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    padding: '20px'
+                    padding: '24px', overflowY: 'auto'
                 }} onClick={toggleModal}>
                     <div style={{
                         backgroundColor: '#ffffff', borderRadius: '24px', padding: '40px',
                         maxWidth: '550px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                         display: 'flex', flexDirection: 'column', gap: '24px',
-                        animation: 'helpEntrance 0.3s ease-out'
+                        animation: 'helpEntrance 0.3s ease-out',
+                        margin: 'auto'
                     }} onClick={e => e.stopPropagation()}>
 
                         <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '16px' }}>
@@ -86,6 +87,8 @@ export const HelpModal: React.FC = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '14px' }}>
                                     <div style={{ color: '#334155' }}><strong>Ctrl + Z</strong> : Deshacer</div>
                                     <div style={{ color: '#334155' }}><strong>Ctrl + Y</strong> : Rehacer</div>
+                                    <div style={{ color: '#334155' }}><strong>Suprimir</strong> : Eliminar selección</div>
+                                    <div style={{ color: '#334155' }}><strong>(Mantener) Espacio</strong> : Desplazar</div>
                                 </div>
                             </div>
                         </div>
