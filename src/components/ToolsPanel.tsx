@@ -43,8 +43,8 @@ const ToolsPanel: React.FC<ToolsPanelProps> = (props) => {
 
     return (
         <div style={{
-            position: 'absolute', top: 0, left: props.isOpen ? 0 : '-400px',
-            width: '400px', height: '100vh', backgroundColor: 'rgba(255, 255, 255, 0.98)',
+            position: 'absolute', top: 0, left: props.isOpen ? 0 : '-400px', width: '100%',
+            maxWidth: '400px', height: '100vh', backgroundColor: 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(20px)', borderRight: '1px solid rgba(0,0,0,0.05)',
             boxShadow: '10px 0 30px rgba(0,0,0,0.05)', transition: 'left 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
             zIndex: 140, display: 'flex', flexDirection: 'column', boxSizing: 'border-box',

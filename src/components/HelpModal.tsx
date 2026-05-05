@@ -7,11 +7,33 @@ export const HelpModal: React.FC = () => {
 
     return (
         <div>
-            {/* Botón Flotante (Trigger) - Miniatura en Esquina Superior Izquierda */}
+            <style>{`
+                /* Posición por defecto en pantallas grandes */
+                .help-button-responsive {
+                    top: 30px;
+                    left: 24px;
+                }
+                
+                /* Si la pantalla es menor a 870px, lo empujamos hacia abajo */
+                @media (max-width: 870px) {
+                    .help-button-responsive {
+                        top: 85px !important; /* Ajustá este número si necesitás que baje más o menos */
+                        left: 30px !important; /* Lo acercamos un poquito más al borde en pantallas chicas */
+                    }
+                }
+                
+                @keyframes helpEntrance {
+                    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+            `}</style>
+
+            {/* Botón Flotante (Trigger) */}
             <button
+                className="help-button-responsive"
                 onClick={toggleModal}
                 style={{
-                    position: 'fixed', top: '24px', left: '24px',
+                    position: 'fixed',
                     width: '36px', height: '36px', borderRadius: '18px',
                     backgroundColor: '#0f172a', color: '#ffffff',
                     border: 'none', cursor: 'pointer', zIndex: 2,
@@ -106,13 +128,6 @@ export const HelpModal: React.FC = () => {
                     </div>
                 </div>
             )}
-
-            <style>{`
-                @keyframes helpEntrance {
-                    from { opacity: 0; transform: scale(0.95) translateY(10px); }
-                    to { opacity: 1; transform: scale(1) translateY(0); }
-                }
-            `}</style>
         </div>
     );
 };

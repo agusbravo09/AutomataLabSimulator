@@ -14,8 +14,8 @@ interface GrammarCleanerModalProps {
 
 export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen, onClose }) => {
 
-    // REFERENCIA PARA EL AUTO-SCROLL DE LA CONSOLA
     const logsEndRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null); // REFERENCIA PARA EL TEXTAREA
 
     const [rawGrammar, setRawGrammar] = useState("S -> a A | B\nA -> lambda\nB -> b");
     const [customAxiom, setCustomAxiom] = useState("");
@@ -23,7 +23,6 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
     const [logs, setLogs] = useState<string[]>([]);
     const [error, setError] = useState("");
 
-    // EFECTO PARA HACER SCROLL AUTOMÁTICO CUANDO CAMBIAN LOS LOGS
     useEffect(() => {
         if (logsEndRef.current) {
             logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -31,6 +30,25 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
     }, [logs]);
 
     if (!isOpen) return null;
+
+    // Insertar texto en la posición del cursor
+    const insertTextAtCursor = (textToInsert: string) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const textBefore = rawGrammar.substring(0, start);
+        const textAfter = rawGrammar.substring(end);
+
+        setRawGrammar(textBefore + textToInsert + textAfter);
+
+        // Devolvemos el foco y acomodamos el cursor después del texto insertado
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + textToInsert.length, start + textToInsert.length);
+        }, 0);
+    };
 
     const handleParse = () => {
         try {
@@ -98,6 +116,22 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
         borderRadius: '8px', cursor: parsedData ? 'pointer' : 'not-allowed', fontWeight: 700, fontSize: '11px', transition: 'all 0.2s', boxShadow: parsedData ? `0 4px 10px ${color}33` : 'none'
     });
 
+    const actionBtnStyle: React.CSSProperties = {
+        padding: '4px 8px',
+        backgroundColor: '#e7f5ff',
+        color: '#1864ab',
+        border: '1px solid #d0ebff',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '12px',
+        fontWeight: 800,
+        transition: 'all 0.2s',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: "'Fira Code', monospace"
+    };
+
     const modalContent = (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ backgroundColor: '#fff', width: '1000px', maxWidth: '95vw', height: '700px', maxHeight: '95vh', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid #dee2e6' }}>
@@ -130,8 +164,33 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
                                 </div>
                             </div>
 
-                            <label style={{ fontSize: '12px', color: '#868e96', fontWeight: 800, marginBottom: '6px', display: 'block', textTransform: 'uppercase' }}>Reglas de Producción</label>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                <label style={{ fontSize: '12px', color: '#868e96', fontWeight: 800, display: 'block', textTransform: 'uppercase' }}>Reglas de Producción</label>
+
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    <button
+                                        onClick={() => insertTextAtCursor(' | ')}
+                                        style={actionBtnStyle}
+                                        title="Insertar separador (Pipe)"
+                                        onMouseOver={e => { e.currentTarget.style.backgroundColor = '#d0ebff'; }}
+                                        onMouseOut={e => { e.currentTarget.style.backgroundColor = '#e7f5ff'; }}
+                                    >
+                                        |
+                                    </button>
+                                    <button
+                                        onClick={() => insertTextAtCursor('lambda')}
+                                        style={actionBtnStyle}
+                                        title="Insertar Lambda"
+                                        onMouseOver={e => { e.currentTarget.style.backgroundColor = '#d0ebff'; }}
+                                        onMouseOut={e => { e.currentTarget.style.backgroundColor = '#e7f5ff'; }}
+                                    >
+                                        λ
+                                    </button>
+                                </div>
+                            </div>
+
                             <textarea
+                                ref={textareaRef} // <-- APLICAMOS LA REFERENCIA ACÁ
                                 value={rawGrammar} onChange={(e) => setRawGrammar(e.target.value)}
                                 placeholder="S -> a A | B&#10;A -> lambda"
                                 style={{ width: '100%', height: '140px', padding: '12px', borderRadius: '8px', border: '1px solid #dee2e6', fontFamily: "'Fira Code', monospace", fontSize: '14px', resize: 'none', whiteSpace: 'pre', boxSizing: 'border-box', backgroundColor: '#f8f9fa', outline: 'none' }}
@@ -215,7 +274,6 @@ export const GrammarCleanerModal: React.FC<GrammarCleanerModalProps> = ({ isOpen
                                         );
                                     })
                                 )}
-                                {/* ANCLA PARA EL AUTO SCROLL CON ESPACIADO */}
                                 <div ref={logsEndRef} style={{ float: 'left', clear: 'both', height: '20px' }}></div>
                             </div>
                         </div>

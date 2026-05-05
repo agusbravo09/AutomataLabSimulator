@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Stage, Layer } from 'react-konva';
 import type { StateNode, Transition, AutomataElement } from '../types/types';
 import { useAutomataStore } from '../store/useAutomataStore';
@@ -89,6 +89,17 @@ function InfinityCanvas() {
         nodes, transitions, setNodes, setTransitions, setAutomataType, setBuildMode, takeSnapshot
     );
 
+    const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+    useEffect(() => {
+        const handleResize = () => {
+            setDimensions({ width: window.innerWidth, height: window.innerHeight });
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+
     const handleStageDragMove = useCallback((e: any) => {
         if (e.target === e.target.getStage()) {
             setCamera((prev) => ({ ...prev, x: e.target.x(), y: e.target.y() }));
@@ -102,6 +113,11 @@ function InfinityCanvas() {
         position: 'relative', overflow: 'hidden',
         cursor: isSpacePressed ? 'grab' : (activeTool === 'STATE' ? 'crosshair' : (activeTool === 'TRANSITION' ? 'alias' : 'default'))
     };
+
+    const isLargeScreen = dimensions.width >= 1221;
+
+    const leftOffset = (isToolsPanelOpen && isLargeScreen) ? 'min(420px, 40vw)' : '20px';
+    const rightOffset = (isPanelOpen && isLargeScreen) ? 'min(420px, 40vw)' : '20px';
 
     return (
         <div style={backgroundStyle}>
@@ -118,7 +134,7 @@ function InfinityCanvas() {
             ========================================== */}
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
                 <Stage
-                    width={window.innerWidth} height={window.innerHeight} draggable={activeTool === 'CURSOR' || isSpacePressed}
+                    width={dimensions.width} height={dimensions.height} draggable={activeTool === 'CURSOR' || isSpacePressed}
                     x={camera.x} y={camera.y} scaleX={camera.scale} scaleY={camera.scale} onWheel={handleWheel}
                     onDragMove={handleStageDragMove}
                     onClick={(e) => { if (!isSpacePressed) handleStageClick(e); }}
@@ -146,7 +162,7 @@ function InfinityCanvas() {
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
                 <TopBar automataType={automataType} setAutomataType={setAutomataType} onExport={handleExportAutomaton} onImport={handleImportAutomaton} onOpenGrammar={() => setIsGrammarModalOpen(true)} onSimulateClick={() => setIsSimulationConsoleOpen(true)} />
 
-                 <div style={{ pointerEvents: 'auto', position: 'absolute', top: '20px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center' }}>
+                 <div style={{ pointerEvents: 'auto', position: 'absolute', bottom: '20px', left: leftOffset, zIndex: 100, display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center', transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
                      {/* <div className="tooltip-container" style={{ position: 'relative', backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(230, 73, 128, 0.2)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(230, 73, 128, 0.1)', transition: 'all 0.2s', display: 'flex', height: '42px', alignItems: 'center' }}>
                         <button onClick={() => setIsDonationModalOpen(true)} style={{ padding: '0 16px', border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', color: '#e64980', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', height: '100%' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fff0f6'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}>
                             <img src="icons/mug.svg" alt="Invitar un café" style={{ width: '22px', height: '22px' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 16px;">Café</span>'; }} />
@@ -156,7 +172,7 @@ function InfinityCanvas() {
 
 
                     <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', transition: 'all 0.2s', display: 'flex', height: '42px', alignItems: 'center' }}>
-                        <button onClick={() => setIsPanelOpen(true)} style={{ padding: '0 16px', border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', color: '#495057', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', transition: 'background-color 0.2s', height: '100%' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <button onClick={() => setIsPanelOpen(!isPanelOpen)} style={{ padding: '0 16px', border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', color: '#495057', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', transition: 'background-color 0.2s', height: '100%' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f3f5'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                             Panel de Control
                         </button>
                     </div>
@@ -170,7 +186,7 @@ function InfinityCanvas() {
                 </div>
 
                 <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
-                    <div style={{ pointerEvents: 'auto', position: 'absolute', left: isToolsPanelOpen ? '420px' : '20px', top: '50%', transform: 'translateY(-50%)', zIndex: 100, transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                    <div style={{ pointerEvents: 'auto', position: 'absolute', left: leftOffset, top: '50%', transform: 'translateY(-50%)', zIndex: 100, transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
                         <Toolbar activeTool={activeTool as Tool} setActiveTool={setActiveTool} onToggleTools={() => setIsToolsPanelOpen(!isToolsPanelOpen)} onClearWorkspace={() => setIsClearModalOpen(true)} />
                     </div>
 
@@ -178,7 +194,7 @@ function InfinityCanvas() {
                         <PropertiesPanel element={selectedElement} nodes={nodes} isSidePanelOpen={isPanelOpen} onClose={() => setSelectedElement(null)} onDelete={() => setIsConfirmOpen(true)} onChange={(updated) => setSelectedElement(updated)} onSave={handleSaveElement} automataType={automataType} />
                     </div>
 
-                    <div style={{ pointerEvents: 'auto', position: 'absolute', bottom: '20px', right: isPanelOpen ? '420px' : '20px', zIndex: 100, transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                    <div style={{ pointerEvents: 'auto', position: 'absolute', bottom: '20px', right: rightOffset, zIndex: 100, transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
                         <ZoomControl scale={camera.scale} onZoomIn={() => handleManualZoom(0.2)} onZoomOut={() => handleManualZoom(-0.2)}  onReset={handleResetZoom}  />
                     </div>
                 </div>
