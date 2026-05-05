@@ -58,24 +58,41 @@ export const simulateDFA = (nodes: StateNode[], transitions: Transition[], input
 };
 
 // Automata Finito No Determinista
-const getLambdaClosure = (stateIds: Set<string>, transitions: Transition[]): Set<string> => {
-    const closure = new Set(stateIds);
+const getLambdaClosure = (stateIds: Set<string>, transitions: Transition[]): { states: Set<string>, usedLambdaTransitions: Set<string> } => {
+    const states = new Set(stateIds);
+    const usedLambdaTransitions = new Set<string>();
     const stack = Array.from(stateIds);
+
     while (stack.length > 0) {
         const current = stack.pop()!;
-        transitions.filter(t => t.from === current && t.hasLambda).forEach(t => {
-            if (!closure.has(t.to)) { closure.add(t.to); stack.push(t.to); }
+
+        // Captura el texto "lambda" de las transiciones
+        transitions.filter(t => t.from === current && (t.hasLambda || t.symbols.includes('lambda') || t.symbols.includes('λ'))).forEach(t => {
+            usedLambdaTransitions.add(t.id);
+            if (!states.has(t.to)) {
+                states.add(t.to);
+                stack.push(t.to);
+            }
         });
     }
-    return closure;
+    return { states, usedLambdaTransitions };
 };
 
 export const simulateNFA = (nodes: StateNode[], transitions: Transition[], inputString: string): SimulationResult => {
     const initialNodes = nodes.filter(n => n.isInitial).map(n => n.id);
     if (initialNodes.length === 0) return { accepted: false, path: [], error: "No hay estado inicial." };
 
-    let currentStates = getLambdaClosure(new Set(initialNodes), transitions);
-    const path: Step[] = [{ charRead: '', activeStates: Array.from(currentStates), activeTransitions: [] }];
+    // calculamos la clausura inicial
+    const initialClosure = getLambdaClosure(new Set(initialNodes), transitions);
+    let currentStates = initialClosure.states;
+
+    // paso 0 -> transiciones lambda iniciales
+    const path: Step[] = [{
+        charRead: '',
+        activeStates: Array.from(currentStates),
+        activeTransitions: Array.from(initialClosure.usedLambdaTransitions)
+    }];
+
     let died = false;
 
     for (const char of inputString) {
@@ -93,8 +110,16 @@ export const simulateNFA = (nodes: StateNode[], transitions: Transition[], input
             break;
         }
 
-        currentStates = getLambdaClosure(nextStates, transitions);
-        path.push({ charRead: char, activeStates: Array.from(currentStates), activeTransitions: Array.from(usedTransitions) });
+        const closure = getLambdaClosure(nextStates, transitions);
+        currentStates = closure.states;
+
+        closure.usedLambdaTransitions.forEach(id => usedTransitions.add(id));
+
+        path.push({
+            charRead: char,
+            activeStates: Array.from(currentStates),
+            activeTransitions: Array.from(usedTransitions)
+        });
     }
 
     const isAccepted = !died && Array.from(currentStates).some(id => nodes.find(n => n.id === id)?.isFinal);

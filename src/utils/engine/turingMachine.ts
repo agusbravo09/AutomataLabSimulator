@@ -108,8 +108,6 @@ export const simulateTM = (
             headPosition: head
         });
 
-        // Criterio de parada temprana (opcional): si cae en un final y no querés que siga operando
-        // Aunque la MT estándar para al no tener transiciones, no instantáneamente al tocar el final.
     }
 
     return { accepted: false, path, error: "Bucle infinito detectado. Simulación finalizada por seguridad." };
