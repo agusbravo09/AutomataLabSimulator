@@ -124,9 +124,43 @@ function InfinityCanvas() {
             {/* ESTILOS PARA TOOLTIPS FLOTANTES */}
             <style>{`
                 .tooltip-container { position: relative; }
-                .custom-tooltip { position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(-5px); background-color: #212529; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 1000; }
-                .custom-tooltip::after { content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); border-width: 6px; border-style: solid; border-color: transparent transparent #212529 transparent; }
-                .tooltip-container:hover .custom-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+                
+                /* ESTILOS BASE COMPARTIDOS */
+                .custom-tooltip { 
+                    position: absolute; 
+                    left: 50%; 
+                    background-color: #212529; color: #fff; padding: 8px 12px; 
+                    border-radius: 8px; font-size: 12px; font-weight: 600; 
+                    white-space: nowrap; pointer-events: none; opacity: 0; 
+                    visibility: hidden; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 1000; 
+                }
+                .custom-tooltip::after { 
+                    content: ''; position: absolute; left: 50%; 
+                    transform: translateX(-50%); border-width: 6px; border-style: solid; 
+                }
+
+                .custom-tooltip.below { 
+                    top: calc(100% + 12px); 
+                    transform: translateX(-50%) translateY(-5px); 
+                }
+                .custom-tooltip.below::after { 
+                    bottom: 100%; /* La flecha se pega arriba del tooltip */
+                    border-color: transparent transparent #212529 transparent; /* Flecha hacia arriba */
+                }
+
+                .custom-tooltip.above { 
+                    bottom: calc(100% + 12px); /* Se posiciona arriba del botón */
+                    transform: translateX(-50%) translateY(5px); /* Entrance animation slides up */
+                }
+                .custom-tooltip.above::after { 
+                    top: 100%; /* La flecha se pega abajo del tooltip */
+                    border-color: #212529 transparent transparent transparent; /* Flecha hacia abajo */
+                }
+
+                .tooltip-container:hover .custom-tooltip { opacity: 1; visibility: visible; }
+                .tooltip-container:hover .custom-tooltip.below { transform: translateX(-50%) translateY(0); }
+                .tooltip-container:hover .custom-tooltip.above { transform: translateX(-50%) translateY(0); }
             `}</style>
 
             {/* ==========================================
@@ -181,7 +215,7 @@ function InfinityCanvas() {
                         <button onClick={() => setIsFeedbackOpen(true)} style={{ padding: 0, border: 'none', backgroundColor: 'transparent', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fff3cd'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                             <img src={bug} alt="Reportar Bug" style={{ width: '24px', height: '24px', opacity: 0.7, transition: 'opacity 0.2s' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML += '<span style="font-size: 20px;">!</span>'; }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.7'} />
                         </button>
-                        <div className="custom-tooltip">Reportar un bug</div>
+                        <div className="custom-tooltip above">Reportar un bug</div>
                     </div>
                 </div>
 
